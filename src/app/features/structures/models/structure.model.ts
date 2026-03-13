@@ -1,0 +1,56 @@
+import { StructurePlanType } from '../enums/structure-plan-type.enum';
+import { StructureStatus }   from '../enums/structure-status.enum';
+import { UserModel }         from '../../users/models/user.model';
+import { PropertyModel } from '../../properties/models/property.model';
+
+// ── Correspond à la migration structures ──────────────────────────
+
+export interface StructureModel {
+  // ── Champs Laravel (snake_case) ─────────────────────────────────
+  id:          number;
+  name:        string;
+  cover:       string | null;
+  logo:        string | null;
+  facebook:    string | null;
+  web_site:    string | null;
+  plan:        StructurePlanType;
+  status:      StructureStatus;
+  description: string | null;
+  deleted_at:  string | null;
+  created_at:  string;
+  updated_at:  string;
+
+
+  users?: UserModel[];
+  owner?: UserModel;
+  properties?: PropertyModel[]
+
+  stats: {
+    employes:  number;   // COUNT(users WHERE structure_id = ?)
+    biens:     number;   // COUNT(properties WHERE structure_id = ?)
+    locations: number;   // COUNT(unite_locations WHERE status = 'rented')
+  };
+
+  metrics: {
+    tauxOccupation: number;    // en %
+    revenuMensuel: number;
+    derniereConnexion: string;
+    contratsActifs: number;
+  }
+
+  activites: AuditModel[];
+
+  // Vont deriver des audits
+  lastActivity?:     string;
+  lastActivityType?: string;
+}
+
+export interface AuditModel {
+  id:        number;
+  nom:       string;
+  prenom:    string;
+  name:      string;        
+  email:     string;
+  telephone: string | null;
+  avatar:    string;        // 'avatar.png' par défaut
+}

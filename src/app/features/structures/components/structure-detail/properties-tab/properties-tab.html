@@ -1,0 +1,42 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  @for (bien of structure.properties; track bien.id) {
+    <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 hover:shadow-sm transition-shadow">
+      <div class="flex items-start gap-3">
+        <div
+          class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+          [class]="(propertyTypeStyles[bien.property_type.name]).bgClass"
+        >
+          <ng-icon
+            name="lucideBuilding"
+            size="20"
+            [class]="(propertyTypeStyles[bien.property_type.name]).textClass"
+          >
+          </ng-icon>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="font-semibold text-primary-900 text-sm">{{ bien.name }}</p>
+          <div class="flex gap-1.5 mt-1.5 flex-wrap">
+            <span
+              class="px-2 py-0.5 text-[10px] font-semibold bg-primary-100 text-primary-600 rounded-full"
+            >
+              {{ bien.property_type.name | titlecase }}
+            </span>
+            <span
+              class="px-2 py-0.5 text-[10px] font-semibold rounded-full"
+              [class]="
+                bien.status === PropertyStatus.RENTED ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+              "
+            >
+              {{ bien.status | titlecase }}
+            </span>
+          </div>
+          @if (bien.address) {
+            <p class="flex items-center gap-1 mt-1.5 text-[11px] text-primary-400">
+              <ng-icon name="lucideMapPin" size="11"></ng-icon> {{ bien.address }}
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

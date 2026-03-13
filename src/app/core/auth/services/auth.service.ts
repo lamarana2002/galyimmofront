@@ -1,0 +1,273 @@
+import { Injectable, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { Observable, tap, catchError, throwError } from 'rxjs';
+import { RegisterPayload } from '../interfaces/register-payload.interface';
+import { BASE_URL } from '../../../shared/constants/app.constant';
+
+// ── Types ─────────────────────────────────────────────────────────
+export type UserRole = 'super_admin' | 'owner' | 'employee';
+
+// Correspond exactement à la migration users (snake_case Laravel)
+export interface AuthUser {
+  id:           number;
+  structure_id: number | null;
+
+  // Identité
+  prenom:    string;
+  nom:       string;
+  login:     string;
+  email:     string;
+  telephone: string;
+  genre:     'Masculin' | 'Feminin';
+
+  // Localisation
+  pays:    string;
+  ville:   string;
+  adresse: string;
+
+  // Profil
+  avatar:      string;        // 'avatar.png' par défaut
+  description: string | null;
+
+  // Auth
+  status:             string;
+  email_verified_at:  string | null;
+
+  // Champs calculés/ajoutés par l'API
+  role:         UserRole;
+  hasStructure: boolean;      // structure_id !== null
+
+  // Timestamps
+  created_at: string;
+  updated_at: string;
+}
+
+// Helpers calculés côté Angular (non stockés)
+export function getUserFullName(u: AuthUser): string {
+  return `${u.prenom} ${u.nom}`.trim();
+}
+
+export function getUserInitials(u: AuthUser): string {
+  return `${u.prenom?.[0] ?? ''}${u.nom?.[0] ?? ''}`.toUpperCase();
+}
+
+export interface LoginPayload {
+  login: string;
+  password: string;
+}
+
+export interface RegisterFiles {
+  avatar?: File;
+  cover?: File;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: AuthUser;
+  message?: string;
+}
+
+// ── Clés localStorage ─────────────────────────────────────────────
+const TOKEN_KEY = 'auth_token';
+const USER_KEY  = 'auth_user';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+
+  private readonly apiUrl = BASE_URL;
+
+  // ── Signals (état réactif) ─────────────────────────────────────
+  private _user   = signal<AuthUser | null>(this.loadUserFromStorage());
+  private _loading = signal<boolean>(false);
+
+  readonly user    = this._user.asReadonly();
+  readonly loading = this._loading.asReadonly();
+
+  // ── Computed ───────────────────────────────────────────────────
+  readonly isLoggedIn    = computed(() => !!this._user());
+  readonly isSuperAdmin  = computed(() => this._user()?.role === 'super_admin');
+  readonly isOwner       = computed(() => this._user()?.role === 'owner');
+  readonly isEmployee    = computed(() => this._user()?.role === 'employee');
+  // email_verified_at (snake_case — champ réel de la migration)
+  readonly emailVerified = computed(() => !!this._user()?.email_verified_at);
+  // hasStructure : structure_id non null
+  readonly hasStructure  = computed(() => !!this._user()?.structure_id);
+  readonly fullName      = computed(() => {
+    const u = this._user();
+    return u ? `${u.prenom} ${u.nom}`.trim() : '';
+  });
+  readonly initials = computed(() => {
+    const u = this._user();
+    return u ? `${u.prenom?.[0] ?? ''}${u.nom?.[0] ?? ''}`.toUpperCase() : '';
+  });
+  readonly avatarUrl = computed(() => {
+    const avatar = this._user()?.avatar ?? 'avatar.png';
+    // Si c'est déjà une URL complète, on la retourne telle quelle
+    if (avatar.startsWith('http')) return avatar;
+    return `/storage/${avatar}`;
+  });
+
+  constructor(private http: HttpClient, private router: Router) {}
+
+  // ── Login ──────────────────────────────────────────────────────
+  login(payload: LoginPayload): Observable<AuthResponse> {
+    this._loading.set(true);
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, payload).pipe(
+      tap(res => {
+        this.saveSession(res);
+        this._loading.set(false);
+        this.redirectAfterLogin(res.user);
+      }),
+      catchError(err => {
+        this._loading.set(false);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  // ── Register ───────────────────────────────────────────────────
+  register(payload: RegisterPayload, files?: RegisterFiles): Observable<AuthResponse> {
+    this._loading.set(true);
+
+    // FormData obligatoire à cause des fichiers avatar/cover
+    const fd = new FormData();
+    Object.entries(payload.structure).forEach(([k, v]) => {
+      if (v !== undefined && v!== null) {
+        fd.append(`structure[${k}]`, String(v));
+      }
+    });
+    Object.entries(payload.user).forEach(([k, v]) => {
+      if (v !== undefined && v!== null) {
+        fd.append(`user[${k}]`, String(v));
+      }
+    });
+    if (files?.avatar) fd.append('avatar', files.avatar);
+    if (files?.cover)  fd.append('cover',  files.cover);
+
+    return this.http.post<AuthResponse>(`${this.apiUrl}/inscription`, fd).pipe(
+      tap(res => {
+        this.saveSession(res);
+        this._loading.set(false);
+        // this.router.navigate(['/auth/verify-email']);
+        this.router.navigate(['/auth/login']);
+      }),
+      catchError(err => {
+        this._loading.set(false);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  // ── Logout ─────────────────────────────────────────────────────
+  logout(): void {
+    // Appel API pour révoquer le token côté serveur (fire & forget)
+    const token = this.getToken();
+    if (token) {
+      this.http.post(`${this.apiUrl}/logout`, {}).subscribe({ error: () => {} });
+    }
+    this.clearSession();
+    this.router.navigate(['/auth/login']);
+  }
+
+  // ── Forgot password ────────────────────────────────────────────
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  // ── Reset password ─────────────────────────────────────────────
+  resetPassword(payload: {
+    token: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+  }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, payload);
+  }
+
+  // ── Verify email ───────────────────────────────────────────────
+  verifyEmail(id: string, hash: string, expires: string, signature: string): Observable<{ message: string }> {
+    return this.http.get<{ message: string }>(
+      `/api/email/verify/${id}/${hash}?expires=${expires}&signature=${signature}`
+    ).pipe(
+      tap(() => {
+        const u = this._user();
+        if (u) {
+          const updated = { ...u, emailVerifiedAt: new Date().toISOString() };
+          this._user.set(updated);
+          localStorage.setItem(USER_KEY, JSON.stringify(updated));
+          this.redirectAfterLogin(updated);
+        }
+      })
+    );
+  }
+
+  // ── Resend verification email ──────────────────────────────────
+  resendVerification(): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>('/api/email/verification-notification', {});
+  }
+
+  // ── Refresh user from API ──────────────────────────────────────
+  refreshUser(): Observable<AuthUser> {
+    return this.http.get<AuthUser>(`${this.apiUrl}/me`).pipe(
+      tap(user => {
+        this._user.set(user);
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+      })
+    );
+  }
+
+  // ── Token ──────────────────────────────────────────────────────
+  getToken(): string | null {
+    return localStorage.getItem(TOKEN_KEY);
+  }
+
+  // ── Redirect selon rôle ────────────────────────────────────────
+  redirectAfterLogin(user: AuthUser): void {
+    // email_verified_at — snake_case champ réel
+    if (!user.email_verified_at) {
+      this.router.navigate(['/auth/verify-email']);
+      return;
+    }
+    switch (user.role) {
+      case 'super_admin':
+        this.router.navigate(['/structures']);
+        break;
+      case 'owner':
+        // structure_id null → pas encore de structure créée
+        if (!user.structure_id) {
+          this.router.navigate(['/auth/onboarding']);
+        } else {
+          this.router.navigate(['/biens']);
+        }
+        break;
+      case 'employee':
+        this.router.navigate(['/biens']);
+        break;
+      default:
+        this.router.navigate(['/auth/login']);
+    }
+  }
+
+  // ── Session helpers ────────────────────────────────────────────
+  private saveSession(res: AuthResponse): void {
+    localStorage.setItem(TOKEN_KEY, res.token);
+    localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+    this._user.set(res.user);
+  }
+
+  private clearSession(): void {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    this._user.set(null);
+  }
+
+  private loadUserFromStorage(): AuthUser | null {
+    try {
+      const raw = localStorage.getItem(USER_KEY);
+      return raw ? JSON.parse(raw) as AuthUser : null;
+    } catch {
+      return null;
+    }
+  }
+}

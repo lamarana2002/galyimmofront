@@ -1,0 +1,153 @@
+<div class="space-y-5">
+  <!-- Résumé plan -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+      <p
+        class="text-xs font-bold text-primary-400 uppercase tracking-wider mb-3 flex items-center gap-2"
+      >
+        <ng-icon name="lucideCrown" size="13"></ng-icon> Plan actuel
+      </p>
+      <div class="flex items-center justify-between">
+        <span
+          class="px-3 py-1.5 text-sm font-bold rounded-xl"
+          [class]="
+            structure.plan === 'premium'
+              ? 'bg-secondary-100 text-secondary-600'
+              : 'bg-gray-200 text-gray-600'
+          "
+        >
+          {{ structure.plan | titlecase }}
+        </span>
+        <button
+          (click)="openChangePlan()"
+          class="text-xs font-semibold text-secondary-500 hover:text-secondary-700 hover:underline transition-colors"
+        >
+          Modifier →
+        </button>
+      </div>
+      @if (structure.planExpiresAt) {
+        <p class="text-xs text-primary-400 mt-2 flex items-center gap-1">
+          <ng-icon name="lucideCalendar" size="11"></ng-icon>
+          Expire le {{ structure.planExpiresAt | date: 'dd MMM yyyy' }}
+          <span
+            class="font-bold"
+            [class]="planDaysLeft < 30 ? 'text-orange-600' : 'text-green-600'"
+          >
+            ({{ planDaysLeft }}j)
+          </span>
+        </p>
+      }
+    </div>
+
+    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+      <p
+        class="text-xs font-bold text-primary-400 uppercase tracking-wider mb-3 flex items-center gap-2"
+      >
+        <ng-icon name="lucideTrendingUp" size="13"></ng-icon> Total encaissé
+      </p>
+      <p class="text-2xl font-bold text-primary-900">
+        {{ totalRevenu | currency: 'XOF' : 'symbol' : '1.0-0' }}
+      </p>
+      <p class="text-xs text-primary-400 mt-1">Sur {{ structure.paiements?.length }} paiements</p>
+    </div>
+
+    <div
+      class="bg-gray-50 rounded-xl p-4 border border-gray-100"
+      [class.border-orange-200]="structure.paiements && structure.paiements.some(p => p.statut === 'en_attente')"
+      [class.bg-orange-50]="structure.paiements && structure.paiements.some(p => p.statut === 'en_attente')"
+    >
+      <p
+        class="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2"
+        [class]="structure.paiements && structure.paiements.some(p => p.statut === 'en_attente') ? 'text-orange-500' : 'text-primary-400'"
+      >
+        <ng-icon name="lucideAlertTriangle" size="13"></ng-icon> En attente
+      </p>
+      <p
+        class="text-2xl font-bold"
+        [class]="structure.paiements && structure.paiements.some(p => p.statut === 'en_attente') ? 'text-orange-600' : 'text-primary-900'"
+      >
+        {{ totalEnAttente | currency: 'XOF' : 'symbol' : '1.0-0' }}
+      </p>
+      <p class="text-xs text-primary-400 mt-1">Paiements non réglés</p>
+    </div>
+  </div>
+
+  <!-- Historique paiements -->
+  <div>
+    <h4 class="text-xs font-bold text-primary-400 uppercase tracking-wider mb-3">
+      Historique des paiements
+    </h4>
+    <div class="overflow-x-auto rounded-xl border border-gray-100">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-100">
+            <th
+              class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+            >
+              Description
+            </th>
+            <th
+              class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+            >
+              Date
+            </th>
+            <th
+              class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+            >
+              Montant
+            </th>
+            <th
+              class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+            >
+              Statut
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          @for (p of structure.paiements; track p.id) {
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-4 py-3.5 text-sm text-primary-800 font-medium">
+                {{ p.description }}
+              </td>
+              <td class="px-4 py-3.5 text-xs text-primary-500">
+                {{ p.date | date: 'dd/MM/yyyy' }}
+              </td>
+              <td class="px-4 py-3.5 text-sm font-bold text-primary-900">
+                {{ p.montant | currency: 'XOF' : 'symbol' : '1.0-0' }}
+              </td>
+              <td class="px-4 py-3.5">
+                <span
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full"
+                  [class]="
+                    p.statut === 'payé'
+                      ? 'bg-green-100 text-green-700'
+                      : p.statut === 'en_attente'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-red-100 text-red-600'
+                  "
+                >
+                  <span
+                    class="w-1.5 h-1.5 rounded-full"
+                    [class]="
+                      p.statut === 'payé'
+                        ? 'bg-green-500'
+                        : p.statut === 'en_attente'
+                          ? 'bg-amber-500'
+                          : 'bg-red-500'
+                    "
+                  ></span>
+                  {{ p.statut | titlecase }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL CHANGER PLAN ══ -->
+@if (showPlanModal) {
+  <app-change-plan-modal [showPlanModal]="showPlanModal" (confirmChange)="confirmChangePlan($event)" (cancel)="showPlanModal = false" />
+}

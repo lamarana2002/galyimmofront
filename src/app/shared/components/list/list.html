@@ -1,0 +1,321 @@
+<div class="relative overflow-hidden bg-white rounded-2xl border border-gray-200 shadow-sm">
+
+  <!-- ── En-tête ── -->
+  <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-secondary-500 shadow-sm flex-shrink-0">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="font-semibold text-primary-900 leading-tight">Portefeuille de biens</h3>
+        <p class="text-xs text-primary-400 mt-0.5">Gestion et suivi de vos propriétés</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <!-- Filtre -->
+      <button class="p-2 text-primary-500 hover:text-primary-800 hover:bg-primary-50 rounded-lg transition-all duration-200" title="Filtrer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+        </svg>
+      </button>
+      <!-- Export -->
+      <button class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-primary-700 border border-primary-200 hover:bg-primary-50 rounded-lg transition-all duration-200">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Exporter
+      </button>
+      <!-- Ajouter -->
+      <button class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-secondary-500 hover:bg-secondary-600 rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Ajouter un bien
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Recherche & Filtres ── -->
+  <div class="px-6 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <!-- Search -->
+      <div class="relative">
+        <svg class="w-4 h-4 text-primary-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text" placeholder="Rechercher un bien, un locataire..."
+          class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-300 focus:border-secondary-400 bg-white w-72 transition-all duration-200 text-primary-800 placeholder-primary-300">
+      </div>
+      <!-- Filtre type -->
+      <select class="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-300 focus:border-secondary-400 bg-white text-primary-700 transition-all duration-200">
+        <option>Tous les types</option>
+        <option>Appartement</option>
+        <option>Villa</option>
+        <option>Bureau</option>
+        <option>Commerce</option>
+      </select>
+      <!-- Filtre statut -->
+      <select class="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-300 focus:border-secondary-400 bg-white text-primary-700 transition-all duration-200">
+        <option>Tous les statuts</option>
+        <option>Loué</option>
+        <option>Disponible</option>
+        <option>En travaux</option>
+      </select>
+    </div>
+    <span class="text-xs text-primary-400 whitespace-nowrap">3 biens sur 24</span>
+  </div>
+
+  <!-- ── Tableau ── -->
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left">
+
+      <thead>
+        <tr class="border-b border-gray-100">
+          <th class="px-6 py-3.5">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" class="rounded border-gray-300 text-secondary-500 focus:ring-secondary-300">
+              <span class="text-[11px] font-semibold text-primary-400 uppercase tracking-wider">Bien</span>
+            </div>
+          </th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold text-primary-400 uppercase tracking-wider">Localisation</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold text-primary-400 uppercase tracking-wider">Type</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold text-primary-400 uppercase tracking-wider">Locataire</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold text-primary-400 uppercase tracking-wider">Loyer / mois</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold text-primary-400 uppercase tracking-wider">Statut</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold text-primary-400 uppercase tracking-wider text-right">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-50">
+
+        <!-- ── Ligne 1 : Loué ── -->
+        <tr class="group hover:bg-primary-50/50 transition-colors duration-150">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" class="rounded border-gray-300 text-secondary-500 focus:ring-secondary-300">
+              <div class="w-10 h-10 rounded-xl bg-primary-800 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg class="w-5 h-5 text-primary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-semibold text-primary-900 leading-tight">Appartement F3 – Plateau</p>
+                <p class="text-xs text-primary-400 mt-0.5">Réf : APT-001 · 85 m²</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-1.5 text-primary-600">
+              <svg class="w-3.5 h-3.5 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <span class="text-sm text-primary-700">Abidjan, Plateau</span>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-primary-100 text-primary-700 rounded-full">
+              Appartement
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-full bg-secondary-200 flex items-center justify-center text-xs font-bold text-secondary-700">KM</div>
+              <div>
+                <p class="text-sm font-medium text-primary-800 leading-tight">Koné Mamadou</p>
+                <p class="text-[10px] text-primary-400">Depuis jan. 2024</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <p class="font-semibold text-primary-900">350 000 <span class="text-xs font-normal text-primary-400">FCFA</span></p>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold bg-green-100 text-green-700 rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+              Loué
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <button class="p-1.5 text-primary-400 hover:text-primary-700 hover:bg-primary-100 rounded-lg transition-all" title="Voir">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+              <button class="p-1.5 text-primary-400 hover:text-secondary-500 hover:bg-secondary-50 rounded-lg transition-all" title="Modifier">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </button>
+              <button class="p-1.5 text-primary-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Supprimer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ── Ligne 2 : Disponible ── -->
+        <tr class="group hover:bg-primary-50/50 transition-colors duration-150">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" class="rounded border-gray-300 text-secondary-500 focus:ring-secondary-300">
+              <div class="w-10 h-10 rounded-xl bg-secondary-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg class="w-5 h-5 text-secondary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-semibold text-primary-900 leading-tight">Villa duplex – Cocody</p>
+                <p class="text-xs text-primary-400 mt-0.5">Réf : VIL-023 · 240 m²</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <span class="text-sm text-primary-700">Abidjan, Cocody</span>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-secondary-100 text-secondary-700 rounded-full">
+              Villa
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <span class="text-sm text-primary-300 italic">— Aucun locataire</span>
+          </td>
+          <td class="px-6 py-4">
+            <p class="font-semibold text-primary-900">850 000 <span class="text-xs font-normal text-primary-400">FCFA</span></p>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold bg-primary-100 text-primary-600 rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary-400"></span>
+              Disponible
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <button class="p-1.5 text-primary-400 hover:text-primary-700 hover:bg-primary-100 rounded-lg transition-all" title="Voir">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+              <button class="p-1.5 text-primary-400 hover:text-secondary-500 hover:bg-secondary-50 rounded-lg transition-all" title="Modifier">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </button>
+              <button class="p-1.5 text-primary-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Supprimer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ── Ligne 3 : En travaux ── -->
+        <tr class="group hover:bg-primary-50/50 transition-colors duration-150">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" class="rounded border-gray-300 text-secondary-500 focus:ring-secondary-300">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-semibold text-primary-900 leading-tight">Local commercial – Adjamé</p>
+                <p class="text-xs text-primary-400 mt-0.5">Réf : COM-007 · 120 m²</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <span class="text-sm text-primary-700">Abidjan, Adjamé</span>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-amber-100 text-amber-700 rounded-full">
+              Commerce
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <span class="text-sm text-primary-300 italic">— Aucun locataire</span>
+          </td>
+          <td class="px-6 py-4">
+            <p class="font-semibold text-primary-900">200 000 <span class="text-xs font-normal text-primary-400">FCFA</span></p>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold bg-amber-100 text-amber-700 rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              En travaux
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <button class="p-1.5 text-primary-400 hover:text-primary-700 hover:bg-primary-100 rounded-lg transition-all" title="Voir">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+              <button class="p-1.5 text-primary-400 hover:text-secondary-500 hover:bg-secondary-50 rounded-lg transition-all" title="Modifier">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </button>
+              <button class="p-1.5 text-primary-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Supprimer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Pagination ── -->
+  <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-4">
+    <span class="text-xs text-primary-400">
+      Affichage de <span class="font-semibold text-primary-700">1</span> à <span class="font-semibold text-primary-700">3</span> sur <span class="font-semibold text-primary-700">24</span> biens
+    </span>
+    <div class="flex items-center gap-1">
+      <button class="px-3 py-1.5 text-xs font-medium text-primary-400 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+        ← Précédent
+      </button>
+      <button class="w-7 h-7 flex items-center justify-center text-xs font-semibold bg-secondary-500 text-white rounded-lg">1</button>
+      <button class="w-7 h-7 flex items-center justify-center text-xs font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-all">2</button>
+      <button class="w-7 h-7 flex items-center justify-center text-xs font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-all">3</button>
+      <span class="px-1 text-primary-300 text-xs">···</span>
+      <button class="w-7 h-7 flex items-center justify-center text-xs font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-all">8</button>
+      <button class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded-lg transition-all">
+        Suivant →
+      </button>
+    </div>
+  </div>
+
+</div>

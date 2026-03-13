@@ -1,0 +1,486 @@
+<div class="min-h-screen" style="background: #f4f1ee;">
+
+  <!-- ══════════════════════════════════════════════════
+       HEADER STICKY
+  ═════════════════════════════════════════════════════ -->
+  <div class="bg-white border-b border-gray-200 sticky top-16 z-30 shadow-sm">
+    <div class="px-6 py-4">
+
+      <div class="flex items-center justify-between gap-4 mb-4">
+        <div>
+          <h1 class="text-xl font-bold text-primary-900 flex items-center gap-2.5" style="letter-spacing:-0.02em;">
+            <div class="w-8 h-8 rounded-lg bg-primary-800 flex items-center justify-center">
+              <ng-icon name="lucideBuilding2" size="16" class="text-white"></ng-icon>
+            </div>
+            Gestion des Structures
+          </h1>
+          <p class="text-xs text-primary-400 mt-0.5 ml-10">
+            {{ filteredStructures.length }} structure(s) · mise à jour il y a 2 min
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold
+                         text-primary-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-all">
+            <ng-icon name="lucideDownload" size="13"></ng-icon>
+            Exporter
+          </button>
+          <button class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold
+                         text-white bg-primary-800 hover:bg-primary-900 rounded-xl shadow-sm transition-all">
+            <ng-icon name="lucidePlus" size="13"></ng-icon>
+            Nouvelle structure
+          </button>
+        </div>
+      </div>
+
+      <!-- Recherche + filtres + toggle -->
+      <div class="flex items-center gap-3 flex-wrap">
+
+        <div class="relative flex-1 min-w-[220px] max-w-xs">
+          <ng-icon name="lucideSearch" size="14"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300 pointer-events-none">
+          </ng-icon>
+          <input [(ngModel)]="searchQuery" (input)="applyFilters()" type="text"
+            placeholder="Rechercher une structure..."
+            class="w-full pl-9 pr-4 py-2 text-sm text-primary-800 placeholder-primary-300
+                   bg-gray-50 border border-gray-200 rounded-xl focus:outline-none
+                   focus:border-secondary-400 focus:bg-white transition-all">
+        </div>
+
+        <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          @for (f of planFilters; track f.value) {
+            <button (click)="activePlan = f.value; applyFilters()"
+              class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+              [class]="activePlan === f.value
+                ? 'bg-white text-primary-900 shadow-sm'
+                : 'text-primary-400 hover:text-primary-700'">
+              {{ f.label }}
+              <span class="ml-1 text-[10px] opacity-60">({{ getPlanCount(f.value) }})</span>
+            </button>
+          }
+        </div>
+
+        <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          @for (f of statutFilters; track f.value) {
+            <button (click)="activeStatut = f.value; applyFilters()"
+              class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+              [class]="activeStatut === f.value
+                ? 'bg-white text-primary-900 shadow-sm'
+                : 'text-primary-400 hover:text-primary-700'">
+              {{ f.label }}
+            </button>
+          }
+        </div>
+
+        <div class="flex-1"></div>
+
+        <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          <button (click)="viewMode = 'grid'"
+            class="p-1.5 rounded-lg transition-all"
+            [class]="viewMode === 'grid' ? 'bg-white shadow-sm text-primary-900' : 'text-primary-400 hover:text-primary-700'">
+            <ng-icon name="lucideLayoutGrid" size="15"></ng-icon>
+          </button>
+          <button (click)="viewMode = 'table'"
+            class="p-1.5 rounded-lg transition-all"
+            [class]="viewMode === 'table' ? 'bg-white shadow-sm text-primary-900' : 'text-primary-400 hover:text-primary-700'">
+            <ng-icon name="lucideList" size="15"></ng-icon>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 py-5">
+
+    <!-- KPI CARDS -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+      @for (kpi of kpis; track kpi.label) {
+        <div class="bg-white rounded-2xl border border-gray-200 px-5 py-4 flex items-center gap-3 shadow-sm">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" [class]="kpi.bgClass">
+            <ng-icon [name]="kpi.icon" size="20" [class]="kpi.iconClass"></ng-icon>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-2xl font-bold text-primary-900 leading-none">{{ kpi.value }}</p>
+            <p class="text-[11px] text-primary-400 mt-0.5 font-medium">{{ kpi.label }}</p>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <p class="text-xs font-bold" [class]="kpi.trend > 0 ? 'text-green-600' : 'text-red-500'">
+              {{ kpi.trend > 0 ? '↑ +' : '↓ ' }}{{ kpi.trend }}%
+            </p>
+            <p class="text-[10px] text-primary-300">ce mois</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- EMPTY STATE -->
+    @if (filteredStructures.length === 0) {
+      <div class="flex flex-col items-center py-24 text-center bg-white rounded-2xl border border-gray-200">
+        <div class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-4">
+          <ng-icon name="lucideSearchX" size="28" class="text-primary-400"></ng-icon>
+        </div>
+        <p class="font-semibold text-primary-600">Aucune structure trouvée</p>
+        <p class="text-sm text-primary-400 mt-1">Essayez d'autres filtres</p>
+        <button (click)="resetFilters()"
+          class="mt-4 px-4 py-2 text-sm font-semibold text-secondary-600 bg-secondary-50
+                 hover:bg-secondary-100 border border-secondary-200 rounded-xl transition-all">
+          Réinitialiser
+        </button>
+      </div>
+    }
+
+    <!-- ════════════════════════════ VUE GRILLE ════════════════════════════ -->
+    @if (viewMode === 'grid' && filteredStructures.length > 0) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        @for (s of filteredStructures; track s.id) {
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden
+                      hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col group">
+
+            <div class="relative h-32 overflow-hidden flex-shrink-0">
+              @if (s.cover) {
+                <img [src]="s.cover" [alt]="s.name"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-primary-900/60 to-transparent"></div>
+              } @else {
+                <div class="w-full h-full flex items-center justify-center"
+                  style="background: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-900));">
+                  <ng-icon name="lucideBuilding2" size="32" class="text-primary-400/60"></ng-icon>
+                </div>
+              }
+              <div class="absolute top-2.5 left-2.5">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm"
+                  [class]="s.statut === 'approuvé' ? 'bg-green-500/90 text-white' :
+                           s.statut === 'rejeté'   ? 'bg-red-500/90 text-white'   :
+                           s.statut === 'suspendu' ? 'bg-orange-500/90 text-white' :
+                                                     'bg-amber-400/90 text-white'">
+                  <span class="w-1.5 h-1.5 bg-white/80 rounded-full"></span>
+                  {{ getStatutLabel(s.statut) }}
+                </span>
+              </div>
+              <span class="absolute top-2.5 right-2.5 inline-flex items-center gap-1
+                           px-2 py-0.5 text-[10px] font-bold rounded-full shadow"
+                [class]="s.plan === 'premium' ? 'bg-secondary-500 text-white' : 'bg-white/90 text-primary-700'">
+                @if (s.plan === 'premium') { <ng-icon name="lucideCrown" size="9"></ng-icon> }
+                {{ s.plan === 'premium' ? 'Premium' : 'Free' }}
+              </span>
+            </div>
+
+            <div class="flex-1 p-4 flex flex-col gap-2.5">
+              <h3 class="font-bold text-primary-900 text-sm truncate" [title]="s.name">{{ s.name }}</h3>
+
+              <div class="flex items-center gap-3 text-[11px] text-primary-500">
+                <span class="flex items-center gap-1"><ng-icon name="lucideUsers" size="10"></ng-icon>{{ s.stats.employes }}</span>
+                <span class="flex items-center gap-1"><ng-icon name="lucideBuilding" size="10"></ng-icon>{{ s.stats.biens }}</span>
+                <span class="flex items-center gap-1"><ng-icon name="lucideKey" size="10"></ng-icon>{{ s.stats.locations }}</span>
+              </div>
+
+              <!-- Barre santé -->
+              <div class="flex items-center gap-2">
+                <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full transition-all duration-500"
+                    [style.width]="getHealthScore(s) + '%'"
+                    [class]="getHealthScore(s) >= 70 ? 'bg-green-500' : getHealthScore(s) >= 40 ? 'bg-amber-400' : 'bg-red-400'">
+                  </div>
+                </div>
+                <span class="text-[10px] font-bold"
+                  [class]="getHealthScore(s) >= 70 ? 'text-green-600' : getHealthScore(s) >= 40 ? 'text-amber-600' : 'text-red-500'">
+                  {{ getHealthScore(s) }}%
+                </span>
+              </div>
+
+              @if (s.proprietaire) {
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-secondary-200 flex items-center justify-center
+                              text-[10px] font-bold text-secondary-700 flex-shrink-0">
+                    {{ getInitials(s.proprietaire.name) }}
+                  </div>
+                  <span class="text-xs text-primary-500 truncate">{{ s.proprietaire.name }}</span>
+                </div>
+              }
+
+              <p class="text-[10px] text-primary-300 flex items-center gap-1">
+                <ng-icon name="lucideClock" size="10"></ng-icon>
+                {{ s.lastActivity }}
+              </p>
+            </div>
+
+            <div class="px-4 pb-4 grid grid-cols-3 gap-1.5">
+              <button (click)="changeStatut(s, 'approuvé')" [disabled]="s.statut === 'approuvé'"
+                class="flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold
+                       text-green-700 bg-green-50 hover:bg-green-100 border border-green-200
+                       rounded-lg transition-all disabled:opacity-40">
+                <ng-icon name="lucideCheck" size="11"></ng-icon> Approuver
+              </button>
+              <button (click)="changeStatut(s, s.statut === 'suspendu' ? 'approuvé' : 'suspendu')"
+                class="flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold rounded-lg transition-all border"
+                [class]="s.statut === 'suspendu'
+                  ? 'text-green-700 bg-green-50 hover:bg-green-100 border-green-200'
+                  : 'text-orange-600 bg-orange-50 hover:bg-orange-100 border-orange-200'">
+                <ng-icon [name]="s.statut === 'suspendu' ? 'lucidePlay' : 'lucidePause'" size="11"></ng-icon>
+                {{ s.statut === 'suspendu' ? 'Réactiver' : 'Suspendre' }}
+              </button>
+              <a [routerLink]="['/structures', s.id]"
+                class="flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold
+                       text-primary-600 bg-primary-50 hover:bg-primary-100 border border-primary-200
+                       rounded-lg transition-all">
+                <ng-icon name="lucideEye" size="11"></ng-icon> Détail
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ════════════════════════════ VUE TABLEAU ════════════════════════════ -->
+    @if (viewMode === 'table' && filteredStructures.length > 0) {
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-100 bg-gray-50/80">
+                <th class="px-5 py-3.5 text-left w-10">
+                  <input type="checkbox" class="rounded border-gray-300">
+                </th>
+                <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Structure</th>
+                <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Propriétaire</th>
+                <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Plan</th>
+                <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Statut</th>
+                <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Santé</th>
+                <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Dernière activité</th>
+                <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Créée le</th>
+                <th class="px-4 py-3.5 text-right text-[11px] font-bold text-primary-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              @for (s of filteredStructures; track s.id) {
+                <tr class="hover:bg-gray-50/60 transition-colors group">
+                  <td class="px-5 py-4"><input type="checkbox" class="rounded border-gray-300"></td>
+
+                  <td class="px-4 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden border border-gray-100">
+                        @if (s.cover) {
+                          <img [src]="s.cover" class="w-full h-full object-cover">
+                        } @else {
+                          <div class="w-full h-full flex items-center justify-center"
+                            style="background: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-900));">
+                            <ng-icon name="lucideBuilding2" size="16" class="text-primary-300"></ng-icon>
+                          </div>
+                        }
+                      </div>
+                      <div>
+                        <p class="font-semibold text-primary-900">{{ s.name }}</p>
+                        <p class="text-[11px] text-primary-400 mt-0.5 flex items-center gap-2">
+                          <span class="flex items-center gap-0.5"><ng-icon name="lucideBuilding" size="10"></ng-icon> {{ s.stats.biens }}</span>
+                          <span class="flex items-center gap-0.5"><ng-icon name="lucideUsers" size="10"></ng-icon> {{ s.stats.employes }}</span>
+                          <span class="flex items-center gap-0.5"><ng-icon name="lucideKey" size="10"></ng-icon> {{ s.stats.locations }}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td class="px-4 py-4">
+                    @if (s.proprietaire) {
+                      <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full bg-secondary-200 flex items-center justify-center
+                                    text-[10px] font-bold text-secondary-700 flex-shrink-0">
+                          {{ getInitials(s.proprietaire.name) }}
+                        </div>
+                        <div>
+                          <p class="text-sm font-medium text-primary-800 leading-tight">{{ s.proprietaire.name }}</p>
+                          <p class="text-[11px] text-primary-400">{{ s.proprietaire.email }}</p>
+                        </div>
+                      </div>
+                    } @else {
+                      <span class="text-xs text-primary-300 italic">—</span>
+                    }
+                  </td>
+
+                  <td class="px-4 py-4">
+                    <div class="flex flex-col gap-1">
+                      <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full w-fit"
+                        [class]="s.plan === 'premium' ? 'bg-secondary-100 text-secondary-600' : 'bg-gray-100 text-gray-500'">
+                        @if (s.plan === 'premium') { <ng-icon name="lucideCrown" size="10"></ng-icon> }
+                        {{ s.plan | titlecase }}
+                      </span>
+                      <button (click)="changePlan(s)"
+                        class="text-[10px] font-semibold text-secondary-500 hover:text-secondary-700 hover:underline transition-colors text-left">
+                        Changer →
+                      </button>
+                    </div>
+                  </td>
+
+                  <td class="px-4 py-4">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full"
+                      [class]="s.statut === 'approuvé' ? 'bg-green-100 text-green-700'  :
+                               s.statut === 'rejeté'   ? 'bg-red-100 text-red-600'       :
+                               s.statut === 'suspendu' ? 'bg-orange-100 text-orange-600' :
+                                                         'bg-amber-100 text-amber-700'">
+                      <span class="w-1.5 h-1.5 rounded-full"
+                        [class]="s.statut === 'approuvé' ? 'bg-green-500'  :
+                                 s.statut === 'rejeté'   ? 'bg-red-500'    :
+                                 s.statut === 'suspendu' ? 'bg-orange-500' : 'bg-amber-500'">
+                      </span>
+                      {{ getStatutLabel(s.statut) }}
+                    </span>
+                  </td>
+
+                  <td class="px-4 py-4">
+                    <div class="flex items-center gap-2">
+                      <div class="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full"
+                          [style.width]="getHealthScore(s) + '%'"
+                          [class]="getHealthScore(s) >= 70 ? 'bg-green-500' : getHealthScore(s) >= 40 ? 'bg-amber-400' : 'bg-red-400'">
+                        </div>
+                      </div>
+                      <span class="text-xs font-bold"
+                        [class]="getHealthScore(s) >= 70 ? 'text-green-600' : getHealthScore(s) >= 40 ? 'text-amber-600' : 'text-red-500'">
+                        {{ getHealthScore(s) }}%
+                      </span>
+                    </div>
+                  </td>
+
+                  <td class="px-4 py-4">
+                    <p class="text-xs text-primary-700 font-medium">{{ s.lastActivity }}</p>
+                    <p class="text-[10px] text-primary-300 mt-0.5">{{ s.lastActivityType }}</p>
+                  </td>
+
+                  <td class="px-4 py-4 text-xs text-primary-500 whitespace-nowrap">
+                    {{ s.createdAt | date:'dd/MM/yyyy' }}
+                  </td>
+
+                  <td class="px-4 py-4">
+                    <div class="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button (click)="changeStatut(s, 'approuvé')" [disabled]="s.statut === 'approuvé'"
+                        class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-all disabled:opacity-30" title="Approuver">
+                        <ng-icon name="lucideCheckCircle" size="15"></ng-icon>
+                      </button>
+                      <button (click)="changeStatut(s, s.statut === 'suspendu' ? 'approuvé' : 'suspendu')"
+                        class="p-1.5 rounded-lg transition-all"
+                        [class]="s.statut === 'suspendu' ? 'text-green-600 hover:bg-green-50' : 'text-orange-500 hover:bg-orange-50'"
+                        [title]="s.statut === 'suspendu' ? 'Réactiver' : 'Suspendre'">
+                        <ng-icon [name]="s.statut === 'suspendu' ? 'lucidePlay' : 'lucidePause'" size="15"></ng-icon>
+                      </button>
+                      <button (click)="openContact(s)"
+                        class="p-1.5 text-primary-400 hover:bg-primary-50 hover:text-secondary-500 rounded-lg transition-all" title="Contacter">
+                        <ng-icon name="lucideMail" size="15"></ng-icon>
+                      </button>
+                      <a [routerLink]="['/structures', s.id]"
+                        class="p-1.5 text-primary-400 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-all" title="Détail">
+                        <ng-icon name="lucideEye" size="15"></ng-icon>
+                      </a>
+                      <button (click)="confirmDelete(s)"
+                        class="p-1.5 text-primary-300 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all" title="Supprimer">
+                        <ng-icon name="lucideTrash2" size="15"></ng-icon>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between">
+          <p class="text-xs text-primary-400">
+            <span class="font-semibold text-primary-700">{{ filteredStructures.length }}</span> structures affichées
+          </p>
+          <div class="flex items-center gap-1">
+            <button class="px-3 py-1.5 text-xs font-medium text-primary-400 hover:text-primary-700
+                           hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30"
+              [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">← Précédent</button>
+            @for (p of totalPagesArray; track p) {
+              <button (click)="changePage(p)"
+                class="w-7 h-7 flex items-center justify-center text-xs font-semibold rounded-lg transition-all"
+                [class]="currentPage === p ? 'bg-secondary-500 text-white' : 'text-primary-500 hover:bg-gray-50'">
+                {{ p }}
+              </button>
+            }
+            <button class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-900
+                           hover:bg-gray-50 rounded-lg transition-all"
+              (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">Suivant →</button>
+          </div>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- ══ MODAL CONTACT ══ -->
+@if (contactTarget) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="contactTarget = null">
+    <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
+    <div class="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl p-6" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-bold text-primary-900 flex items-center gap-2">
+          <ng-icon name="lucideMail" size="16" class="text-secondary-500"></ng-icon>
+          Contacter le propriétaire
+        </h3>
+        <button (click)="contactTarget = null" class="p-1.5 hover:bg-gray-100 rounded-lg transition-all">
+          <ng-icon name="lucideX" size="16" class="text-primary-400"></ng-icon>
+        </button>
+      </div>
+      <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-4">
+        <div class="w-9 h-9 rounded-full bg-secondary-200 flex items-center justify-center text-sm font-bold text-secondary-700">
+          {{ getInitials(contactTarget.proprietaire?.name || '?') }}
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-primary-800">{{ contactTarget.proprietaire?.name || '—' }}</p>
+          <p class="text-xs text-primary-400">{{ contactTarget.proprietaire?.email || '—' }}</p>
+        </div>
+      </div>
+      <div class="space-y-3 mb-4">
+        <div>
+          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Sujet</label>
+          <input [(ngModel)]="contactSubject" type="text" placeholder="Objet du message..."
+            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Message</label>
+          <textarea [(ngModel)]="contactMessage" rows="4" placeholder="Votre message..."
+            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 resize-none">
+          </textarea>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button (click)="sendContact()"
+          class="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold
+                 text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all">
+          <ng-icon name="lucideSend" size="14"></ng-icon> Envoyer
+        </button>
+        <button (click)="contactTarget = null"
+          class="px-4 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all">
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ══ MODAL SUPPRESSION ══ -->
+@if (deleteTarget) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="deleteTarget = null">
+    <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
+    <div class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6" (click)="$event.stopPropagation()">
+      <div class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
+        <ng-icon name="lucideTriangleAlert" size="24" class="text-red-500"></ng-icon>
+      </div>
+      <h3 class="font-bold text-primary-900 text-center mb-2">Supprimer la structure ?</h3>
+      <p class="text-sm text-primary-500 text-center mb-5">
+        <strong class="text-primary-700">{{ deleteTarget.name }}</strong> sera définitivement supprimée.
+        Cette action est irréversible.
+      </p>
+      <div class="flex gap-2">
+        <button (click)="deleteStructure()"
+          class="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all">
+          Supprimer
+        </button>
+        <button (click)="deleteTarget = null"
+          class="flex-1 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all">
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+}

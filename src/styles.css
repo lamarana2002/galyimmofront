@@ -1,3 +1,123 @@
 /* You can add global styles to this file, and also import other style files */
 
-@import 'tailwindcss';
+/* @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "flowbite/src/themes/default";
+@plugin "flowbite/plugin";
+@source "../node_modules/flowbite"; */
+
+@import "tailwindcss";
+@plugin "flowbite/plugin";
+@source "../node_modules/flowbite";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 🎨 CUSTOM COLOR VARIABLES */
+@theme {
+    /* ===== PRIMARY COLOR (Dark Blue) ===== */
+    --color-primary: #283f4f;
+    --color-primary-50: #e6f0f5;
+    --color-primary-100: #c0d6e2;
+    --color-primary-200: #97bace;
+    --color-primary-300: #6d9eb9;
+    --color-primary-400: #4a89aa;
+    --color-primary-500: #283f4f;  /* Base primary */
+    --color-primary-600: #233846;
+    --color-primary-700: #1d2f3b;
+    --color-primary-800: #172630;
+    --color-primary-900: #0e1a21;
+
+    /* ===== SECONDARY COLOR (Terracotta/Orange) ===== */
+    --color-secondary: #c87254;
+    --color-secondary-50: #fdf3ef;
+    --color-secondary-100: #fbe2d7;
+    --color-secondary-200: #f8ccbc;
+    --color-secondary-300: #f5b5a0;
+    --color-secondary-400: #f2a285;
+    --color-secondary-500: #c87254;  /* Base secondary */
+    --color-secondary-600: #b06448;
+    --color-secondary-700: #94543c;
+    --color-secondary-800: #784430;
+    --color-secondary-900: #5c3324;
+
+    /* ===== TERTIARY COLOR (Light Beige) ===== */
+    --color-tertiary: #f3f0ec;
+    --color-tertiary-50: #ffffff;
+    --color-tertiary-100: #ffffff;
+    --color-tertiary-200: #fefdfc;
+    --color-tertiary-300: #fcf9f6;
+    --color-tertiary-400: #faf5f1;
+    --color-tertiary-500: #f3f0ec;  /* Base tertiary */
+    --color-tertiary-600: #d9d6d2;
+    --color-tertiary-700: #bcb9b6;
+    --color-tertiary-800: #9f9c99;
+    --color-tertiary-900: #82807d;
+
+    /* ===== SEMANTIC COLOR VARIABLES ===== */
+    /* Brand colors (based on primary) */
+    --color-brand: var(--color-primary-500);
+    --color-brand-soft: var(--color-primary-100);
+    --color-brand-medium: var(--color-primary-300);
+    --color-brand-strong: var(--color-primary-700);
+    
+    /* Accent colors (based on secondary) */
+    --color-accent: var(--color-secondary-500);
+    --color-accent-soft: var(--color-secondary-100);
+    --color-accent-medium: var(--color-secondary-300);
+    --color-accent-strong: var(--color-secondary-700);
+    
+    /* Background colors (based on tertiary) */
+    --color-bg: var(--color-tertiary-500);
+    --color-bg-soft: var(--color-tertiary-200);
+    --color-bg-medium: var(--color-tertiary-400);
+    --color-bg-strong: var(--color-tertiary-700);
+    --color-bg-inverse: var(--color-primary-700);
+
+    /* ===== TEXT COLORS ===== */
+    --color-text-body: var(--color-primary-700);
+    --color-text-body-soft: var(--color-primary-500);
+    --color-text-heading: var(--color-primary-900);
+    --color-text-heading-soft: var(--color-primary-700);
+    --color-text-inverse: var(--color-tertiary-50);
+    --color-text-accent: var(--color-secondary-500);
+    
+    /* ===== FOREGROUND (TEXT ON COLORED BG) ===== */
+    --color-fg-on-brand: var(--color-tertiary-50);
+    --color-fg-on-brand-soft: var(--color-primary-900);
+    --color-fg-on-accent: var(--color-tertiary-50);
+    --color-fg-on-bg: var(--color-primary-900);
+
+    /* ===== STATUS COLORS ===== */
+    --color-success: #10b981;
+    --color-success-soft: #d1fae5;
+    --color-warning: #f59e0b;
+    --color-warning-soft: #fef3c7;
+    --color-error: #ef4444;
+    --color-error-soft: #fee2e2;
+    --color-info: var(--color-primary-500);
+    --color-info-soft: var(--color-primary-100);
+
+    /* ===== NEUTRAL COLORS (Based on tertiary) ===== */
+    --color-neutral-50: var(--color-tertiary-50);
+    --color-neutral-100: var(--color-tertiary-100);
+    --color-neutral-200: var(--color-tertiary-200);
+    --color-neutral-300: var(--color-tertiary-300);
+    --color-neutral-400: var(--color-tertiary-400);
+    --color-neutral-500: var(--color-tertiary-500);
+    --color-neutral-600: var(--color-tertiary-600);
+    --color-neutral-700: var(--color-tertiary-700);
+    --color-neutral-800: var(--color-tertiary-800);
+    --color-neutral-900: var(--color-tertiary-900);
+    --color-neutral-950: var(--color-primary-900);
+
+    /* ===== BORDER COLORS ===== */
+    --color-border: var(--color-tertiary-600);
+    --color-border-soft: var(--color-tertiary-400);
+    --color-border-strong: var(--color-primary-300);
+    --color-border-brand: var(--color-primary-500);
+
+    /* ===== FONTS ===== */
+    --font-sans: 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    --font-body: 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    --font-mono: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+}

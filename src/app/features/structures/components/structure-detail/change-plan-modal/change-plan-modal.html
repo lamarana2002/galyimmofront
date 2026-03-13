@@ -1,0 +1,63 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center p-4"
+  (click)="onCancel()"
+>
+  <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
+  <div
+    class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="font-bold text-primary-900 flex items-center gap-2">
+        <ng-icon name="lucideCrown" size="16" class="text-secondary-500"></ng-icon>
+        Changer le plan
+      </h3>
+      <button (click)="showPlanModal = false" class="p-1.5 hover:bg-gray-100 rounded-lg">
+        <ng-icon name="lucideX" size="16" class="text-primary-400"></ng-icon>
+      </button>
+    </div>
+    <div class="space-y-3 mb-5">
+      @for (plan of ['freemium', 'premium']; track plan) {
+        <label
+          class="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all"
+          [class]="
+            selectedPlan === plan
+              ? 'border-secondary-400 bg-secondary-50'
+              : 'border-gray-200 hover:border-gray-300'
+          "
+        >
+          <input
+            type="radio"
+            [value]="plan"
+            [(ngModel)]="selectedPlan"
+            class="text-secondary-500 w-4 h-4 flex-shrink-0"
+          />
+          <div>
+            <p class="font-semibold text-primary-900 capitalize">{{ plan }}</p>
+            <p class="text-xs text-primary-400">
+              {{
+                plan === 'premium'
+                  ? 'Toutes les fonctionnalités · 150 000 XOF/mois'
+                  : 'Fonctionnalités limitées · Gratuit'
+              }}
+            </p>
+          </div>
+        </label>
+      }
+    </div>
+    <div class="flex gap-2">
+      <button
+        (click)="onConfirmChangePlan()"
+        class="flex-1 py-2.5 text-sm font-bold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all"
+      >
+        Confirmer
+      </button>
+      <button
+        (click)="onCancel()"
+        class="px-4 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all"
+      >
+        Annuler
+      </button>
+    </div>
+  </div>
+</div>
