@@ -1,96 +1,88 @@
-import { Component, inject, Input, OnDestroy, output } from '@angular/core';
-import { NgIcon, provideIcons } from '@ng-icons/core';
-import {
-  lucideBuilding2,
-  lucideBuilding,
-  lucideUsers,
-  lucideKey,
-  lucideCrown,
-  lucideSearch,
-  lucideSearchX,
-  lucideDownload,
-  lucidePlus,
-  lucideLayoutGrid,
-  lucideList,
-  lucideClock,
-  lucideCheckCircle,
-  lucideCheck,
-  lucidePause,
-  lucidePlay,
-  lucideMail,
-  lucideEye,
-  lucideTrash2,
-  lucideX,
-  lucideSend,
-  lucideTriangleAlert,
-} from '@ng-icons/lucide';
-import { StructureModel } from '../../../models/structure.model';
+import { Component, Input, output, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { StructureStatus } from '../../../enums/structure-status.enum';
-import { Subscription } from 'rxjs';
-import { StructureService } from '../../../services/structure.service';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  lucideBuilding2, lucideBuilding, lucideUsers, lucideKey, lucideCrown,
+  lucideClock, lucideCheck, lucideX, lucidePause, lucidePlay, lucideEye,
+  lucideMail, lucideTrash2, lucideEllipsisVertical,
+} from '@ng-icons/lucide';
+
+import { StructureModel }    from '../../../models/structure.model';
+import { StructureStatus }   from '../../../enums/structure-status.enum';
+import { StructurePlanType } from '../../../enums/structure-plan-type.enum';
+import {
+  getHealthScore, getHealthScoreClass, getHealthTextClass,
+  getInitials, getStatutLabel, getStatusBadgeClass,
+  getOwnerFullName, getPlanBadgeClass, getPlanLabel,
+} from '../../../utils/structure.utils';
 
 @Component({
   selector: 'app-structure-grid-view',
-  imports: [NgIcon, RouterLink],
+  standalone: true,
+  imports: [NgIconComponent, RouterLink, DatePipe],
   templateUrl: './structure-grid-view.html',
-  styleUrl: './structure-grid-view.css',
   viewProviders: [
     provideIcons({
-      lucideBuilding2,
-      lucideBuilding,
-      lucideUsers,
-      lucideKey,
-      lucideCrown,
-      lucideSearch,
-      lucideSearchX,
-      lucideDownload,
-      lucidePlus,
-      lucideLayoutGrid,
-      lucideList,
-      lucideClock,
-      lucideCheckCircle,
-      lucideCheck,
-      lucidePause,
-      lucidePlay,
-      lucideMail,
-      lucideEye,
-      lucideTrash2,
-      lucideX,
-      lucideSend,
-      lucideTriangleAlert,
+      lucideBuilding2, lucideBuilding, lucideUsers, lucideKey, lucideCrown,
+      lucideClock, lucideCheck, lucideX, lucidePause, lucidePlay, lucideEye,
+      lucideMail, lucideTrash2, lucideEllipsisVertical,
     }),
   ],
 })
-export class StructureGridView implements OnDestroy {
+export class StructureGridView {
+
   @Input({ required: true }) structures!: StructureModel[];
-  StructureStatus = StructureStatus;
-  structureService = inject(StructureService);
-  changeStatus = output<{ id: number; status: StructureStatus }>();
 
-  // subscription
-  sub: Subscription = new Subscription();
+  // Enums
+  readonly StructureStatus   = StructureStatus;
+  readonly StructurePlanType = StructurePlanType;
 
-  onStatusChange(s: StructureModel, status: StructureStatus) {
-    this.changeStatus.emit({ id: s.id, status: status });
+  // Utils
+  readonly getStatutLabel      = getStatutLabel;
+  readonly getStatusBadgeClass = getStatusBadgeClass;
+  readonly getInitials         = getInitials;
+  readonly getOwnerFullName    = getOwnerFullName;
+  readonly getPlanBadgeClass   = getPlanBadgeClass;
+  readonly getPlanLabel        = getPlanLabel;
+  readonly getHealthScore      = getHealthScore;
+  readonly getHealthScoreClass = getHealthScoreClass;
+  readonly getHealthTextClass  = getHealthTextClass;
+
+  // Outputs
+  readonly changeStatus = output<{ id: number; status: StructureStatus }>();
+  readonly changePlan   = output<number>();
+  readonly contact      = output<StructureModel>();
+  readonly delete       = output<StructureModel>();
+
+  // ID de la card dont le menu est ouvert — null si aucun
+  openMenuId = signal<number | null>(null);
+
+  toggleMenu(id: number): void {
+    this.openMenuId.update(current => current === id ? null : id);
   }
 
-  getHealthScore(s: StructureModel): number {
-    return this.structureService.getHealthScore(s);
+  closeMenu(): void {
+    this.openMenuId.set(null);
   }
 
-  getOwnerName(nom?: string, prenom?: string){
-    return `${prenom} ${nom}`;
+  onStatusChange(s: StructureModel, status: StructureStatus): void {
+    this.changeStatus.emit({ id: s.id, status });
+    this.closeMenu();
   }
 
-  getInitials(name: string): string {
-    return this.structureService.getInitials(name);
-  }
-  getStatutLabel(status: string): string {
-    return this.structureService.getStatutLabel(status);
+  onPlanChange(s: StructureModel): void {
+    this.changePlan.emit(s.id);
+    this.closeMenu();
   }
 
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
+  onContact(s: StructureModel): void {
+    this.contact.emit(s);
+    this.closeMenu();
+  }
+
+  onDelete(s: StructureModel): void {
+    this.delete.emit(s);
+    this.closeMenu();
   }
 }

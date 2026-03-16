@@ -1,4 +1,3 @@
-// property-type.model.ts
 export interface PropertyTypeModel {
   /** ID unique du type de propriété */
   id: number;

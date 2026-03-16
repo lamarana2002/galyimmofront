@@ -1,111 +1,78 @@
 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
+
       <thead>
         <tr class="border-b border-gray-100 bg-gray-50/80">
           <th class="px-5 py-3.5 text-left w-10">
-            <input type="checkbox" class="rounded border-gray-300" />
+            <input type="checkbox" class="rounded border-gray-300"/>
           </th>
-          <th
-            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
-          >
-            Structure
-          </th>
-          <th
-            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
-          >
-            Propriétaire
-          </th>
-          <th
-            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
-          >
-            Plan
-          </th>
-          <th
-            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
-          >
-            Statut
-          </th>
-          <th
-            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
-          >
-            Santé
-          </th>
-          <th
-            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
-          >
-            Dernière activité
-          </th>
-          <th
-            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
-          >
-            Créée le
-          </th>
-          <th
-            class="px-4 py-3.5 text-right text-[11px] font-bold text-primary-400 uppercase tracking-wider"
-          >
-            Actions
-          </th>
+          <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Structure</th>
+          <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Propriétaire</th>
+          <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Plan</th>
+          <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Statut</th>
+          <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Santé</th>
+          <th class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Créée le</th>
+          <th class="px-4 py-3.5 text-right text-[11px] font-bold text-primary-400 uppercase tracking-wider">Actions</th>
         </tr>
       </thead>
+
       <tbody class="divide-y divide-gray-50">
         @for (s of structures; track s.id) {
+
+          @let score     = getHealthScore(s);
+          @let ownerName = getOwnerFullName(s.owner?.nom, s.owner?.prenom);
+
           <tr class="hover:bg-gray-50/60 transition-colors group">
+
+            <!-- Checkbox -->
             <td class="px-5 py-4">
-              <input type="checkbox" class="rounded border-gray-300" />
+              <input type="checkbox" class="rounded border-gray-300"/>
             </td>
 
+            <!-- Structure -->
             <td class="px-4 py-4">
               <div class="flex items-center gap-3">
-                <div
-                  class="w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden border border-gray-100"
-                >
+                <div class="w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden border border-gray-100">
                   @if (s.cover) {
-                    <img [src]="s.cover" class="w-full h-full object-cover" />
+                    <img [src]="s.cover" [alt]="s.name" class="w-full h-full object-cover"/>
                   } @else {
-                    <div
-                      class="w-full h-full flex items-center justify-center"
-                      style="
-                        background: linear-gradient(
-                          135deg,
-                          var(--color-primary-700),
-                          var(--color-primary-900)
-                        );
-                      "
-                    >
+                    <div class="w-full h-full flex items-center justify-center"
+                      style="background: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-900));">
                       <ng-icon name="lucideBuilding2" size="16" class="text-primary-300"></ng-icon>
                     </div>
                   }
                 </div>
                 <div>
-                  <p class="font-semibold text-primary-900">{{ s.name }}</p>
+                  <p class="font-semibold text-primary-900 leading-tight">{{ s.name }}</p>
                   <p class="text-[11px] text-primary-400 mt-0.5 flex items-center gap-2">
-                    <span class="flex items-center gap-0.5"
-                      ><ng-icon name="lucideBuilding" size="10"></ng-icon> {{ s.stats.biens }}</span
-                    >
-                    <span class="flex items-center gap-0.5"
-                      ><ng-icon name="lucideUsers" size="10"></ng-icon> {{ s.stats.employes }}</span
-                    >
-                    <span class="flex items-center gap-0.5"
-                      ><ng-icon name="lucideKey" size="10"></ng-icon> {{ s.stats.locations }}</span
-                    >
+                    <span class="flex items-center gap-0.5">
+                      <ng-icon name="lucideBuilding" size="10"></ng-icon>
+                      {{ s.stats?.biens ?? 0 }}
+                    </span>
+                    <span class="flex items-center gap-0.5">
+                      <ng-icon name="lucideUsers" size="10"></ng-icon>
+                      {{ s.stats?.employes ?? 0 }}
+                    </span>
+                    <span class="flex items-center gap-0.5">
+                      <ng-icon name="lucideKey" size="10"></ng-icon>
+                      {{ s.stats?.locations ?? 0 }}
+                    </span>
                   </p>
                 </div>
               </div>
             </td>
 
+            <!-- Propriétaire -->
             <td class="px-4 py-4">
               @if (s.owner) {
                 <div class="flex items-center gap-2">
-                  <div
-                    class="w-7 h-7 rounded-full bg-secondary-200 flex items-center justify-center text-[10px] font-bold text-secondary-700 flex-shrink-0"
-                  >
-                    {{ getInitials(getOwnerName(s.owner.nom, s.owner.prenom)) }}
+                  <div class="w-7 h-7 rounded-full bg-secondary-200 flex items-center justify-center
+                              text-[10px] font-bold text-secondary-700 flex-shrink-0">
+                    {{ getInitials(ownerName) }}
                   </div>
                   <div>
-                    <p class="text-sm font-medium text-primary-800 leading-tight">
-                      {{ getOwnerName(s.owner.nom, s.owner.prenom) }}
-                    </p>
+                    <p class="text-xs font-medium text-primary-800 leading-tight">{{ ownerName }}</p>
                     <p class="text-[11px] text-primary-400">{{ s.owner.email }}</p>
                   </div>
                 </div>
@@ -114,210 +81,168 @@
               }
             </td>
 
+            <!-- Plan -->
             <td class="px-4 py-4">
               <div class="flex flex-col gap-1">
-                <span
-                  class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full w-fit"
-                  [class]="
-                    s.plan === 'premium'
-                      ? 'bg-secondary-100 text-secondary-600'
-                      : 'bg-gray-100 text-gray-500'
-                  "
-                >
-                  @if (s.plan === 'premium') {
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold
+                             rounded-full w-fit border"
+                      [class]="getPlanBadgeClass(s.plan)">
+                  @if (s.plan === StructurePlanType.PREMIUM) {
                     <ng-icon name="lucideCrown" size="10"></ng-icon>
                   }
-                  {{ s.plan | titlecase }}
+                  {{ getPlanLabel(s.plan) }}
                 </span>
-                <button
-                  (click)="onPlanChange(s.id)"
-                  class="text-[10px] font-semibold text-secondary-500 hover:text-secondary-700 hover:underline transition-colors text-left"
-                >
+                <button (click)="onPlanChange(s.id)"
+                  class="text-[10px] font-semibold text-secondary-500 hover:text-secondary-700
+                         hover:underline transition-colors text-left">
                   Changer →
                 </button>
               </div>
             </td>
 
+            <!-- Statut -->
             <td class="px-4 py-4">
-              <span
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full"
-                [class]="
-                  s.status === StructureStatus.APPROUVED
-                    ? 'bg-green-100 text-green-700'
-                    : s.status === StructureStatus.REJECTED
-                      ? 'bg-red-100 text-red-600'
-                      : s.status === StructureStatus.SUSPENDED
-                        ? 'bg-orange-100 text-orange-600'
-                        : 'bg-amber-100 text-amber-700'
-                "
-              >
-                <span
-                  class="w-1.5 h-1.5 rounded-full"
-                  [class]="
-                    s.status === StructureStatus.APPROUVED
-                      ? 'bg-green-500'
-                      : s.status === StructureStatus.REJECTED
-                        ? 'bg-red-500'
-                        : s.status === StructureStatus.SUSPENDED
-                          ? 'bg-orange-500'
-                          : 'bg-amber-500'
-                  "
-                >
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px]
+                           font-semibold rounded-full border"
+                    [class]="getStatusBadgeClass(s.status)">
+                <span class="w-1.5 h-1.5 rounded-full"
+                      [class]="getStatusDotClass(s.status)">
                 </span>
                 {{ getStatutLabel(s.status) }}
               </span>
             </td>
 
+            <!-- Santé -->
             <td class="px-4 py-4">
               <div class="flex items-center gap-2">
                 <div class="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    class="h-full rounded-full"
-                    [style.width]="getHealthScore(s) + '%'"
-                    [class]="
-                      getHealthScore(s) >= 70
-                        ? 'bg-green-500'
-                        : getHealthScore(s) >= 40
-                          ? 'bg-amber-400'
-                          : 'bg-red-400'
-                    "
-                  ></div>
+                  <div class="h-full rounded-full transition-all duration-500"
+                       [style.width]="score + '%'"
+                       [class]="getHealthScoreClass(score)">
+                  </div>
                 </div>
-                <span
-                  class="text-xs font-bold"
-                  [class]="
-                    getHealthScore(s) >= 70
-                      ? 'text-green-600'
-                      : getHealthScore(s) >= 40
-                        ? 'text-amber-600'
-                        : 'text-red-500'
-                  "
-                >
-                  {{ getHealthScore(s) }}%
+                <span class="text-xs font-bold w-7"
+                      [class]="getHealthTextClass(score)">
+                  {{ score }}%
                 </span>
               </div>
             </td>
 
-            <td class="px-4 py-4">
-              <p class="text-xs text-primary-700 font-medium">{{ s.lastActivity }}</p>
-              <p class="text-[10px] text-primary-300 mt-0.5">{{ s.lastActivityType }}</p>
-            </td>
-
+            <!-- Date -->
             <td class="px-4 py-4 text-xs text-primary-500 whitespace-nowrap">
-              {{ s.created_at | date: 'dd/MM/yyyy' }}
+              {{ s.created_at | date:'dd/MM/yyyy' }}
             </td>
 
+            <!-- Actions — visibles au hover -->
             <td class="px-4 py-4">
-              <div
-                class="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity"
-              >
+              <div class="flex items-center gap-1 justify-end
+                          opacity-0 group-hover:opacity-100 transition-opacity">
+
                 @if (s.status === StructureStatus.PENDING) {
-                  <button
-                    (click)="onStatusChange(s, StructureStatus.APPROUVED)"
-                    class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-all disabled:opacity-30"
-                    title="Approuver"
-                  >
+                  <button (click)="onStatusChange(s, StructureStatus.APPROUVED)"
+                    class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                    title="Approuver">
                     <ng-icon name="lucideCheckCircle" size="15"></ng-icon>
                   </button>
-                  <button
-                    (click)="onStatusChange(s, StructureStatus.REJECTED)"
-                    class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-30"
-                    title="Rejetter"
-                  >
+                  <button (click)="onStatusChange(s, StructureStatus.REJECTED)"
+                    class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                    title="Rejeter">
                     <ng-icon name="lucideXCircle" size="15"></ng-icon>
                   </button>
+
                 } @else if (s.status === StructureStatus.REJECTED) {
-                  <button
-                    (click)="onStatusChange(s, StructureStatus.APPROUVED)"
-                    class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-all disabled:opacity-30"
-                    title="Reactiver"
-                  >
+                  <button (click)="onStatusChange(s, StructureStatus.APPROUVED)"
+                    class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                    title="Réactiver">
                     <ng-icon name="lucideCheckCircle" size="15"></ng-icon>
                   </button>
+
                 } @else {
-                  <button
-                    (click)="
-                      onStatusChange(
-                        s,
-                        s.status === StructureStatus.SUSPENDED
-                          ? StructureStatus.APPROUVED
-                          : StructureStatus.SUSPENDED
-                      )
-                    "
+                  <button (click)="onStatusChange(s,
+                            s.status === StructureStatus.SUSPENDED
+                              ? StructureStatus.APPROUVED
+                              : StructureStatus.SUSPENDED)"
                     class="p-1.5 rounded-lg transition-all"
-                    [class]="
-                      s.status === StructureStatus.SUSPENDED
-                        ? 'text-green-600 hover:bg-green-50'
-                        : 'text-orange-500 hover:bg-orange-50'
-                    "
-                    [title]="s.status === StructureStatus.SUSPENDED ? 'Réactiver' : 'Suspendre'"
-                  >
+                    [class]="s.status === StructureStatus.SUSPENDED
+                      ? 'text-green-600 hover:bg-green-50'
+                      : 'text-orange-500 hover:bg-orange-50'"
+                    [title]="s.status === StructureStatus.SUSPENDED ? 'Réactiver' : 'Suspendre'">
                     <ng-icon
                       [name]="s.status === StructureStatus.SUSPENDED ? 'lucidePlay' : 'lucidePause'"
-                      size="15"
-                    ></ng-icon>
+                      size="15">
+                    </ng-icon>
                   </button>
                 }
-                <button
-                  (click)="openContact(s)"
-                  class="p-1.5 text-primary-400 hover:bg-primary-50 hover:text-secondary-500 rounded-lg transition-all"
-                  title="Contacter"
-                >
+
+                <button (click)="onContact(s)"
+                  class="p-1.5 text-primary-400 hover:bg-primary-50 hover:text-secondary-500
+                         rounded-lg transition-all"
+                  title="Contacter">
                   <ng-icon name="lucideMail" size="15"></ng-icon>
                 </button>
-                <a
-                  [routerLink]="['/structures', s.id]"
-                  class="p-1.5 text-primary-400 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-all"
-                  title="Détail"
-                >
+
+                <a [routerLink]="['/structures', s.id]"
+                  class="p-1.5 text-primary-400 hover:bg-primary-50 hover:text-primary-700
+                         rounded-lg transition-all"
+                  title="Voir le détail">
                   <ng-icon name="lucideEye" size="15"></ng-icon>
                 </a>
-                <button
-                  (click)="confirmDelete(s)"
-                  class="p-1.5 text-primary-300 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
-                  title="Supprimer"
-                >
+
+                <button (click)="onDelete(s)"
+                  class="p-1.5 text-primary-300 hover:bg-red-50 hover:text-red-500
+                         rounded-lg transition-all"
+                  title="Supprimer">
                   <ng-icon name="lucideTrash2" size="15"></ng-icon>
                 </button>
+
               </div>
             </td>
+
           </tr>
         }
       </tbody>
     </table>
   </div>
 
-  <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between">
-    <p class="text-xs text-primary-400">
-      <span class="font-semibold text-primary-700">{{ structures.length }}</span>
-      structures affichées
-    </p>
-    <div class="flex items-center gap-1">
-      <button
-        class="px-3 py-1.5 text-xs font-medium text-primary-400 hover:text-primary-700 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30"
-        [disabled]="!hasPrevPage"
-        (click)="onPageChange(currentPage - 1)"
-      >
-        ← Précédent
-      </button>
-      @for (p of totalPagesArray; track p) {
+  <!-- Footer pagination -->
+  @if (totalPages > 1) {
+    <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between">
+      <p class="text-xs text-primary-400">
+        Page <span class="font-semibold text-primary-700">{{ currentPage }}</span>
+        sur {{ totalPages }}
+        · <span class="font-semibold text-primary-700">{{ totalItems }}</span> structures
+      </p>
+      <div class="flex items-center gap-1">
         <button
-          (click)="onPageChange(p)"
-          class="w-7 h-7 flex items-center justify-center text-xs font-semibold rounded-lg transition-all"
-          [class]="
-            currentPage === p ? 'bg-secondary-500 text-white' : 'text-primary-500 hover:bg-gray-50'
-          "
-        >
-          {{ p }}
+          (click)="onPageChange(currentPage - 1)"
+          [disabled]="!hasPrevPage"
+          class="px-3 py-1.5 text-xs font-medium text-primary-400 hover:text-primary-700
+                 hover:bg-gray-50 rounded-lg transition-all
+                 disabled:opacity-30 disabled:cursor-not-allowed">
+          ← Précédent
         </button>
-      }
-      <button
-        class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg transition-all"
-        [disabled]="!hasNextPage"
-        (click)="onPageChange(currentPage + 1)"
-      >
-        Suivant →
-      </button>
+
+        @for (p of pagesArray; track p) {
+          <button (click)="onPageChange(p)"
+            class="w-7 h-7 flex items-center justify-center text-xs font-semibold
+                   rounded-lg transition-all"
+            [class]="currentPage === p
+              ? 'bg-secondary-500 text-white'
+              : 'text-primary-500 hover:bg-gray-50'">
+            {{ p }}
+          </button>
+        }
+
+        <button
+          (click)="onPageChange(currentPage + 1)"
+          [disabled]="!hasNextPage"
+          class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-900
+                 hover:bg-gray-50 rounded-lg transition-all
+                 disabled:opacity-30 disabled:cursor-not-allowed">
+          Suivant →
+        </button>
+      </div>
     </div>
-  </div>
+  }
+
 </div>

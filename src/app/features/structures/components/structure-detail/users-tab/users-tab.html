@@ -1,87 +1,102 @@
 <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-gray-100">
-                <th
-                  class="pb-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider pr-4"
+  @if (hasUsers()) {
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-100">
+          <th
+            class="pb-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider pr-4"
+          >
+            Employé
+          </th>
+          <th
+            class="pb-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider pr-4"
+          >
+            Contact
+          </th>
+          <th
+            class="pb-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider pr-4"
+          >
+            Rôle
+          </th>
+          <th
+            class="pb-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider pr-4"
+          >
+            Statut
+          </th>
+          <th
+            class="pb-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+          >
+            Depuis
+          </th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        @for (emp of users; track emp.id) {
+          @let fullName = getUserFullName(emp);
+          @let initials = getUserInitials(emp);
+          @let statusClass = getStatusClass(emp.status);
+          @let dotClass = getStatusDotClass(emp.status);
+
+          <tr class="hover:bg-gray-50 transition-colors">
+            <!-- Employé (avatar + nom) -->
+            <td class="py-3.5 pr-4">
+              <div class="flex items-center gap-2.5">
+                <div
+                  class="w-9 h-9 rounded-full bg-secondary-200 flex items-center justify-center text-xs font-bold text-secondary-700 flex-shrink-0"
                 >
-                  Employé
-                </th>
-                <th
-                  class="pb-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider pr-4"
-                >
-                  Contact
-                </th>
-                <th
-                  class="pb-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider pr-4"
-                >
-                  Rôle
-                </th>
-                <th
-                  class="pb-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider pr-4"
-                >
-                  Statut
-                </th>
-                <th
-                  class="pb-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
-                >
-                  Depuis
-                </th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-              @for (emp of structure.users; track emp.email) {
-                <tr class="hover:bg-gray-50 transition-colors">
-                  <td class="py-3.5 pr-4">
-                    <div class="flex items-center gap-2.5">
-                      <div
-                        class="w-9 h-9 rounded-full bg-secondary-200 flex items-center justify-center text-xs font-bold text-secondary-700 flex-shrink-0"
-                      >
-                        {{ getInitials(getUserFullName(emp.nom, emp.prenom)) }}
-                      </div>
-                      <span class="font-semibold text-primary-900">{{ getUserFullName(emp.nom, emp.prenom) }}</span>
-                    </div>
-                  </td>
-                  <td class="py-3.5 pr-4">
-                    <p class="text-sm text-primary-700">{{ emp.email }}</p>
-                    <p class="text-xs text-primary-400">{{ emp.telephone || '—' }}</p>
-                  </td>
-                  <td class="py-3.5 pr-4">
-                    <span
-                      class="px-2.5 py-1 text-[11px] font-semibold bg-primary-100 text-primary-700 rounded-full"
-                    >
-                      {{ emp.role || 'Employé' }}
-                    </span>
-                  </td>
-                  <td class="py-3.5 pr-4">
-                    <span
-                      class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full"
-                      [class]="
-                        emp.status === UserStatus.ACTIVE
-                          ? 'bg-green-100 text-green-700'
-                          : emp.status === UserStatus.SUSPENDED
-                            ? 'bg-red-100 text-red-600'
-                            : 'bg-amber-100 text-amber-700'
-                      "
-                    >
-                      <span
-                        class="w-1.5 h-1.5 rounded-full"
-                        [class]="
-                          emp.status === UserStatus.ACTIVE
-                            ? 'bg-green-500'
-                            : emp.status === UserStatus.SUSPENDED
-                              ? 'bg-red-500'
-                              : 'bg-amber-500'
-                        "
-                      ></span>
-                      {{ emp.status || 'en_attente' | titlecase }}
-                    </span>
-                  </td>
-                  <td class="py-3.5 text-xs text-primary-400">
-                    {{ emp.created_at | date: 'dd/MM/yyyy' }}
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+                  {{ initials }}
+                </div>
+                <span class="font-semibold text-primary-900">{{ fullName }}</span>
+              </div>
+            </td>
+
+            <!-- Contact (email + téléphone) -->
+            <td class="py-3.5 pr-4">
+              <p class="text-sm text-primary-700">{{ emp.email }}</p>
+              <p class="text-xs text-primary-400">{{ emp.telephone || '—' }}</p>
+            </td>
+
+            <!-- Rôle -->
+            <td class="py-3.5 pr-4">
+              <span
+                class="px-2.5 py-1 text-[11px] font-semibold bg-primary-100 text-primary-700 rounded-full"
+              >
+                {{ getRoleLabel(emp.role) }}
+              </span>
+            </td>
+
+            <!-- Statut avec indicateur visuel -->
+            <td class="py-3.5 pr-4">
+              <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full"
+                [class]="statusClass"
+              >
+                <span class="w-1.5 h-1.5 rounded-full" [class]="dotClass"></span>
+                {{ getStatusLabel(emp.status) }}
+              </span>
+            </td>
+
+            <!-- Date de création -->
+            <td class="py-3.5 text-xs text-primary-400">
+              {{ emp.created_at | date: 'dd/MM/yyyy' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <!-- État vide -->
+    <div class="flex flex-col items-center py-16 text-center">
+      <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">
+        <ng-icon name="lucideUsers" size="28" class="text-gray-300"></ng-icon>
+      </div>
+      <p class="font-semibold text-primary-500">Aucun employé</p>
+      <p class="text-sm text-primary-400 mt-1">Cette structure n'a pas encore d'employés</p>
+      <button
+        class="mt-4 px-4 py-2 text-sm font-semibold text-secondary-600 bg-secondary-50 hover:bg-secondary-100 border border-secondary-200 rounded-xl transition-all"
+      >
+        + Ajouter un employé
+      </button>
+    </div>
+  }
+</div>

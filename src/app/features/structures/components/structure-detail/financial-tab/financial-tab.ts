@@ -1,63 +1,118 @@
-import { Component, inject, Input } from '@angular/core';
-import { PlanType, StructureDetail } from '../../../pages/structure-details/structure-details';
-import { StructureService } from '../../../services/structure.service';
-import { CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
-import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCrown, lucideTrendingUp } from '@ng-icons/lucide';
-import { FormsModule } from '@angular/forms';
-import { ChangePlanModal } from "../change-plan-modal/change-plan-modal";
+import { Component, Input, OnInit, inject } from '@angular/core';
+import { CurrencyPipe, DatePipe } from '@angular/common';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  lucideCrown, lucideTrendingUp, lucideAlertTriangle,
+  lucideCalendar, lucideShield,
+} from '@ng-icons/lucide';
+
+import { StructureModel }    from '../../../models/structure.model';
+import { StructurePlanType } from '../../../enums/structure-plan-type.enum';
+import { getPlanBadgeClass, getPlanLabel } from '../../../utils/structure.utils';
+
+// ── Interfaces temporaires ─────────────────────────────────────
+// À déplacer dans un fichier payment.model.ts quand l'endpoint sera prêt
+export type PaymentStatus = 'payé' | 'en_attente' | 'échoué';
+
+export interface StructurePayment {
+  id:          number;
+  date:        string;      // ISO string — format Laravel
+  montant:     number;
+  status:      PaymentStatus;
+  description: string;
+}
 
 @Component({
   selector: 'app-financial-tab',
-  imports: [CurrencyPipe, DatePipe, NgIcon, TitleCasePipe, FormsModule, ChangePlanModal],
+  standalone: true,
+  imports: [CurrencyPipe, DatePipe, NgIconComponent],
   templateUrl: './financial-tab.html',
-  styleUrl: './financial-tab.css',
-  viewProviders: [
-    provideIcons({
-      lucideCrown,
-      lucideTrendingUp,
-    }),
-  ],
+  viewProviders: [provideIcons({
+    lucideCrown, lucideTrendingUp, lucideAlertTriangle,
+    lucideCalendar, lucideShield,
+  })],
 })
-export class FinancialTab {
-  @Input({ required: true }) structure!: StructureDetail;
-  structureService = inject(StructureService);
-  // ── UI states ─────────────────────────────────────────────────
-  showContactModal = false;
-  showDeleteConfirm = false;
-  showPlanModal = false;
-  contactMessage = '';
-  contactSubject = '';
-  selectedPlan: PlanType = 'premium';
+export class FinancialTab implements OnInit {
 
-  confirmChangePlan(selectedPlan: PlanType): void {
-    // const old = this.structure.plan;
-    // this.structure.plan = selectedPlan;
-    console.log('selected plan', selectedPlan);
-    
-    this.showPlanModal = false;
-    // this.addAuditLog(`Plan modifié : ${old} → ${this.selectedPlan}.`);
+  @Input({ required: true }) structure!: StructureModel;
+
+  // Enums
+  readonly StructurePlanType = StructurePlanType;
+
+  // Utils
+  readonly getPlanBadgeClass = getPlanBadgeClass;
+  readonly getPlanLabel      = getPlanLabel;
+
+  // État
+  paymentsLoading = false;
+  paymentsError: string | null = null;
+
+  // TODO: Remplacer par un vrai appel API quand l'endpoint sera prêt
+  // GET /structures/{id}/payments
+  payments: StructurePayment[] = [];
+
+  ngOnInit(): void {
+    // TODO: this.loadPayments();
   }
-  openChangePlan(): void {
-    this.selectedPlan = this.structure.plan;
-    this.showPlanModal = true;
+
+  // TODO: décommenter quand l'endpoint existe
+  // private loadPayments(): void {
+  //   this.paymentsLoading = true;
+  //   this.structureService.getPayments(this.structure.id)
+  //     .pipe(takeUntil(this.destroy$))
+  //     .subscribe({
+  //       next: (response) => {
+  //         this.payments = response.data;
+  //         this.paymentsLoading = false;
+  //       },
+  //       error: (err) => {
+  //         this.paymentsError = err?.error?.message ?? 'Erreur chargement paiements';
+  //         this.paymentsLoading = false;
+  //       },
+  //     });
+  // }
+
+  // ── Computed getters ──────────────────────────────────────────
+  get totalEncaisse(): number {
+    return this.payments
+      .filter(p => p.status === 'payé')
+      .reduce((sum, p) => sum + p.montant, 0);
   }
-  get planDaysLeft(): number {
-    if (!this.structure.planExpiresAt) return 0;
-    return Math.max(0, Math.ceil((this.structure.planExpiresAt.getTime() - Date.now()) / 86400000));
-  }
-  get totalRevenu(): number {
-    return (
-      this.structure.paiements
-        ?.filter((p) => p.statut === 'payé')
-        .reduce((a, p) => a + p.montant, 0) ?? 0
-    );
-  }
+
   get totalEnAttente(): number {
-    return (
-      this.structure.paiements
-        ?.filter((p) => p.statut === 'en_attente')
-        .reduce((a, p) => a + p.montant, 0) ?? 0
-    );
+    return this.payments
+      .filter(p => p.status === 'en_attente')
+      .reduce((sum, p) => sum + p.montant, 0);
+  }
+
+  get hasPaymentsPending(): boolean {
+    return this.payments.some(p => p.status === 'en_attente');
+  }
+
+  getPaymentBadgeClass(status: PaymentStatus): string {
+    const map: Record<PaymentStatus, string> = {
+      'payé':       'bg-green-100 text-green-700',
+      'en_attente': 'bg-amber-100 text-amber-700',
+      'échoué':     'bg-red-100 text-red-600',
+    };
+    return map[status] ?? 'bg-gray-100 text-gray-600';
+  }
+
+  getPaymentDotClass(status: PaymentStatus): string {
+    const map: Record<PaymentStatus, string> = {
+      'payé':       'bg-green-500',
+      'en_attente': 'bg-amber-500',
+      'échoué':     'bg-red-500',
+    };
+    return map[status] ?? 'bg-gray-400';
+  }
+
+  getPaymentLabel(status: PaymentStatus): string {
+    const map: Record<PaymentStatus, string> = {
+      'payé':       'Payé',
+      'en_attente': 'En attente',
+      'échoué':     'Échoué',
+    };
+    return map[status] ?? status;
   }
 }

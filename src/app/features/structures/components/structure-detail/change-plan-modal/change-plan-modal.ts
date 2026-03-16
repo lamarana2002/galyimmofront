@@ -1,7 +1,7 @@
 import { Component, Input, output } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
-import { PlanType } from '../../../pages/structure-details/structure-details';
 import { FormsModule } from '@angular/forms';
+import { StructurePlanType } from '../../../enums/structure-plan-type.enum';
 
 @Component({
   selector: 'app-change-plan-modal',
@@ -11,8 +11,8 @@ import { FormsModule } from '@angular/forms';
 })
 export class ChangePlanModal {
   @Input() showPlanModal = false;
-  confirmChange = output<PlanType>();
-  selectedPlan: PlanType = 'premium';
+  confirmChange = output<StructurePlanType>();
+  selectedPlan: StructurePlanType = StructurePlanType.PREMIUM;
   cancel = output();
 
   onConfirmChangePlan(): void {

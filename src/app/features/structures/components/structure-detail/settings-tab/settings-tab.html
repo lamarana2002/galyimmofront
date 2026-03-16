@@ -1,122 +1,121 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
-            <p
-              class="text-xs font-bold text-primary-400 uppercase tracking-wider flex items-center gap-2 mb-4"
-            >
-              <ng-icon name="lucideInfo" size="13"></ng-icon> Informations générales
-            </p>
-            <div class="space-y-4">
-              @for (
-                row of [
-                  { icon: 'lucideBuilding2', label: 'Nom', value: structure.name },
-                  {
-                    icon: 'lucideCalendar',
-                    label: 'Créée le',
-                    value: (structure.created_at | date: "dd MMM yyyy 'à' HH:mm"),
-                  },
-                ];
-                track row.label
-              ) {
-                <div class="flex items-center gap-3">
-                  <div
-                    class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"
-                  >
-                    <ng-icon [name]="row.icon" size="13" class="text-primary-600"></ng-icon>
-                  </div>
-                  <div>
-                    <p class="text-[10px] text-primary-400">{{ row.label }}</p>
-                    <p class="text-sm font-semibold text-primary-900">{{ row.value }}</p>
-                  </div>
-                </div>
-              }
-              <div class="flex items-center gap-3">
-                <div
-                  class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"
-                >
-                  <ng-icon name="lucideCrown" size="13" class="text-secondary-500"></ng-icon>
-                </div>
-                <div>
-                  <p class="text-[10px] text-primary-400">Plan</p>
-                  <span
-                    class="px-2.5 py-0.5 text-[11px] font-bold rounded-full"
-                    [class]="
-                      structure.plan === 'premium'
-                        ? 'bg-secondary-100 text-secondary-600'
-                        : 'bg-gray-100 text-gray-600'
-                    "
-                  >
-                    {{ structure.plan | titlecase }}
-                  </span>
-                </div>
-              </div>
-              @if (structure.description) {
-                <div class="flex items-start gap-3">
-                  <div
-                    class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                  >
-                    <ng-icon name="lucideAlignLeft" size="13" class="text-primary-600"></ng-icon>
-                  </div>
-                  <div>
-                    <p class="text-[10px] text-primary-400">Description</p>
-                    <p class="text-sm text-primary-700 leading-relaxed">
-                      {{ structure.description }}
-                    </p>
-                  </div>
-                </div>
-              }
-            </div>
+  <!-- COLONNE GAUCHE : Informations générales -->
+  <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
+    <p class="text-xs font-bold text-primary-400 uppercase tracking-wider flex items-center gap-2 mb-4">
+      <ng-icon name="lucideInfo" size="13"></ng-icon> Informations générales
+    </p>
+    
+    <div class="space-y-4">
+      <!-- Infos de base (nom, date) -->
+      @for (row of generalInfoRows(); track row.label) {
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+            <ng-icon [name]="row.icon" size="13" class="text-primary-600"></ng-icon>
           </div>
-          <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
-            <p
-              class="text-xs font-bold text-primary-400 uppercase tracking-wider flex items-center gap-2 mb-4"
-            >
-              <ng-icon name="lucideLink" size="13"></ng-icon> Liens &amp; contact
-            </p>
-            <div class="space-y-4">
-              <div class="flex items-start gap-3">
-                <div
-                  class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                >
-                  <ng-icon name="lucideGlobe" size="13" class="text-primary-600"></ng-icon>
-                </div>
-                <div>
-                  <p class="text-[10px] text-primary-400">Site web</p>
-                  @if (structure.web_site) {
-                    <a
-                      [href]="structure.web_site"
-                      target="_blank"
-                      class="text-sm text-secondary-600 hover:underline break-all"
-                      >{{ structure.web_site }}</a
-                    >
-                  } @else {
-                    <p class="text-sm text-primary-300 italic">Non renseigné</p>
-                  }
-                </div>
-              </div>
-              <div class="flex items-start gap-3">
-                <div
-                  class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                >
-                  <svg class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path
-                      d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-[10px] text-primary-400">Facebook</p>
-                  @if (structure.facebook) {
-                    <a
-                      [href]="structure.facebook"
-                      target="_blank"
-                      class="text-sm text-blue-600 hover:underline break-all"
-                      >{{ structure.facebook }}</a
-                    >
-                  } @else {
-                    <p class="text-sm text-primary-300 italic">Non renseigné</p>
-                  }
-                </div>
-              </div>
-            </div>
+          <div>
+            <p class="text-[10px] text-primary-400">{{ row.label }}</p>
+            <p class="text-sm font-semibold text-primary-900">{{ row.value }}</p>
           </div>
         </div>
+      }
+
+      <!-- Plan avec bouton de changement -->
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+          <ng-icon name="lucideCrown" size="13" class="text-secondary-500"></ng-icon>
+        </div>
+        <div class="flex-1">
+          <p class="text-[10px] text-primary-400">Plan</p>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-full" [class]="planClass">
+              {{ planLabel }}
+            </span>
+            <button
+              (click)="openChangePlan()"
+              class="text-[10px] font-semibold text-secondary-600 hover:text-secondary-700 hover:underline transition-all"
+            >
+              Changer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description (optionnelle) -->
+      @if (hasDescription()) {
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+            <ng-icon name="lucideAlignLeft" size="13" class="text-primary-600"></ng-icon>
+          </div>
+          <div>
+            <p class="text-[10px] text-primary-400">Description</p>
+            <p class="text-sm text-primary-700 leading-relaxed">{{ structure.description }}</p>
+          </div>
+        </div>
+      }
+
+      <!-- Fin du plan (si premium) -->
+      @if (structure.plan === StructurePlanType.PREMIUM && planDaysLeft > 0) {
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+            <ng-icon name="lucideCalendar" size="13" class="text-primary-600"></ng-icon>
+          </div>
+          <div>
+            <p class="text-[10px] text-primary-400">Fin du plan</p>
+            <p class="text-sm font-semibold text-primary-900">Dans {{ planDaysLeft }} jours</p>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- COLONNE DROITE : Liens & contact -->
+  <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
+    <p class="text-xs font-bold text-primary-400 uppercase tracking-wider flex items-center gap-2 mb-4">
+      <ng-icon name="lucideLink" size="13"></ng-icon> Liens & contact
+    </p>
+    
+    <div class="space-y-4">
+      <!-- Site web -->
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+          <ng-icon name="lucideGlobe" size="13" class="text-primary-600"></ng-icon>
+        </div>
+        <div>
+          <p class="text-[10px] text-primary-400">Site web</p>
+          @if (hasWebSite()) {
+            <a
+              [href]="structure.web_site"
+              target="_blank"
+              class="text-sm text-secondary-600 hover:underline break-all"
+            >
+              {{ structure.web_site }}
+            </a>
+          } @else {
+            <p class="text-sm text-primary-300 italic">Non renseigné</p>
+          }
+        </div>
+      </div>
+
+      <!-- Facebook -->
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+          <ng-icon name="lucideFacebook" size="13" class="text-blue-600"></ng-icon>
+        </div>
+        <div>
+          <p class="text-[10px] text-primary-400">Facebook</p>
+          @if (hasFacebook()) {
+            <a
+              [href]="structure.facebook"
+              target="_blank"
+              class="text-sm text-blue-600 hover:underline break-all"
+            >
+              {{ structure.facebook }}
+            </a>
+          } @else {
+            <p class="text-sm text-primary-300 italic">Non renseigné</p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -4,6 +4,7 @@ import { StructureModel } from '../../../models/structure.model';
 import { StructureService } from '../../../services/structure.service';
 import { FormsModule } from '@angular/forms';
 import { lucideMessageSquare, lucideSend, lucideX } from '@ng-icons/lucide';
+import { getInitials, getOwnerFullName } from '../../../utils/structure.utils';
 
 @Component({
   selector: 'app-contact-structure-modal',
@@ -23,10 +24,10 @@ export class ContactStructureModal {
   structureService = inject(StructureService);
 
   getOwnerName(nom: string, prenom: string): string {
-    return this.structureService.getOwnerName(nom, prenom);
+    return getOwnerFullName(nom, prenom);
   }
   getInitials(name: string) {
-    return this.structureService.getInitials(name);
+    return getInitials(name);
   }
   sendContactMessage() {
     this.sendMessage.emit();

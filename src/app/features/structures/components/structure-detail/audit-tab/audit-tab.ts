@@ -1,18 +1,54 @@
-import { Component, inject, Input } from '@angular/core';
-import { StructureDetail } from '../../../pages/structure-details/structure-details';
-import { StructureService } from '../../../services/structure.service';
+import { Component, Input, OnInit } from '@angular/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucideActivity, lucideShield, lucideUser } from '@ng-icons/lucide';
+
+import { StructureModel } from '../../../models/structure.model';
+import { getInitials } from '../../../utils/structure.utils';
+
+// ── Interface temporaire ───────────────────────────────────────
+// À déplacer dans audit.model.ts quand spatie/laravel-activitylog sera branché
+export type AuditType = 'admin' | 'user';
+
+export interface AuditLog {
+  id:          number;
+  causer:      string;
+  description: string;
+  date:        string;
+  type:        AuditType;
+}
 
 @Component({
   selector: 'app-audit-tab',
-  imports: [],
+  standalone: true,
+  imports: [NgIconComponent],
   templateUrl: './audit-tab.html',
-  styleUrl: './audit-tab.css',
+  viewProviders: [provideIcons({ lucideActivity, lucideShield, lucideUser })],
 })
-export class AuditTab {
-  @Input({required: true}) structure!: StructureDetail;
-  structureService = inject(StructureService);
+export class AuditTab implements OnInit {
 
-  getInitials(name: string){
-    return this.structureService.getInitials(name);
+  @Input({ required: true }) structure!: StructureModel;
+
+  // État
+  loading = false;
+  error: string | null = null;
+
+  // TODO: Remplacer par un vrai appel API
+  // GET /structures/{id}/activities  (spatie/laravel-activitylog)
+  logs: AuditLog[] = [];
+
+  readonly getInitials = getInitials;
+
+  ngOnInit(): void {
+    // TODO: this.loadLogs();
   }
+
+  // TODO: décommenter quand spatie est configuré
+  // private loadLogs(): void {
+  //   this.loading = true;
+  //   this.structureService.getActivities(this.structure.id)
+  //     .subscribe({
+  //       next: (res) => { this.logs = res.data; this.loading = false; },
+  //       error: (err) => { this.error = err?.error?.message ?? 'Erreur'; this.loading = false; },
+  //     });
+  // }
 }

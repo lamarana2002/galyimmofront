@@ -1,54 +1,45 @@
-import { Component, inject, Input, NgModule } from '@angular/core';
-import { StructureModel } from '../../../models/structure.model';
+import { Component, inject, Input, computed } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
-  lucideAlignLeft,
-  lucideCalendar,
-  lucideMail,
+  lucideBuilding,
+  lucideHome,
+  lucideStore,
+  lucideDoorOpen,
+  lucideHelpCircle,
   lucideMapPin,
-  lucidePhone,
-  lucideUser,
-  lucideUserX,
 } from '@ng-icons/lucide';
-import { StructureDetail } from '../../../pages/structure-details/structure-details';
-import { StructureService } from '../../../services/structure.service';
-import { PlanType } from '../../structures/structure-card/structure-card';
-import { DatePipe, TitleCasePipe } from '@angular/common';
+import { TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
+import { StructureModel } from '../../../models/structure.model';
+import { StructureService } from '../../../services/structure.service';
 import { PropertyTypeStyleConfig } from '../../../../properties/interfaces/property-type-styleConfig.interface';
 import { ProperttyStatusEnum } from '../../../../properties/enums/property-status.enum';
 
 @Component({
   selector: 'app-properties-tab',
+  standalone: true,
   imports: [NgIcon, TitleCasePipe, FormsModule],
   templateUrl: './properties-tab.html',
-  styleUrl: './properties-tab.css',
   viewProviders: [
     provideIcons({
-      lucideUser,
-      lucideMail,
-      lucidePhone,
+      lucideBuilding,
+      lucideHome,
+      lucideStore,
+      lucideDoorOpen,
+      lucideHelpCircle,
       lucideMapPin,
-      lucideCalendar,
-      lucideAlignLeft,
-      lucideUserX,
     }),
   ],
 })
 export class PropertiesTab {
   @Input({ required: true }) structure!: StructureModel;
-  structureService = inject(StructureService);
-  // ── UI states ─────────────────────────────────────────────────
-  showContactModal = false;
-  showDeleteConfirm = false;
-  showPlanModal = false;
-  contactMessage = '';
-  contactSubject = '';
-  selectedPlan: PlanType = 'premium';
+  
+  protected readonly structureService = inject(StructureService);
+  protected readonly PropertyStatus = ProperttyStatusEnum;
 
-  PropertyStatus = ProperttyStatusEnum;
-
-  propertyTypeStyles: Record<string, PropertyTypeStyleConfig> = {
+  // ── Configuration des styles par type de propriété ────────────
+  protected readonly propertyTypeStyles: Record<string, PropertyTypeStyleConfig> = {
     appartement: {
       bgClass: 'bg-primary-100',
       textClass: 'text-primary-600',
@@ -73,23 +64,56 @@ export class PropertiesTab {
       borderClass: 'border-purple-200',
       icon: 'lucideDoorOpen',
     },
+    immeuble: {
+      bgClass: 'bg-indigo-100',
+      textClass: 'text-indigo-600',
+      borderClass: 'border-indigo-200',
+      icon: 'lucideBuilding',
+    },
+    terrain: {
+      bgClass: 'bg-emerald-100',
+      textClass: 'text-emerald-600',
+      borderClass: 'border-emerald-200',
+      icon: 'lucideMapPin',
+    },
   };
 
-  defaultStyle: PropertyTypeStyleConfig = {
+  protected readonly defaultStyle: PropertyTypeStyleConfig = {
     bgClass: 'bg-gray-100',
-    textClass: 'text-gray-700',
+    textClass: 'text-gray-600',
     borderClass: 'border-gray-200',
     icon: 'lucideHelpCircle',
   };
 
-  getInitials(name?: string): string {
-    return name ? this.structureService.getInitials(name) : '';
+  // ── Getters pratiques ─────────────────────────────────────────
+  protected get properties() {
+    return this.structure.properties ?? [];
   }
-  sendContactMessage(): void {
-    console.log('Message envoyé à', this.structure?.owner?.email);
-    // this.addAuditLog(`Message envoyé au propriétaire : "${this.contactSubject}".`);
-    this.showContactModal = false;
-    this.contactMessage = '';
-    this.contactSubject = '';
+
+  protected hasProperties = computed(() => this.properties.length > 0);
+
+  // ── Méthodes utilitaires ──────────────────────────────────────
+  protected getPropertyStyle(typeName?: string): PropertyTypeStyleConfig {
+    return typeName? this.propertyTypeStyles[typeName?.toLowerCase()] : this.defaultStyle;
+  }
+
+  protected getStatusClass(status: string): string {
+    const statusMap: Record<string, string> = {
+      [ProperttyStatusEnum.RENTED]: 'bg-green-100 text-green-700',
+      [ProperttyStatusEnum.AVAILABLE]: 'bg-blue-100 text-blue-700',
+      [ProperttyStatusEnum.UNDER_RENOVATION]: 'bg-orange-100 text-orange-700',
+      [ProperttyStatusEnum.SOLD]: 'bg-gray-100 text-gray-700',
+    };
+    return statusMap[status] ?? 'bg-gray-100 text-gray-600';
+  }
+
+  protected getStatusLabel(status: string): string {
+    const statusMap: Record<string, string> = {
+      [ProperttyStatusEnum.RENTED]: 'Loué',
+      [ProperttyStatusEnum.AVAILABLE]: 'Disponible',
+      [ProperttyStatusEnum.SOLD]: 'Vendu',
+      [ProperttyStatusEnum.UNDER_RENOVATION]: 'Sous renovation',
+    };
+    return statusMap[status] ?? status;
   }
 }

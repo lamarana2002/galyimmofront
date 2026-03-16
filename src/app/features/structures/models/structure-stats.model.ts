@@ -1,9 +1,5 @@
 export interface StructureStats {
-    total: number;
-    pending: number;
-    premium: number;
-    suspended: number;
-    active: number;
-    rejected: number;
-    freemium: number;
+  employes:  number;   // COUNT(users WHERE structure_id = id)
+  biens:     number;   // COUNT(properties WHERE structure_id = id)
+  locations: number;   // COUNT(unite_locations WHERE status = 'rented')
 }

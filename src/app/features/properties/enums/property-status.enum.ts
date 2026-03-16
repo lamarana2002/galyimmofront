@@ -1,6 +1,8 @@
 export enum ProperttyStatusEnum {
-    AVAILABLE = 'available',
-    RENTED = 'rented',
-    SOLD = 'sold',
-    UNDER_RENOVATION = 'under_renovation',
+  AVAILABLE = 'available',
+  SOLD = 'sold',
+  RENTED = 'rented',
+  FOR_SALE = 'for_sale',
+  FOR_RENT = 'for_rent',
+  UNDER_RENOVATION = 'under_renovation',
 }

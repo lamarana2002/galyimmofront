@@ -1,4 +1,6 @@
 import { ProperttyStatusEnum } from "../enums/property-status.enum";
+import { LocationUnit } from "./location-unit.model";
+import { PropertyStats } from "./property-stats.model";
 import { PropertyTypeModel } from "./propety-type.model";
 
 export interface PropertyModel {
@@ -7,6 +9,7 @@ export interface PropertyModel {
   // Relations
   structure_id: number | null;
   property_type: PropertyTypeModel;
+  units: LocationUnit[];
 
   // Identification
   code: string | null;
@@ -46,6 +49,9 @@ export interface PropertyModel {
   created_at: string; // ISO date string
   updated_at: string; // ISO date string
   deleted_at: string | null;
+
+  // Les Stats
+  stats: PropertyStats;
 }
 
 // Interface pour les relations chargées (optionnel)

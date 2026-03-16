@@ -38,19 +38,18 @@ export interface StructureModel {
     contratsActifs: number;
   }
 
-  activites: AuditModel[];
+  activites: StructureActivity[];
 
   // Vont deriver des audits
   lastActivity?:     string;
   lastActivityType?: string;
 }
 
-export interface AuditModel {
-  id:        number;
-  nom:       string;
-  prenom:    string;
-  name:      string;        
-  email:     string;
-  telephone: string | null;
-  avatar:    string;        // 'avatar.png' par défaut
+export interface StructureActivity {
+  id:          number;
+  log_name:    string;      // 'structure', 'bien', 'contrat'
+  description: string;      // 'created', 'updated', 'status_changed'
+  event:       string;
+  created_at:  string;
+  causer?: Pick<UserModel, 'id' | 'nom' | 'prenom' | 'avatar'>;
 }

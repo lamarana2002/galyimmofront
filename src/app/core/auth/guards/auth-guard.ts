@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService, UserRole } from '../services/auth.service';
+import { AuthService } from '../services/auth.service';
+import { UserRole } from '../interfaces/auth-user.interface';
 
 // ── Guard 1 : utilisateur connecté ? ──────────────────────────────
 export const authGuard: CanActivateFn = (route, state) => {
@@ -34,11 +35,11 @@ export const roleGuard = (...allowedRoles: UserRole[]): CanActivateFn => {
     const auth   = inject(AuthService);
     const router = inject(Router);
 
-    const role = auth.user()?.role;
-    if (!role || !allowedRoles.includes(role)) {
-      router.navigate(['/403']);
-      return false;
-    }
+    const role = auth.user()?.roles;
+    // if (!role || !allowedRoles.includes(role)) {
+    //   router.navigate(['/403']);
+    //   return false;
+    // }
     return true;
   };
 };

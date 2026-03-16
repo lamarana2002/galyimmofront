@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { SidebarService } from '../sidebar/sidebar.service';
+import { AuthService } from '../../../core/auth/services/auth.service';
+import { ProfileService } from '../../../core/auth/services/profile.service';
 
 interface User {
   name: string;
@@ -31,6 +33,10 @@ interface Language {
   styleUrl: './navbar.css',
 })
 export class Navbar {
+
+  profile = inject(ProfileService);
+  authService = inject(AuthService);
+  get fullName(): string{ return `${this.profile.currentUser?.nom} ${this.profile.currentUser?.prenom}`};
 
   currentUser: User = {
     name: 'Neil Sims',
@@ -117,6 +123,6 @@ export class Navbar {
 
   onSignOut(): void {
     this.closeAllDropdowns();
-    this.router.navigate(['/login']);
+    this.authService.logout();
   }
 }
