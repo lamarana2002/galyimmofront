@@ -35,7 +35,7 @@ export interface PropertyTypeModel {
 
   // ── UI / Angular ────────────────────────────────────────
   /** Nom de l'icône Lucide côté Angular (ex: lucideHome, lucideBuilding, lucideHotel) */
-  icon: string | null;
+  icon: string;
 
   /** Ordre d'affichage dans les selects Angular (plus petit = premier) */
   sort_order: number;

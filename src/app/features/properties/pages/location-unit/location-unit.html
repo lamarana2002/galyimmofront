@@ -587,7 +587,7 @@
             { value: 'maintenance', label: 'En travaux',  cls: 'text-orange-600 bg-orange-50 hover:bg-orange-100 border-orange-200' },
             { value: 'inactif',     label: 'Inactif',     cls: 'text-red-600 bg-red-50 hover:bg-red-100 border-red-200'           }
           ]; track s.value) {
-            <button (click)="changerStatut('disponible')"
+            <button (click)="changerStatut(UnitStatutEnum.AVAILABLE)"
               class="py-2 text-[11px] font-semibold rounded-lg border transition-all"
               [class]="unite.statut === s.value
                 ? s.cls + ' ring-2 ring-offset-1 ring-current/30 font-bold'

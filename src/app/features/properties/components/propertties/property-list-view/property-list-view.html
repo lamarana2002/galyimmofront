@@ -1,0 +1,249 @@
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-100 bg-gray-50/80">
+          <th
+            class="px-5 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+          >
+            Bien
+          </th>
+          <th
+            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+          >
+            Type
+          </th>
+          <th
+            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+          >
+            Localisation
+          </th>
+          <th
+            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+          >
+            Unités
+          </th>
+          <th
+            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+          >
+            Occupation
+          </th>
+          <th
+            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+          >
+            Prix
+          </th>
+          <th
+            class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+          >
+            Statut
+          </th>
+          <th
+            class="px-4 py-3.5 text-right text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+          >
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        @for (property of filteredProperties; track property.id) {
+          <tr class="hover:bg-gray-50/60 transition-colors group">
+            <!-- Bien -->
+            <td class="px-5 py-4">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-11 h-11 rounded-xl flex-shrink-0 overflow-hidden border border-gray-100"
+                >
+                  @if (property.cover_image) {
+                    <img [src]="property.cover_image" class="w-full h-full object-cover" />
+                  } @else {
+                    <div
+                      class="w-full h-full flex items-center justify-center"
+                      style="background: linear-gradient(135deg, #2a5c5a, #1d3f3e)"
+                    >
+                      <ng-icon
+                        [name]="
+                          propertyUtils.getPropertyTypeIcon(property.property_type?.slug ?? '')
+                        "
+                        size="18"
+                        class="text-primary-300"
+                      ></ng-icon>
+                    </div>
+                  }
+                </div>
+                <div>
+                  <p class="font-semibold text-primary-900 leading-tight">
+                    {{ property.name }}
+                  </p>
+                  @if (property.code) {
+                    <p class="text-[10px] text-primary-400 mt-0.5 font-mono">
+                      {{ property.code }}
+                    </p>
+                  }
+                </div>
+              </div>
+            </td>
+
+            <!-- Type -->
+            <td class="px-4 py-4">
+              <span
+                class="px-2.5 py-1 text-[11px] font-semibold bg-primary-100 text-primary-700 rounded-full"
+              >
+                {{ propertyUtils.getPropertyTypeLabel(property.property_type?.slug ?? '') }}
+              </span>
+            </td>
+
+            <!-- Localisation -->
+            <td class="px-4 py-4">
+              <p class="text-sm text-primary-700 font-medium">{{ property.city || '—' }}</p>
+              <p class="text-[11px] text-primary-400 truncate max-w-[160px]">
+                {{ property.address || '' }}
+              </p>
+            </td>
+
+            <!-- Unités -->
+            <td class="px-4 py-4">
+              @if (propertyUtils.hasPropertyUnits(property)) {
+                <div class="flex items-center gap-2 text-xs">
+                  <span class="font-bold text-primary-900">{{ property.stats?.units || 0 }}</span>
+                  <span class="text-primary-300">·</span>
+                  <span class="text-green-600 font-semibold"
+                    >{{ property.stats?.rented || 0 }} louées</span
+                  >
+                </div>
+              } @else {
+                <span class="text-xs text-primary-400">Bien simple</span>
+              }
+            </td>
+
+            <!-- Occupation -->
+            <td class="px-4 py-4">
+              @if (propertyUtils.hasPropertyUnits(property)) {
+                <div class="flex items-center gap-2">
+                  <div class="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full"
+                      [style.width.%]="propertyUtils.getPropertyOccupationRate(property)"
+                      [class]="
+                        propertyUtils
+                          .getPropertyOccupationRateClass(
+                            propertyUtils.getPropertyOccupationRate(property)
+                          )
+                          .replace('text-', 'bg-')
+                      "
+                    ></div>
+                  </div>
+                  <span
+                    class="text-xs font-bold"
+                    [class]="
+                      propertyUtils.getPropertyOccupationRateClass(
+                        propertyUtils.getPropertyOccupationRate(property)
+                      )
+                    "
+                  >
+                    {{ propertyUtils.getPropertyOccupationRate(property) }}%
+                  </span>
+                </div>
+              } @else {
+                <span class="text-xs text-primary-400">—</span>
+              }
+            </td>
+
+            <!-- Prix -->
+            <td class="px-4 py-4">
+              @if (property.sale_price) {
+                <p class="text-sm font-bold text-primary-900">
+                  {{ propertyUtils.formatPropertyPrice(property.sale_price) }}
+                </p>
+              } @else {
+                <span class="text-xs text-primary-400">—</span>
+              }
+            </td>
+
+            <!-- Statut -->
+            <td class="px-4 py-4">
+              <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full"
+                [class]="propertyUtils.getPropertyStatusBadgeClass(property.status)"
+              >
+                <span class="w-1.5 h-1.5 rounded-full bg-current opacity-80"></span>
+                {{ propertyUtils.getPropertyStatusLabel(property.status) }}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td class="px-4 py-4">
+              <div
+                class="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <a
+                  [routerLink]="['/properties', property.id]"
+                  class="p-1.5 text-primary-400 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-all"
+                  title="Voir"
+                >
+                  <ng-icon name="lucideEye" size="15"></ng-icon>
+                </a>
+                <button
+                  (click)="editPropertty(property.id)"
+                  class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
+                  title="Modifier"
+                >
+                  <ng-icon name="lucidePencil" size="15"></ng-icon>
+                </button>
+                <button
+                  (click)="confirmDelete(property)"
+                  class="p-1.5 text-red-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
+                  title="Supprimer"
+                >
+                  <ng-icon name="lucideTrash2" size="15"></ng-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <!-- @if (totalPages() > 1) {
+    <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between">
+      <p class="text-xs text-primary-400">
+        Page <span class="font-semibold text-primary-700">{{ currentPage() }}</span> sur
+        {{ totalPages() }} ·
+        <span class="font-semibold text-primary-700">{{ totalItems() }}</span> biens
+      </p>
+      <div class="flex items-center gap-1">
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="!hasPrev()"
+          class="px-3 py-1.5 text-xs font-medium text-primary-400 hover:text-primary-700 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          ← Précédent
+        </button>
+
+        @for (p of pagesArray(); track p) {
+          <button
+            (click)="onPageChange(p)"
+            class="w-7 h-7 flex items-center justify-center text-xs font-semibold rounded-lg transition-all"
+            [class]="
+              currentPage() === p
+                ? 'bg-secondary-500 text-white'
+                : 'text-primary-500 hover:bg-gray-50'
+            "
+          >
+            {{ p }}
+          </button>
+        }
+
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="!hasNext()"
+          class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          Suivant →
+        </button>
+      </div>
+    </div>
+  } -->
+</div>

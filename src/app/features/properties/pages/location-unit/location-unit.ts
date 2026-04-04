@@ -14,8 +14,8 @@ import {
   lucideHistory, lucideSave, lucideInfo, lucideShieldCheck,
   lucideWrench, lucideRefreshCw,
 } from '@ng-icons/lucide';
+import { UnitStatutEnum } from '../../enums/unit-status.enum';
 
-export type UnitStatut = 'disponible' | 'loué' | 'maintenance' | 'vendu' | 'inactif';
 
 export interface Locataire {
   id: number;
@@ -60,7 +60,7 @@ export interface UniteDetail {
   etage?: number;
   lot?: string;
   surface?: number;
-  statut: UnitStatut;
+  statut: UnitStatutEnum;
   pieces?: number;
   chambres?: number;
   sallesDeBain?: number;
@@ -111,6 +111,8 @@ export class LocationUnit {
     { key: 'documents',  label: 'Documents',     icon: 'lucideFile'         },
   ];
 
+  UnitStatutEnum = UnitStatutEnum;
+
   // ── Galerie ────────────────────────────────────────────────────
   lightboxIndex   = 0;
   showLightbox    = false;
@@ -127,7 +129,7 @@ export class LocationUnit {
     etage: 1,
     lot: 'LOT-02',
     surface: 95,
-    statut: 'loué',
+    statut: UnitStatutEnum.RENTED,
     pieces: 3,
     chambres: 0,
     sallesDeBain: 1,
@@ -243,7 +245,7 @@ export class LocationUnit {
   }
 
   // ── Actions ───────────────────────────────────────────────────
-  changerStatut(statut: UnitStatut): void { this.unite.statut = statut; }
+  changerStatut(statut: UnitStatutEnum): void { this.unite.statut = statut; }
   contacterLocataire(): void { console.log('Contacter', this.unite.locataireActuel?.email); }
   affecterLocataire(): void { console.log('Ouvrir formulaire affectation locataire'); }
 

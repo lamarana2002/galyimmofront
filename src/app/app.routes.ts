@@ -71,7 +71,7 @@ export const routes: Routes = [
         loadComponent: () => import('./features/properties/pages/properties/properties').then(m => m.Properties),
       },
       {
-        path: 'property-detail',
+        path: 'property/:propertyId',
         // canActivate: [roleGuard('owner', 'employee'), hasStructureGuard],
         loadComponent: () => import('./features/properties/pages/property-detail/property-detail').then(m => m.PropertyDetail),
       },

@@ -1,0 +1,146 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+  @for (property of filteredProperties; track property.id) {
+    <div
+      class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col group"
+    >
+      <!-- Cover -->
+      <div class="relative h-36 overflow-hidden flex-shrink-0">
+        @if (property.cover_image) {
+          <img
+            [src]="property.cover_image"
+            [alt]="property.name"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-primary-900/50 to-transparent"></div>
+        } @else {
+          <div
+            class="w-full h-full flex items-center justify-center"
+            style="background: linear-gradient(135deg, #2a5c5a, #1d3f3e)"
+          >
+            <ng-icon
+              [name]="propertyUtils.getPropertyTypeIcon(property.property_type?.slug ?? '')"
+              size="36"
+              class="text-primary-400/50"
+            ></ng-icon>
+          </div>
+        }
+
+        <!-- Badge statut -->
+        <span
+          class="absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm"
+          [class]="propertyUtils.getPropertyStatusBadgeClass(property.status)"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-current opacity-80"></span>
+          {{ propertyUtils.getPropertyStatusLabel(property.status) }}
+        </span>
+
+        <!-- Badge type -->
+        <span
+          class="absolute top-2.5 right-2.5 px-2 py-0.5 text-[10px] font-bold bg-white/90 text-primary-700 rounded-full shadow"
+        >
+          {{ propertyUtils.getPropertyTypeLabel(property.property_type?.slug ?? '') }}
+        </span>
+
+        <!-- Code en bas -->
+        @if (property.code) {
+          <span
+            class="absolute bottom-2 left-2.5 text-[10px] font-bold text-white/80 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full"
+          >
+            {{ property.code }}
+          </span>
+        }
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 p-4 flex flex-col gap-2">
+        <h3 class="font-bold text-primary-900 text-sm truncate" [title]="property.name">
+          {{ property.name }}
+        </h3>
+
+        @if (property.address || property.city) {
+          <p class="text-[11px] text-primary-400 flex items-center gap-1 truncate">
+            <ng-icon name="lucideMapPin" size="11"></ng-icon>
+            {{ propertyUtils.getPropertyLocationShort(property) }}
+          </p>
+        }
+
+        @if (propertyUtils.hasPropertyUnits(property)) {
+          <!-- Stats unités -->
+          <div class="flex items-center gap-3 text-[11px]">
+            <span class="flex items-center gap-1 text-primary-500">
+              <ng-icon name="lucideLayoutGrid" size="10"></ng-icon>
+              {{ property.stats?.units || 0 }} unités
+            </span>
+            <span class="flex items-center gap-1 text-green-600 font-semibold">
+              <ng-icon name="lucideKey" size="10"></ng-icon>
+              {{ property.stats?.rented || 0 }} louées
+            </span>
+            <span class="flex items-center gap-1 text-primary-400">
+              <ng-icon name="lucideCheck" size="10"></ng-icon>
+              {{ property.stats?.available || 0 }} dispo
+            </span>
+          </div>
+
+          <!-- Barre taux occupation -->
+          <div class="flex items-center gap-2">
+            <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all duration-500"
+                [style.width.%]="propertyUtils.getPropertyOccupationRate(property)"
+                [class]="
+                  propertyUtils
+                    .getPropertyOccupationRateClass(
+                      propertyUtils.getPropertyOccupationRate(property)
+                    )
+                    .replace('text-', 'bg-')
+                "
+              ></div>
+            </div>
+            <span
+              class="text-[10px] font-bold"
+              [class]="
+                propertyUtils.getPropertyOccupationRateClass(
+                  propertyUtils.getPropertyOccupationRate(property)
+                )
+              "
+            >
+              {{ propertyUtils.getPropertyOccupationRate(property) }}%
+            </span>
+          </div>
+        } @else {
+          <!-- Bien simple - prix de vente -->
+          @if (property.sale_price) {
+            <p class="text-xs font-bold text-primary-800 flex items-center gap-1 mt-1">
+              <ng-icon name="lucideBanknote" size="12" class="text-secondary-500"></ng-icon>
+              {{ propertyUtils.formatPropertyPrice(property.sale_price) }}
+            </p>
+          }
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="px-4 pb-4 flex items-center gap-1.5">
+        <a
+          [routerLink]="['/properties', property.id]"
+          class="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-semibold text-primary-600 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded-xl transition-all"
+        >
+          <ng-icon name="lucideEye" size="12"></ng-icon>
+          Voir
+        </a>
+        <a
+          (click)="editPropertty(property.id)"
+          class="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-all"
+        >
+          <ng-icon name="lucidePencil" size="12"></ng-icon>
+          Modifier
+        </a>
+        <button
+          (click)="confirmDelete(property)"
+          class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 rounded-xl transition-all"
+        >
+          <ng-icon name="lucideTrash2" size="13"></ng-icon>
+        </button>
+      </div>
+    </div>
+  }
+</div>

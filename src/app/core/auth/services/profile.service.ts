@@ -27,4 +27,7 @@ export class ProfileService {
   get isEmployee(): boolean {
     return this.authService.isEmployee();
   }
+  get userStructure(): number | null | undefined {
+    return this.currentUser?.structure_id;
+  }
 }

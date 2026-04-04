@@ -1,169 +1,361 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, computed, signal, WritableSignal } from '@angular/core';
 import { CommonModule, TitleCasePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { Subject, forkJoin, takeUntil } from 'rxjs';
+
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   lucideHome, lucideBuilding2, lucideSearch, lucideSearchX,
   lucideDownload, lucidePlus, lucideLayoutGrid, lucideList,
   lucideMapPin, lucideKey, lucideCheck, lucideBanknote,
-  lucideEye, lucidePencil, lucideTrash2,
+  lucideEye, lucidePencil, lucideTrash2, lucideX, lucideSend,
+  lucideTriangleAlert, lucideLoader, lucideStore, lucideMap,
+  lucideWarehouse, lucideBuilding,
 } from '@ng-icons/lucide';
 
-export type BienStatut = 'disponible' | 'loué' | 'maintenance' | 'vendu' | 'inactif';
+import { PropertyModel } from '../../models/property.model';
+import { ProperttyStatusEnum } from '../../enums/property-status.enum';
+import { PropertyService } from '../../services/property.service';
+import { FilterProperty } from '../../interfaces/filter-property.interface';
+import { PropertyKpis } from '../../models/property-kpis.model';
 
-export interface BienItem {
-  id: number;
-  nom: string;
-  code?: string;
-  cover?: string;
-  type: string;
-  statut: BienStatut;
-  adresse?: string;
-  ville?: string;
-  stats: {
-    totalUnits: number;
-    rentedUnits: number;
-    availableUnits: number;
-    revenuPotentiel: number;
-  };
-}
+// Utils
+import * as propertyUtils from '../../utils/property.utils';
+import { IQueryParam } from '../../../../shared/interfaces/query-parms.interface';
+import { AddPropertyModal } from "../../components/modals/add-property-modal/add-property-modal";
+import { PropertyGridView } from "../../components/propertties/property-grid-view/property-grid-view";
+import { ProfileService } from '../../../../core/auth/services/profile.service';
+import { PropertyListView } from "../../components/propertties/property-list-view/property-list-view";
 
 @Component({
   selector: 'app-properties',
-  imports: [CommonModule, FormsModule, RouterLink, NgIconComponent, TitleCasePipe, DecimalPipe],
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    NgIconComponent,
+    TitleCasePipe,
+    DecimalPipe,
+    AddPropertyModal,
+    PropertyGridView,
+    PropertyListView
+],
   templateUrl: './properties.html',
-  styleUrl: './properties.css',
+  styleUrls: ['./properties.css'],
   viewProviders: [
     provideIcons({
       lucideHome, lucideBuilding2, lucideSearch, lucideSearchX,
       lucideDownload, lucidePlus, lucideLayoutGrid, lucideList,
       lucideMapPin, lucideKey, lucideCheck, lucideBanknote,
-      lucideEye, lucidePencil, lucideTrash2,
+      lucideEye, lucidePencil, lucideTrash2, lucideX, lucideSend,
+      lucideTriangleAlert, lucideLoader, lucideStore, lucideMap,
+      lucideWarehouse, lucideBuilding,
     })
   ]
 })
-export class Properties implements OnInit {
+export class Properties implements OnInit, OnDestroy {
+  
+  private readonly service = inject(PropertyService);
+  private profile = inject(ProfileService);
+  private router = inject(Router);
+  private readonly destroy$ = new Subject<void>();
 
-  structureName = 'Immo Prestige CI';
-  viewMode: 'grid' | 'table' = 'grid';
-  searchQuery = '';
-  activeStatut = 'all';
-  activeType   = 'all';
-  currentPage  = 1;
-  itemsPerPage = 12;
+  // Enums exposés au template
+  readonly PropertyStatus = ProperttyStatusEnum;
 
-  deleteBienTarget: BienItem | null = null;
+  // Utils exposés au template
+  readonly propertyUtils = propertyUtils;
 
-  typeOptions = ['appartement', 'villa', 'commercial', 'terrain', 'bureau'];
+  // ── État ──────────────────────────────────────────────────────
+  loading = signal(true);
+  error   = signal<string | null>(null);
 
-  statutFilters = [
-    { label: 'Tous',        value: 'all'         },
-    { label: 'Disponible',  value: 'disponible'  },
-    { label: 'Loué',        value: 'loué'        },
-    { label: 'Maintenance', value: 'maintenance' },
-    { label: 'Vendu',       value: 'vendu'       },
+  // ── Données ───────────────────────────────────────────────────
+  allProperties = signal<PropertyModel[]>([]);
+  filteredProperties = signal<PropertyModel[]>([]);
+  structureId = signal<number | null>(null);
+
+  kpisData = signal<PropertyKpis>({
+    total: 0,
+    available: 0,
+    rented: 0,
+    under_renovation: 0,
+  });
+
+  // ── Pagination (serveur) ──────────────────────────────────────
+  currentPage  = signal(1);
+  itemsPerPage = signal(12);
+  totalItems   = signal(0);
+  hasNext      = signal(false);
+  hasPrev      = signal(false);
+
+  // ── UI ────────────────────────────────────────────────────────
+  viewMode     = signal<'grid' | 'table'>('grid');
+  searchQuery  = signal('');
+  activeStatut = signal('all');
+  activeType   = signal<string>('all');
+
+  // ── Modales ───────────────────────────────────────────────────
+  editingPropertyId = signal<number | null>(null);
+  addPropertyModal = signal<boolean>(false);
+
+  deleteTarget = signal<PropertyModel | null>(null);
+  deleteLoading = signal(false);
+
+  // ── Filtres ───────────────────────────────────────────────────
+  readonly statutFilters = [
+    { label: 'Tous', value: 'all' },
+    { label: 'Disponible', value: ProperttyStatusEnum.AVAILABLE },
+    { label: 'À louer', value: ProperttyStatusEnum.FOR_RENT },
+    { label: 'En vente', value: ProperttyStatusEnum.FOR_SALE },
+    { label: 'Loué', value: ProperttyStatusEnum.RENTED },
+    { label: 'Vendu', value: ProperttyStatusEnum.SOLD },
+    { label: 'En travaux', value: ProperttyStatusEnum.UNDER_RENOVATION },
   ];
 
-  kpis = [
-    { label: 'Total biens',  value: 0, icon: 'lucideHome',      bgClass: 'bg-primary-100',   iconClass: 'text-primary-700'   },
-    { label: 'Disponibles',  value: 0, icon: 'lucideCheck',     bgClass: 'bg-green-100',     iconClass: 'text-green-600'     },
-    { label: 'Loués',        value: 0, icon: 'lucideKey',       bgClass: 'bg-amber-100',     iconClass: 'text-amber-600'     },
-    { label: 'En travaux',   value: 0, icon: 'lucideBuilding2', bgClass: 'bg-orange-100',    iconClass: 'text-orange-600'    },
-  ];
+  // Types (seront chargés depuis le backend)
+  typeOptions = signal<{ value: string; label: string; icon: string }[]>([
+    { value: 'appartement', label: 'Appartement', icon: 'lucideHome' },
+    { value: 'villa', label: 'Villa', icon: 'lucideBuilding2' },
+    { value: 'commercial', label: 'Local commercial', icon: 'lucideStore' },
+    { value: 'terrain', label: 'Terrain', icon: 'lucideMap' },
+    { value: 'bureau', label: 'Bureau', icon: 'lucideBuilding' },
+    { value: 'entrepot', label: 'Entrepôt', icon: 'lucideWarehouse' },
+    { value: 'immeuble', label: 'Immeuble', icon: 'lucideBuilding2' },
+  ]);
 
-  allBiens: BienItem[] = [
-    { id: 1, nom: 'Villa Les Deux Plateaux',       code: 'BIEN-001', type: 'villa',        statut: 'loué',        adresse: 'Cocody',   ville: 'Abidjan',    stats: { totalUnits: 1,  rentedUnits: 1,  availableUnits: 0, revenuPotentiel: 2500000  } },
-    { id: 2, nom: 'Appartement T3 Zone 4',         code: 'BIEN-002', type: 'appartement',  statut: 'disponible',  adresse: 'Marcory',  ville: 'Abidjan',    stats: { totalUnits: 1,  rentedUnits: 0,  availableUnits: 1, revenuPotentiel: 800000   } },
-    { id: 3, nom: 'Immeuble Le Plateau',           code: 'BIEN-003', type: 'commercial',   statut: 'loué',        adresse: 'Plateau',  ville: 'Abidjan',    stats: { totalUnits: 6,  rentedUnits: 5,  availableUnits: 1, revenuPotentiel: 9000000  } },
-    { id: 4, nom: 'Terrain Bingerville 800m²',     code: 'BIEN-004', type: 'terrain',      statut: 'disponible',  adresse: '',         ville: 'Bingerville',stats: { totalUnits: 1,  rentedUnits: 0,  availableUnits: 1, revenuPotentiel: 0        } },
-    { id: 5, nom: 'Résidence Angré 10 logements',  code: 'BIEN-005', type: 'appartement',  statut: 'loué',        adresse: 'Angré',    ville: 'Abidjan',    stats: { totalUnits: 10, rentedUnits: 8,  availableUnits: 2, revenuPotentiel: 6400000  } },
-    { id: 6, nom: 'Bureau Riviera 3',              code: 'BIEN-006', type: 'bureau',       statut: 'maintenance', adresse: 'Riviera',  ville: 'Abidjan',    stats: { totalUnits: 3,  rentedUnits: 0,  availableUnits: 0, revenuPotentiel: 3600000  } },
-    { id: 7, nom: 'Villa Yopougon Selmer',         code: 'BIEN-007', type: 'villa',        statut: 'disponible',  adresse: 'Yopougon',  ville: 'Abidjan',   stats: { totalUnits: 1,  rentedUnits: 0,  availableUnits: 1, revenuPotentiel: 1200000  } },
-  ];
+  // ── Computed ──────────────────────────────────────────────────
+  kpis = computed(() => [
+    {
+      label: 'Total biens',
+      value: this.kpisData().total,
+      icon: 'lucideHome',
+      bgClass: 'bg-primary-100',
+      iconClass: 'text-primary-700',
+      trend: 0
+    },
+    {
+      label: 'Disponibles',
+      value: this.kpisData().available,
+      icon: 'lucideCheck',
+      bgClass: 'bg-green-100',
+      iconClass: 'text-green-600',
+      trend: 0
+    },
+    {
+      label: 'Loués',
+      value: this.kpisData().rented,
+      icon: 'lucideKey',
+      bgClass: 'bg-amber-100',
+      iconClass: 'text-amber-600',
+      trend: 0
+    },
+    {
+      label: 'En travaux',
+      value: this.kpisData().under_renovation,
+      icon: 'lucideBuilding2',
+      bgClass: 'bg-orange-100',
+      iconClass: 'text-orange-600',
+      trend: 0
+    },
+  ]);
 
-  filteredBiens: BienItem[] = [];
+  totalPages = computed(() =>
+    Math.ceil(this.totalItems() / this.itemsPerPage())
+  );
 
+  pagesArray = computed(() =>
+    Array.from({ length: this.totalPages() }, (_, i) => i + 1)
+  );
+
+  // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
-    this.applyFilters();
-    this.updateKpis();
+    if (!this.profile.userStructure) {
+      this.router.navigate(['']);
+    }else {
+      this.structureId?.set(this.profile.userStructure)
+    }
+    this.loadAll(this.currentPage());
   }
 
-  applyFilters(): void {
-    let result = [...this.allBiens];
-    if (this.searchQuery.trim()) {
-      const q = this.searchQuery.toLowerCase();
-      result = result.filter(b =>
-        b.nom.toLowerCase().includes(q) ||
-        b.code?.toLowerCase().includes(q) ||
-        b.adresse?.toLowerCase().includes(q) ||
-        b.ville?.toLowerCase().includes(q)
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ── Chargement ────────────────────────────────────────────────
+  loadAll(page = 1): void {
+    this.loading.set(true);
+    this.error.set(null);
+
+    forkJoin({
+      properties: this.service.findAll(this.buildQueryParams(page)),
+      kpis: this.service.getKpis(),
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: ({ properties, kpis }) => {
+        this.allProperties.set(properties.data);
+        this.applyFilters(this.buildFilterData());
+
+        this.currentPage.set(properties.current_page);
+        this.itemsPerPage.set(properties.per_page);
+        this.totalItems.set(properties.total);
+        this.hasNext.set(!!properties.next_page_url);
+        this.hasPrev.set(!!properties.prev_page_url);
+
+        this.kpisData.set(kpis);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.error.set(err?.error?.message ?? 'Erreur lors du chargement.');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  //modal de mise a jour
+  editPropertty(id: number){
+    this.editingPropertyId.set(id);
+    this.addPropertyModal.set(true);
+  }
+
+  // ── Filtrage local ────────────────────────────────────────────
+  applyFilters(filter?: FilterProperty & IQueryParam & { type?: string }): void {
+    const all = this.allProperties();
+
+    if (!all.length) {
+      this.filteredProperties.set([]);
+      return;
+    }
+
+    let result = [...all];
+
+    if (filter?.search?.trim()) {
+      const q = filter.search.toLowerCase();
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.code?.toLowerCase().includes(q) ||
+        p.address?.toLowerCase().includes(q) ||
+        p.city?.toLowerCase().includes(q)
       );
     }
-    if (this.activeStatut !== 'all') result = result.filter(b => b.statut === this.activeStatut);
-    if (this.activeType   !== 'all') result = result.filter(b => b.type   === this.activeType);
-    this.filteredBiens = result;
-    this.currentPage = 1;
+
+    if (filter?.status && filter.status !== 'all') {
+      result = result.filter(p => p.status === filter.status);
+    }
+
+    if (filter?.type && filter.type !== 'all') {
+      result = result.filter(p => p.property_type?.slug === filter.type);
+    }
+
+    this.filteredProperties.set(result);
+  }
+
+  buildFilterData(): FilterProperty & IQueryParam & { type?: string } {
+    return {
+      search: this.searchQuery(),
+      status: this.activeStatut() !== 'all' ? this.activeStatut() : undefined,
+      type: this.activeType() !== 'all' ? this.activeType() : undefined,
+    };
   }
 
   resetFilters(): void {
-    this.searchQuery = '';
-    this.activeStatut = 'all';
-    this.activeType   = 'all';
+    this.searchQuery.set('');
+    this.activeStatut.set('all');
+    this.activeType.set('all');
     this.applyFilters();
   }
 
-  updateKpis(): void {
-    this.kpis[0].value = this.allBiens.length;
-    this.kpis[1].value = this.allBiens.filter(b => b.statut === 'disponible').length;
-    this.kpis[2].value = this.allBiens.filter(b => b.statut === 'loué').length;
-    this.kpis[3].value = this.allBiens.filter(b => b.statut === 'maintenance').length;
+  // ── Handlers filtres ──────────────────────────────────────────
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+    this.applyFilters(this.buildFilterData());
   }
 
-  getStatutCount(statut: string): number {
-    if (statut === 'all') return this.allBiens.length;
-    return this.allBiens.filter(b => b.statut === statut).length;
+  onStatusFilterChange(status: string): void {
+    this.activeStatut.set(status);
+    this.applyFilters(this.buildFilterData());
   }
 
-  getStatutLabel(statut: string): string {
-    const m: Record<string, string> = {
-      'disponible':  'Disponible',
-      'loué':        'Loué',
-      'maintenance': 'En travaux',
-      'vendu':       'Vendu',
-      'inactif':     'Inactif',
+  onTypeFilterChange(type: string): void {
+    this.activeType.set(type);
+    this.applyFilters(this.buildFilterData());
+  }
+
+  onViewModeChange(mode: 'grid' | 'table'): void {
+    this.viewMode.set(mode);
+  }
+
+  onPageChange(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.loadAll(page);
+  }
+
+  // ── Actions ───────────────────────────────────────────────────
+  onStatusChanged(data: { id: number; status: ProperttyStatusEnum }): void {
+    this.service.changeStatus(data.id, data.status)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => this.loadAll(this.currentPage()),
+        error: (err) => this.error.set(
+          err?.error?.message ?? 'Erreur lors du changement de statut.'
+        ),
+      });
+  }
+
+  // ── Modale Suppression ────────────────────────────────────────
+  confirmDelete(property: PropertyModel): void {
+    this.deleteTarget.set(property);
+  }
+
+  cancelDelete(): void {
+    this.deleteTarget.set(null);
+  }
+
+  deleteProperty(): void {
+    const target = this.deleteTarget();
+    if (!target) return;
+
+    this.deleteLoading.set(true);
+
+    this.service.delete(target.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.deleteTarget.set(null);
+          this.deleteLoading.set(false);
+          // Recharge la page courante
+          const newPage = this.allProperties().length === 1 && this.currentPage() > 1
+            ? this.currentPage() - 1
+            : this.currentPage();
+          this.loadAll(newPage);
+        },
+        error: (err) => {
+          this.error.set(err?.error?.message ?? 'Erreur lors de la suppression.');
+          this.deleteLoading.set(false);
+        },
+      });
+  }
+
+  // ── Count helpers ─────────────────────────────────────────────
+  getStatutCount(status: string): number {
+    if (status === 'all') return this.allProperties().length;
+    return this.allProperties().filter(p => p.status === status).length;
+  }
+
+  getTypeCount(type: string): number {
+    if (type === 'all') return this.allProperties().length;
+    return this.allProperties().filter(p => p.property_type?.slug === type).length;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────
+  private buildQueryParams(page: number): IQueryParam {
+    return {
+      page,
+      perPage: this.itemsPerPage(),
     };
-    return m[statut] ?? statut;
   }
-
-  getStatutClass(statut: string): string {
-    const m: Record<string, string> = {
-      'disponible':  'bg-green-100 text-green-700',
-      'loué':        'bg-amber-100 text-amber-700',
-      'maintenance': 'bg-orange-100 text-orange-600',
-      'vendu':       'bg-gray-100 text-gray-600',
-      'inactif':     'bg-red-100 text-red-600',
-    };
-    return m[statut] ?? 'bg-gray-100 text-gray-600';
-  }
-
-  getTauxOccupation(b: BienItem): number {
-    if (!b.stats.totalUnits) return 0;
-    return Math.round((b.stats.rentedUnits / b.stats.totalUnits) * 100);
-  }
-
-  openAddBien(): void { console.log('Ouvrir formulaire nouveau bien'); }
-  editBien(b: BienItem): void { console.log('Éditer bien', b.id); }
-  confirmDeleteBien(b: BienItem): void { this.deleteBienTarget = b; }
-  deleteBien(): void {
-    if (!this.deleteBienTarget) return;
-    this.allBiens = this.allBiens.filter(b => b.id !== this.deleteBienTarget!.id);
-    this.deleteBienTarget = null;
-    this.applyFilters();
-    this.updateKpis();
-  }
-
-  get totalPages(): number { return Math.ceil(this.filteredBiens.length / this.itemsPerPage); }
-  get totalPagesArray(): number[] { return Array.from({ length: this.totalPages }, (_, i) => i + 1); }
-  changePage(p: number): void { if (p >= 1 && p <= this.totalPages) this.currentPage = p; }
 }
