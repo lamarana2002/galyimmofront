@@ -1,10 +1,10 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { SidebarService } from './sidebar.service';
 import { Subscription } from 'rxjs';
-import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideBuilding, lucideBuilding2, lucideFileText, lucideHome, lucideHouse, lucideInbox, lucideUserCog, lucideUserRound, lucideUsers } from '@ng-icons/lucide';
+import { lucideBuilding, lucideBuilding2, lucideChartNoAxesCombined, lucideFileText, lucideHome, lucideHouse, lucideInbox, lucideUserCog, lucideUserRound, lucideUsers } from '@ng-icons/lucide';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ProfileService } from '../../../core/auth/services/profile.service';
+import { NgIcon, provideIcons } from '@ng-icons/core';
 
 type User = {
   name: string,
@@ -25,7 +25,8 @@ type User = {
     lucideUserRound,
     lucideFileText,
     lucideUsers,
-    lucideUserCog
+    lucideUserCog,
+    lucideChartNoAxesCombined
    })],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
@@ -38,11 +39,11 @@ export class Sidebar implements OnInit, OnDestroy {
   navs = [
     { label: "Agences", icon: 'lucideBuilding2', link: '/structures', role: 'super_admin' },
     { label: "Propriétés", icon: 'lucideHome', link: '/properties',  role: 'owner' },
-    { label: "Locataires", icon: 'lucideUserRound', link: '/locataires', role: 'owner' },  
+    { label: "Locataires", icon: 'lucideUserRound', link: '/locataires', role: 'owner' },
     { label: "Contrats", icon: 'lucideFileText', link: '/contrats', role: 'owner' },
     { label: "Utilisateurs", icon: 'lucideUsers', link: '/users', role: 'owner' },
     { label: "Administrateurs", icon: 'lucideUserCog', link: '/admins', role: 'super_admin' },
-    { label: "Analytics", icon: 'chart-no-axes-combined', link: '/analytics', role: 'super_admin' }, 
+    { label: "Analytics", icon: 'lucideChartNoAxesCombined', link: '/analytics', role: 'super_admin' }, 
   ]
 
   isOpen = false;

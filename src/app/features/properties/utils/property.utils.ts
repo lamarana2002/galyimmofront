@@ -1,8 +1,8 @@
 import { PropertyModel } from '../models/property.model';
-import { LocationUnit } from '../models/location-unit.model';
 import { ProperttyStatusEnum } from '../enums/property-status.enum';
 import { PropertyStats } from '../models/property-stats.model';
 import { UnitStatutEnum } from '../enums/unit-status.enum';
+import { ILocationUnit } from '../models/location-unit.model';
 
 // ── Statut du bien ─────────────────────────────────────────────────
 
@@ -254,12 +254,12 @@ export function getUnitStatusDotClass(status: UnitStatutEnum): string {
   return map[status] ?? 'bg-gray-400';
 }
 
-export function getUnitFullName(unit: LocationUnit): string {
+export function getUnitFullName(unit: ILocationUnit): string {
   if (unit.is_primary) return 'Unité principale';
   return unit.unit_number ? `Unité ${unit.unit_number}` : `Unité ${unit.unit_code}`;
 }
 
-export function getUnitLocation(unit: LocationUnit): string {
+export function getUnitLocation(unit: ILocationUnit): string {
   const parts = [];
   if (unit.entrance) parts.push(`Entrée ${unit.entrance}`);
   if (unit.floor !== null) {
@@ -270,7 +270,7 @@ export function getUnitLocation(unit: LocationUnit): string {
   return parts.join(' · ') || 'Emplacement non spécifié';
 }
 
-export function formatUnitRent(unit: LocationUnit): string {
+export function formatUnitRent(unit: ILocationUnit): string {
   if (!unit.rent_amount) return '—';
   return new Intl.NumberFormat('fr-GN', {
     style: 'currency',
@@ -279,7 +279,7 @@ export function formatUnitRent(unit: LocationUnit): string {
   }).format(unit.rent_amount);
 }
 
-export function getUnitBedroomsLabel(unit: LocationUnit): string {
+export function getUnitBedroomsLabel(unit: ILocationUnit): string {
   const parts = [];
   if (unit.rooms) parts.push(`${unit.rooms} pièces`);
   if (unit.bedrooms) parts.push(`${unit.bedrooms} chambre(s)`);
@@ -288,15 +288,15 @@ export function getUnitBedroomsLabel(unit: LocationUnit): string {
   return parts.join(' · ') || '—';
 }
 
-export function isUnitFurnished(unit: LocationUnit): boolean {
+export function isUnitFurnished(unit: ILocationUnit): boolean {
   return unit.is_furnished;
 }
 
-export function getUnitFurnishedLabel(unit: LocationUnit): string {
+export function getUnitFurnishedLabel(unit: ILocationUnit): string {
   return unit.is_furnished ? 'Meublé' : 'Non meublé';
 }
 
-export function getUnitMonthlyCharges(unit: LocationUnit): string {
+export function getUnitMonthlyCharges(unit: ILocationUnit): string {
   if (!unit.monthly_charges) return '—';
   return new Intl.NumberFormat('fr-GN', {
     style: 'currency',

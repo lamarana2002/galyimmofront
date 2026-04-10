@@ -1,9 +1,37 @@
-import { Component } from '@angular/core';
+import { Component, Input, output } from '@angular/core';
+import { NgIcon } from '@ng-icons/core';
+import { provideIcons } from '@ng-icons/core';
+import { lucideUpload, lucideImage, lucideZoomIn, lucideTrash2 } from '@ng-icons/lucide';
+import { PropertyModel } from '../../../models/property.model';
 
 @Component({
   selector: 'app-gallery-tab',
-  imports: [],
+  imports: [NgIcon],
   templateUrl: './gallery-tab.html',
   styleUrl: './gallery-tab.css',
+  viewProviders: [provideIcons({ lucideUpload, lucideImage, lucideZoomIn, lucideTrash2 })]
 })
-export class GalleryTab {}
+export class GalleryTab {
+  onConfirmDelete = output<number>();
+  onOpenLightbox = output<number>();
+  onUploadImage = output<void>();
+  onCancelUpload = output<void>();
+  onFileSelected = output<Event>();
+  @Input({ required: true }) bien!: PropertyModel;
+  @Input() previewUrl: string | null = null;
+  confirmDeleteImage(id: number) {
+    this.onConfirmDelete.emit(id);
+  }
+  openLightbox(index: number) {
+    this.onOpenLightbox.emit(index);
+  }
+  uploadImage() {
+    this.onUploadImage.emit();
+  }
+  cancelUpload() {
+    this.onCancelUpload.emit();
+  }
+  fileSelected($event: Event) {
+    this.onFileSelected.emit($event);
+  }
+}

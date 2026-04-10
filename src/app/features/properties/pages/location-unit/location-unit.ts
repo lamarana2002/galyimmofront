@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeft, lucideBuilding2, lucideHome, lucideMapPin,
@@ -15,6 +15,12 @@ import {
   lucideWrench, lucideRefreshCw,
 } from '@ng-icons/lucide';
 import { UnitStatutEnum } from '../../enums/unit-status.enum';
+import { LocationUnitService } from '../../services/location-unit.service';
+import { Subject, switchMap, takeUntil } from 'rxjs';
+import { ILocationUnit } from '../../models/location-unit.model';
+import { IUnitGallery } from '../../models/unit-gallery.model';
+import { getUnitStatusBadgeClass, getUnitStatusLabel } from '../../utils/property.utils';
+import { ILocationModel } from '../../models/location.model';
 
 
 export interface Locataire {
@@ -99,184 +105,239 @@ export interface UniteDetail {
     })
   ]
 })
-export class LocationUnit {
+export class LocationUnit implements OnInit, OnDestroy {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly unitService = inject(LocationUnitService);
+  private readonly destroy$ = new Subject<void>();
 
+  // État
+  isLoading = signal(true);
+  error = signal<string | null>(null);
+  unite = signal<ILocationUnit | null>(null);
+
+  // UI
   activeTab = 'infos';
 
   tabs = [
     { key: 'infos',      label: 'Informations', icon: 'lucideInfo'         },
-    { key: 'locataire',  label: 'Locataire',     icon: 'lucideUser'         },
-    { key: 'contrats',   label: 'Contrats',      icon: 'lucideShieldCheck'  },
-    { key: 'photos',     label: 'Photos',        icon: 'lucideImage'        },
-    { key: 'documents',  label: 'Documents',     icon: 'lucideFile'         },
+    { key: 'locataire',  label: 'Locataire',    icon: 'lucideUser'         },
+    { key: 'locations',  label: 'Locations',    icon: 'lucideShieldCheck'  },
+    { key: 'photos',     label: 'Photos',       icon: 'lucideImage'        },
   ];
 
   UnitStatutEnum = UnitStatutEnum;
 
+  // ── Computed ──────────────────────────────────────────────────
+  joursRestants = computed(() => {
+    const location = this.unite()?.current_location;
+    if (!location?.end_date) return 0;
+    const endDate = new Date(location.end_date);
+    return Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / 86400000));
+  });
+
+  locationExpireBientot = computed(() => {
+    const days = this.joursRestants();
+    return days > 0 && days <= 60;
+  });
+
+  locationExpire = computed(() => {
+    return this.joursRestants() === 0 && this.unite()?.current_location?.status === 'active';
+  });
+
+  allLocations = computed(() => {
+    const unit = this.unite();
+    if (!unit) return [];
+    const locations: ILocationModel[] = [...(unit.locations ?? [])];
+    if (unit.current_location) {
+      const index = locations.findIndex(l => l.id === unit.current_location?.id);
+      if (index !== -1) locations.splice(index, 1);
+      locations.unshift(unit.current_location);
+    }
+    return locations;
+  });
+
   // ── Galerie ────────────────────────────────────────────────────
-  lightboxIndex   = 0;
-  showLightbox    = false;
+  lightboxIndex = 0;
+  showLightbox = false;
   showDeleteImage = false;
   deletingImageId: number | null = null;
   previewUrl: string | null = null;
+  isUploading = signal(false);
 
-  // ── Données mock ──────────────────────────────────────────────
-  unite: UniteDetail = {
-    id: 2,
-    numero: 'A02',
-    code: 'UNIT-002',
-    type: 'Bureau',
-    etage: 1,
-    lot: 'LOT-02',
-    surface: 95,
-    statut: UnitStatutEnum.RENTED,
-    pieces: 3,
-    chambres: 0,
-    sallesDeBain: 1,
-    loyer: 1200000,
-    caution: 2400000,
-    charges: 150000,
-    actif: true,
-    description: 'Bureau en open space, lumineux, vue sur jardin intérieur. Climatisation centralisée.',
-    bien: { id: 3, nom: 'Immeuble Le Plateau', code: 'BIEN-003' },
-    locataireActuel: {
-      id: 1,
-      nom: 'Camara',
-      prenom: 'Ibrahim',
-      email: 'i.camara@techsolutions.ci',
-      telephone: '+225 07 45 67 89',
-      profession: 'Directeur Général',
-      ville: 'Abidjan',
-    },
-    contratActuel: {
-      id: 1,
-      reference: 'CTR-2024-042',
-      dateDebut: new Date('2024-01-01'),
-      dateFin: new Date('2025-01-01'),
-      loyer: 1200000,
-      caution: 2400000,
-      statut: 'actif',
-      locataire: {
-        id: 1, nom: 'Camara', prenom: 'Ibrahim',
-        email: 'i.camara@techsolutions.ci', telephone: '+225 07 45 67 89',
-      },
-    },
-    historiqueContrats: [
-      {
-        id: 2, reference: 'CTR-2023-018',
-        dateDebut: new Date('2023-01-01'), dateFin: new Date('2023-12-31'),
-        loyer: 1100000, caution: 2200000, statut: 'expiré',
-        locataire: { id: 2, nom: 'Koné', prenom: 'Salif', email: 's.kone@mail.ci', telephone: '+225 05 11 22 33' },
-      },
-      {
-        id: 3, reference: 'CTR-2022-007',
-        dateDebut: new Date('2022-06-01'), dateFin: new Date('2022-12-31'),
-        loyer: 1000000, caution: 2000000, statut: 'résilié',
-        locataire: { id: 3, nom: 'Traoré', prenom: 'Aminata', email: 'a.traore@mail.ci', telephone: '+225 01 99 88 77' },
-      },
-    ],
-    images: [
-      { id: 1, path: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800', caption: 'Vue générale' },
-      { id: 2, path: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800', caption: 'Espace de travail' },
-      { id: 3, path: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800', caption: 'Salle de réunion' },
-    ],
-    documents: [
-      { id: 1, nom: 'Contrat de bail CTR-2024-042', ext: 'pdf',  date: new Date('2024-01-01') },
-      { id: 2, nom: 'État des lieux entrée',         ext: 'pdf',  date: new Date('2024-01-02') },
-      { id: 3, nom: 'Inventaire mobilier',           ext: 'docx', date: new Date('2024-01-02') },
-    ],
-  };
-
-  // ── Computed ──────────────────────────────────────────────────
-  get joursRestants(): number {
-    if (!this.unite.contratActuel) return 0;
-    return Math.max(0, Math.ceil(
-      (this.unite.contratActuel.dateFin.getTime() - Date.now()) / 86400000
-    ));
+  get currentLightboxImage(): IUnitGallery | undefined {
+    return this.unite()?.gallery?.[this.lightboxIndex];
   }
 
-  get contratExpireBientot(): boolean {
-    return this.joursRestants > 0 && this.joursRestants <= 60;
+  // ── Lifecycle ─────────────────────────────────────────────────
+  ngOnInit(): void {
+    this.loadUnit();
   }
 
-  get contratExpire(): boolean {
-    return this.joursRestants === 0 && this.unite.contratActuel?.statut === 'actif';
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  get allContrats(): Contrat[] {
-    const contrats = [...(this.unite.historiqueContrats ?? [])];
-    if (this.unite.contratActuel) contrats.unshift(this.unite.contratActuel);
-    return contrats;
-  }
+  // ── Chargement ────────────────────────────────────────────────
+  loadUnit(): void {
+    this.isLoading.set(true);
+    this.error.set(null);
 
-  get currentLightboxImage(): GalleryImage | undefined {
-    return this.unite.images?.[this.lightboxIndex];
+    this.route.params
+      .pipe(
+        switchMap((params) => this.unitService.findById(Number(params['unitId']))),
+        takeUntil(this.destroy$),
+      )
+      .subscribe({
+        next: (response) => {
+          this.unite.set(response.data);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Erreur:', err);
+          this.error.set(err?.error?.message ?? 'Erreur lors du chargement de l\'unité.');
+          this.isLoading.set(false);
+        },
+      });
   }
 
   // ── Statut helpers ────────────────────────────────────────────
-  getStatutLabel(s: string): string {
-    return ({ 'disponible': 'Disponible', 'loué': 'Loué', 'maintenance': 'En travaux',
-              'vendu': 'Vendu', 'inactif': 'Inactif' } as Record<string,string>)[s] ?? s;
+  getStatutLabel(status: UnitStatutEnum): string {
+    return getUnitStatusLabel(status);
   }
 
-  getStatutClass(s: string): string {
-    return ({ 'disponible': 'bg-green-100 text-green-700',
-              'loué': 'bg-amber-100 text-amber-700',
-              'maintenance': 'bg-orange-100 text-orange-600',
-              'vendu': 'bg-gray-100 text-gray-500',
-              'inactif': 'bg-red-100 text-red-600' } as Record<string,string>)[s] ?? 'bg-gray-100 text-gray-500';
+  getStatutClass(status: UnitStatutEnum): string {
+    return getUnitStatusBadgeClass(status);
   }
 
   getContratStatutClass(s: string): string {
-    return ({ 'actif': 'bg-green-100 text-green-700',
-              'expiré': 'bg-gray-100 text-gray-500',
-              'résilié': 'bg-red-100 text-red-600',
-              'en_attente': 'bg-amber-100 text-amber-700' } as Record<string,string>)[s] ?? 'bg-gray-100 text-gray-500';
+    return ({ 
+      'active': 'bg-green-100 text-green-700',
+      'expired': 'bg-gray-100 text-gray-500',
+      'terminated': 'bg-red-100 text-red-600',
+      'pending': 'bg-amber-100 text-amber-700' } as Record<string,string>)[s] ?? 'bg-gray-100 text-gray-500';
   }
 
-  getDocIconColor(ext: string): string {
-    return ({ 'pdf': 'text-red-600 bg-red-100', 'doc': 'text-blue-600 bg-blue-100',
-              'docx': 'text-blue-600 bg-blue-100', 'xls': 'text-green-600 bg-green-100',
-              'xlsx': 'text-green-600 bg-green-100' } as Record<string,string>)[ext] ?? 'text-gray-500 bg-gray-100';
+  getLocationStatutClass(s: UnitStatutEnum): string {
+    const classes: Record<string, string> = {
+      'active': 'bg-green-100 text-green-700',
+      'expired': 'bg-gray-100 text-gray-500',
+      'terminated': 'bg-red-100 text-red-600',
+      'pending': 'bg-amber-100 text-amber-700'
+    };
+    return classes[s] ?? 'bg-gray-100 text-gray-500';
   }
 
   getInitials(nom: string, prenom: string): string {
-    return `${prenom[0] ?? ''}${nom[0] ?? ''}`.toUpperCase();
+    return `${prenom?.[0] ?? ''}${nom?.[0] ?? ''}`.toUpperCase();
   }
 
   // ── Actions ───────────────────────────────────────────────────
-  changerStatut(statut: UnitStatutEnum): void { this.unite.statut = statut; }
-  contacterLocataire(): void { console.log('Contacter', this.unite.locataireActuel?.email); }
-  affecterLocataire(): void { console.log('Ouvrir formulaire affectation locataire'); }
+  changerStatut(statut: UnitStatutEnum): void {
+    const unit = this.unite();
+    if (!unit) return;
+    
+    this.unitService.changeStatus(unit.id, statut)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.loadUnit();
+          }
+        },
+        error: (err) => console.error('Erreur changement statut:', err)
+      });
+  }
+
+  contacterLocataire(): void {
+    const locataire = this.unite()?.current_locataire;
+    if (locataire?.email) {
+      window.location.href = `mailto:${locataire.email}`;
+    }
+  }
+
+  affecterLocataire(): void {
+    // TODO: Ouvrir modal d'affectation
+    console.log('Ouvrir formulaire affectation locataire');
+  }
 
   // ── Galerie ────────────────────────────────────────────────────
   openLightbox(i: number): void {
     this.lightboxIndex = i;
-    this.showLightbox  = true;
+    this.showLightbox = true;
     document.body.style.overflow = 'hidden';
   }
-  closeLightbox(): void { this.showLightbox = false; document.body.style.overflow = ''; }
-  prevImage(): void { const l = this.unite.images?.length ?? 0; this.lightboxIndex = (this.lightboxIndex - 1 + l) % l; }
-  nextImage(): void { const l = this.unite.images?.length ?? 0; this.lightboxIndex = (this.lightboxIndex + 1) % l; }
 
-  onFileSelected(e: Event): void {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    const r = new FileReader();
-    r.onload = ev => this.previewUrl = ev.target?.result as string;
-    r.readAsDataURL(file);
+  closeLightbox(): void {
+    this.showLightbox = false;
+    document.body.style.overflow = '';
   }
+
+  prevImage(): void {
+    const len = this.unite()?.gallery?.length ?? 0;
+    this.lightboxIndex = (this.lightboxIndex - 1 + len) % len;
+  }
+
+  nextImage(): void {
+    const len = this.unite()?.gallery?.length ?? 0;
+    this.lightboxIndex = (this.lightboxIndex + 1) % len;
+  }
+
+  onFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      console.error('Le fichier doit être une image');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      console.error("L'image ne doit pas dépasser 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => this.previewUrl = e.target?.result as string;
+    reader.readAsDataURL(file);
+  }
+
   uploadImage(): void {
-    if (!this.previewUrl) return;
-    const newId = Math.max(0, ...(this.unite.images?.map(i => i.id) ?? [0])) + 1;
-    this.unite.images = [...(this.unite.images ?? []), { id: newId, path: this.previewUrl }];
+    const unit = this.unite();
+    if (!this.previewUrl || !unit) return;
+
+    this.isUploading.set(true);
+    // TODO: Appel API pour uploader l'image
+    // this.unitService.uploadGalleryImage(unit.id, file).subscribe(...)
+    
+    // Simulation temporaire
+    setTimeout(() => {
+      this.isUploading.set(false);
+      this.previewUrl = null;
+      this.loadUnit();
+    }, 1000);
+  }
+
+  cancelUpload(): void {
     this.previewUrl = null;
   }
-  cancelUpload(): void { this.previewUrl = null; }
-  confirmDeleteImage(id: number): void { this.deletingImageId = id; this.showDeleteImage = true; }
+
+  confirmDeleteImage(id: number): void {
+    this.deletingImageId = id;
+    this.showDeleteImage = true;
+  }
+
   deleteImage(): void {
-    this.unite.images = this.unite.images?.filter(i => i.id !== this.deletingImageId);
-    this.showDeleteImage = false; this.deletingImageId = null;
+    const id = this.deletingImageId;
+    if (!id) return;
+
+    // TODO: Appel API pour supprimer l'image
+    // this.unitService.deleteGalleryImage(id).subscribe(...)
+    
+    this.showDeleteImage = false;
+    this.deletingImageId = null;
     if (this.showLightbox) this.closeLightbox();
+    this.loadUnit();
   }
 }

@@ -5,7 +5,13 @@ import { ProperttyStatusEnum } from '../../../enums/property-status.enum';
 import { PropertyTypeModel } from '../../../models/propety-type.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { FormsModule } from '@angular/forms';
-import { lucideBriefcase, lucideHouse, lucideImage, lucideSave, lucideShoppingBag } from '@ng-icons/lucide';
+import {
+  lucideBriefcase,
+  lucideHouse,
+  lucideImage,
+  lucideSave,
+  lucideShoppingBag,
+} from '@ng-icons/lucide';
 import { ProfileService } from '../../../../../core/auth/services/profile.service';
 import { Router } from '@angular/router';
 
@@ -37,9 +43,10 @@ interface PropertyForm {
   imports: [NgIcon, FormsModule],
   templateUrl: './add-property-modal.html',
   styleUrl: './add-property-modal.css',
-  viewProviders: [provideIcons({lucideImage, lucideSave, lucideHouse, lucideBriefcase, lucideShoppingBag})]
+  viewProviders: [
+    provideIcons({ lucideImage, lucideSave, lucideHouse, lucideBriefcase, lucideShoppingBag }),
+  ],
 })
-
 export class AddPropertyModal implements OnInit {
   private propertyService = inject(PropertyService);
   private propertyTypeService = inject(PropertyTypeService);
@@ -76,7 +83,7 @@ export class AddPropertyModal implements OnInit {
     address: null,
     city: null,
     postal_code: null,
-    country: 'Côte d\'Ivoire',
+    country: "Côte d'Ivoire",
     latitude: null,
     longitude: null,
     total_surface: null,
@@ -93,7 +100,7 @@ export class AddPropertyModal implements OnInit {
 
   ngOnInit(): void {
     console.log(this.editingId());
-    
+
     this.loadPropertyTypes();
     if (this.editingId()) {
       this.loadProperty();
@@ -109,7 +116,7 @@ export class AddPropertyModal implements OnInit {
 
   loadProperty(): void {
     this.propertyService.findById(this.editingId()!).subscribe({
-      next: (response) => {        
+      next: (response) => {
         const property = response.data;
         this.form.set({
           name: property.name,
@@ -119,7 +126,7 @@ export class AddPropertyModal implements OnInit {
           address: property.address,
           city: property.city,
           postal_code: property.postal_code,
-          country: property.country || 'Côte d\'Ivoire',
+          country: property.country || "Côte d'Ivoire",
           latitude: property.latitude,
           longitude: property.longitude,
           total_surface: property.total_surface,
@@ -141,17 +148,17 @@ export class AddPropertyModal implements OnInit {
   onCoverImageSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      this.form.update(f => ({
+      this.form.update((f) => ({
         ...f,
-        cover_image: file
+        cover_image: file,
       }));
-      
+
       // Preview
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        this.form.update(f => ({
+        this.form.update((f) => ({
           ...f,
-          cover_image_preview: e.target.result // <- Maintenant c'est autorisé (string)
+          cover_image_preview: e.target.result, // <- Maintenant c'est autorisé (string)
         }));
       };
       reader.readAsDataURL(file);
@@ -161,19 +168,19 @@ export class AddPropertyModal implements OnInit {
   validate(): boolean {
     this.errors = {};
     const current = this.form();
-    
+
     if (!current.name?.trim()) {
       this.errors['name'] = 'Le nom du bien est requis';
     }
-    
+
     if (!current.property_type_id) {
       this.errors['property_type_id'] = 'Le type de bien est requis';
     }
-    
+
     if (!current.status) {
       this.errors['status'] = 'Le statut est requis';
     }
-    
+
     return Object.keys(this.errors).length === 0;
   }
 
@@ -182,7 +189,7 @@ export class AddPropertyModal implements OnInit {
 
     this.saving.set(true);
     const current = this.form();
-    
+
     const payload: any = {
       structure_id: this.structureId(),
       name: current.name,
@@ -202,8 +209,9 @@ export class AddPropertyModal implements OnInit {
       has_units: current.has_units,
       is_active: current.is_active,
       description: current.description,
-      amenities: current.amenities ? JSON.parse(current.amenities) : null,
-    };    
+      amenities:
+        Array.isArray(current.amenities) && current.amenities.length > 0 ? current.amenities : null,
+    };
 
     if (current.cover_image instanceof File) {
       payload.cover_image = current.cover_image;
