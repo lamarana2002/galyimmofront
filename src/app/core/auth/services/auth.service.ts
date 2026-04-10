@@ -48,9 +48,9 @@ export class AuthService {
 
   // ── Computed ───────────────────────────────────────────────────
   readonly isLoggedIn = computed(() => !!this._user());
-  readonly isSuperAdmin = this.createRoleCheck('super_admin');
-  readonly isOwner = this.createRoleCheck('owner');
-  readonly isEmployee = this.createRoleCheck('employee');
+  readonly isSuperAdmin = this.createRoleCheck('super-admin');
+  readonly isOwner = this.createRoleCheck('proprietaire');
+  readonly isEmployee = this.createRoleCheck('gestionnaire');
   // email_verified_at (snake_case — champ réel de la migration)
   readonly emailVerified = computed(() => !!this._user()?.email_verified_at);
   // hasStructure : structure_id non null
@@ -205,15 +205,15 @@ export class AuthService {
     const roleNames = user.roles?.map(r => r.name);
 
     // Priorité : super_admin > owner > employee
-    if (roleNames.includes('super_admin')) {
+    if (roleNames.includes('super-admin')) {
       this.router.navigate(['/structures']);
-    } else if (roleNames.includes('owner')) {
+    } else if (roleNames.includes('proprietaire')) {
       if (!user.structure_id) {
         this.router.navigate(['/auth/login']);
       } else {
         this.router.navigate(['/properties']);
       }
-    } else if (roleNames.includes('employee')) {
+    } else if (roleNames.includes('gestionnaire')) {
       this.router.navigate(['/biens']);
     } else {
       this.router.navigate(['/auth/login']);

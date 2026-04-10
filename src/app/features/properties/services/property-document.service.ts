@@ -175,7 +175,7 @@ export class PropertyDocumentService {
         window.open(url, '_blank');
         window.URL.revokeObjectURL(url);
       },
-      error: (err) => console.error('Erreur ouverture document:', err),
+      error: () => {},
     });
   }
 

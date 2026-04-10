@@ -171,9 +171,7 @@ export class StructureCard implements OnInit {
   }
 
   sendContact(): void {
-    console.log('Envoyer message à', this.contactTarget?.proprietaire?.email);
-    console.log('Sujet:', this.contactSubject);
-    console.log('Message:', this.contactMessage);
+    // TODO: this.service.sendContact(...).subscribe(...)
     this.contactTarget = null;
   }
 

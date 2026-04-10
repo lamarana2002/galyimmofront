@@ -1,4 +1,4 @@
-import { ProperttyStatusEnum } from '../enums/property-status.enum';
+import { PropertyStatusEnum } from '../enums/property-status.enum';
 
 // ── Création d'une unité ───────────────────────────────────────
 export interface CreateUnitPayload {
@@ -19,7 +19,7 @@ export interface CreateUnitPayload {
   security_deposit?: number | null;
   monthly_charges?:  number | null;
   sale_price?:       number | null;
-  status?:           ProperttyStatusEnum;
+  status?:           PropertyStatusEnum;
   description?:      string | null;
   amenities?:        Record<string, string> | null;
   is_furnished?:     boolean;
@@ -50,7 +50,7 @@ export function emptyUnitForm(propertyId: number): CreateUnitPayload {
     security_deposit:  null,
     monthly_charges:   null,
     sale_price:        null,
-    status:            ProperttyStatusEnum.AVAILABLE,
+    status:            PropertyStatusEnum.AVAILABLE,
     description:       null,
     amenities:         null,
     is_furnished:      false,
@@ -79,7 +79,7 @@ export function unitToUpdatePayload(unit: ILocationUnit): UpdateUnitPayload {
     security_deposit:  unit.security_deposit,
     monthly_charges:   unit.monthly_charges,
     sale_price:        unit.sale_price,
-    status:            unit.status as unknown as ProperttyStatusEnum,
+    status:            unit.status as unknown as PropertyStatusEnum,
     description:       unit.description,
     amenities:         unit.amenities,
     is_furnished:      unit.is_furnished,

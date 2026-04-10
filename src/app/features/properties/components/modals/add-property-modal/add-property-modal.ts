@@ -1,7 +1,7 @@
 import { Component, inject, input, OnInit, output, signal } from '@angular/core';
 import { PropertyService } from '../../../services/property.service';
 import { PropertyTypeService } from '../../../services/property-type.service';
-import { ProperttyStatusEnum } from '../../../enums/property-status.enum';
+import { PropertyStatusEnum } from '../../../enums/property-status.enum';
 import { PropertyTypeModel } from '../../../models/propety-type.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { FormsModule } from '@angular/forms';
@@ -12,8 +12,7 @@ import {
   lucideSave,
   lucideShoppingBag,
 } from '@ng-icons/lucide';
-import { ProfileService } from '../../../../../core/auth/services/profile.service';
-import { Router } from '@angular/router';
+import { ToastService } from '../../../../../shared/services/toast.service';
 
 interface PropertyForm {
   name: string;
@@ -48,8 +47,9 @@ interface PropertyForm {
   ],
 })
 export class AddPropertyModal implements OnInit {
-  private propertyService = inject(PropertyService);
+  private propertyService     = inject(PropertyService);
   private propertyTypeService = inject(PropertyTypeService);
+  private toast               = inject(ToastService);
 
   // Inputs
   editingId = input<number | null>(null);
@@ -66,12 +66,12 @@ export class AddPropertyModal implements OnInit {
 
   // Status options
   statusOptions = [
-    { value: ProperttyStatusEnum.AVAILABLE, label: 'Disponible' },
-    { value: ProperttyStatusEnum.FOR_SALE, label: 'En vente' },
-    { value: ProperttyStatusEnum.FOR_RENT, label: 'À louer' },
-    { value: ProperttyStatusEnum.RENTED, label: 'Loué' },
-    { value: ProperttyStatusEnum.SOLD, label: 'Vendu' },
-    { value: ProperttyStatusEnum.UNDER_RENOVATION, label: 'En travaux' },
+    { value: PropertyStatusEnum.AVAILABLE, label: 'Disponible' },
+    { value: PropertyStatusEnum.FOR_SALE, label: 'En vente' },
+    { value: PropertyStatusEnum.FOR_RENT, label: 'À louer' },
+    { value: PropertyStatusEnum.RENTED, label: 'Loué' },
+    { value: PropertyStatusEnum.SOLD, label: 'Vendu' },
+    { value: PropertyStatusEnum.UNDER_RENOVATION, label: 'En travaux' },
   ];
 
   // Form model en signal avec typage explicite
@@ -99,8 +99,6 @@ export class AddPropertyModal implements OnInit {
   });
 
   ngOnInit(): void {
-    console.log(this.editingId());
-
     this.loadPropertyTypes();
     if (this.editingId()) {
       this.loadProperty();
@@ -109,8 +107,8 @@ export class AddPropertyModal implements OnInit {
 
   loadPropertyTypes(): void {
     this.propertyTypeService.findAll().subscribe({
-      next: (types) => this.propertyTypes.set(types),
-      error: (err) => console.error('Erreur chargement types', err),
+      next: (response) => this.propertyTypes.set(response.data),
+      error: () => this.toast.error('Impossible de charger les types de bien.'),
     });
   }
 
@@ -141,7 +139,7 @@ export class AddPropertyModal implements OnInit {
           amenities: property.amenities ? JSON.stringify(property.amenities, null, 2) : '',
         });
       },
-      error: (err) => console.error('Erreur chargement bien', err),
+      error: () => this.toast.error('Impossible de charger les données du bien.'),
     });
   }
 
@@ -223,14 +221,15 @@ export class AddPropertyModal implements OnInit {
 
     request.subscribe({
       next: () => {
+        this.toast.success(this.editingId() ? 'Bien mis à jour avec succès.' : 'Bien créé avec succès.');
         this.saved.emit();
         this.closeModal();
       },
       error: (err) => {
-        console.error('Erreur sauvegarde', err);
         if (err.error?.errors) {
           this.errors = err.error.errors;
         }
+        this.toast.error(err?.error?.message ?? 'Erreur lors de la sauvegarde.');
         this.saving.set(false);
       },
     });

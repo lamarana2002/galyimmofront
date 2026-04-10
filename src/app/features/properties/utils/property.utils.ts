@@ -1,84 +1,83 @@
 import { PropertyModel } from '../models/property.model';
-import { ProperttyStatusEnum } from '../enums/property-status.enum';
-import { PropertyStats } from '../models/property-stats.model';
+import { PropertyStatusEnum } from '../enums/property-status.enum';
 import { UnitStatutEnum } from '../enums/unit-status.enum';
 import { ILocationUnit } from '../models/location-unit.model';
+import { BADGE_CLASSES, DOT_CLASSES } from '../../../shared/utils/status.utils';
 
 // ── Statut du bien ─────────────────────────────────────────────────
 
-export function getPropertyStatusLabel(status: ProperttyStatusEnum): string {
-  const map: Record<ProperttyStatusEnum, string> = {
-    [ProperttyStatusEnum.AVAILABLE]: 'Disponible',
-    [ProperttyStatusEnum.SOLD]: 'Vendu',
-    [ProperttyStatusEnum.RENTED]: 'Loué',
-    [ProperttyStatusEnum.FOR_SALE]: 'En vente',
-    [ProperttyStatusEnum.FOR_RENT]: 'À louer',
-    [ProperttyStatusEnum.UNDER_RENOVATION]: 'En travaux',
+export function getPropertyStatusLabel(status: PropertyStatusEnum): string {
+  const map: Record<PropertyStatusEnum, string> = {
+    [PropertyStatusEnum.AVAILABLE]: 'Disponible',
+    [PropertyStatusEnum.SOLD]: 'Vendu',
+    [PropertyStatusEnum.RENTED]: 'Loué',
+    [PropertyStatusEnum.FOR_SALE]: 'En vente',
+    [PropertyStatusEnum.FOR_RENT]: 'À louer',
+    [PropertyStatusEnum.UNDER_RENOVATION]: 'En travaux',
   };
   return map[status] ?? status;
 }
 
-export function getPropertyStatusBadgeClass(status: ProperttyStatusEnum): string {
-  const map: Record<ProperttyStatusEnum, string> = {
-    [ProperttyStatusEnum.AVAILABLE]: 'bg-green-100 text-green-700 border-green-200',
-    [ProperttyStatusEnum.SOLD]: 'bg-gray-100 text-gray-700 border-gray-200',
-    [ProperttyStatusEnum.RENTED]: 'bg-amber-100 text-amber-700 border-amber-200',
-    [ProperttyStatusEnum.FOR_SALE]: 'bg-blue-100 text-blue-700 border-blue-200',
-    [ProperttyStatusEnum.FOR_RENT]: 'bg-purple-100 text-purple-700 border-purple-200',
-    [ProperttyStatusEnum.UNDER_RENOVATION]: 'bg-orange-100 text-orange-700 border-orange-200',
+export function getPropertyStatusBadgeClass(status: PropertyStatusEnum): string {
+  const map: Record<PropertyStatusEnum, string> = {
+    [PropertyStatusEnum.AVAILABLE]:        BADGE_CLASSES.success,
+    [PropertyStatusEnum.SOLD]:             BADGE_CLASSES.neutral,
+    [PropertyStatusEnum.RENTED]:           BADGE_CLASSES.warning,
+    [PropertyStatusEnum.FOR_SALE]:         BADGE_CLASSES.info,
+    [PropertyStatusEnum.FOR_RENT]:         BADGE_CLASSES.accent,
+    [PropertyStatusEnum.UNDER_RENOVATION]: BADGE_CLASSES.caution,
   };
-  return map[status] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+  return map[status] ?? BADGE_CLASSES.neutral;
 }
 
-
-export function getPropertyStatusDotClass(status: ProperttyStatusEnum): string {
-  const map: Record<ProperttyStatusEnum, string> = {
-    [ProperttyStatusEnum.AVAILABLE]: 'bg-green-500',
-    [ProperttyStatusEnum.SOLD]: 'bg-gray-500',
-    [ProperttyStatusEnum.RENTED]: 'bg-amber-500',
-    [ProperttyStatusEnum.FOR_SALE]: 'bg-blue-500',
-    [ProperttyStatusEnum.FOR_RENT]: 'bg-purple-500',
-    [ProperttyStatusEnum.UNDER_RENOVATION]: 'bg-orange-500',
+export function getPropertyStatusDotClass(status: PropertyStatusEnum): string {
+  const map: Record<PropertyStatusEnum, string> = {
+    [PropertyStatusEnum.AVAILABLE]:        DOT_CLASSES.success,
+    [PropertyStatusEnum.SOLD]:             DOT_CLASSES.neutral,
+    [PropertyStatusEnum.RENTED]:           DOT_CLASSES.warning,
+    [PropertyStatusEnum.FOR_SALE]:         DOT_CLASSES.info,
+    [PropertyStatusEnum.FOR_RENT]:         DOT_CLASSES.accent,
+    [PropertyStatusEnum.UNDER_RENOVATION]: DOT_CLASSES.caution,
   };
-  return map[status] ?? 'bg-gray-400';
+  return map[status] ?? DOT_CLASSES.neutral;
 }
 
 // Règles de transition pour les statuts
-export function getPropertyAllowedTransitions(current: ProperttyStatusEnum): ProperttyStatusEnum[] {
-  const rules: Record<ProperttyStatusEnum, ProperttyStatusEnum[]> = {
-    [ProperttyStatusEnum.AVAILABLE]: [
-      ProperttyStatusEnum.FOR_SALE,
-      ProperttyStatusEnum.FOR_RENT,
-      ProperttyStatusEnum.UNDER_RENOVATION,
+export function getPropertyAllowedTransitions(current: PropertyStatusEnum): PropertyStatusEnum[] {
+  const rules: Record<PropertyStatusEnum, PropertyStatusEnum[]> = {
+    [PropertyStatusEnum.AVAILABLE]: [
+      PropertyStatusEnum.FOR_SALE,
+      PropertyStatusEnum.FOR_RENT,
+      PropertyStatusEnum.UNDER_RENOVATION,
     ],
-    [ProperttyStatusEnum.FOR_SALE]: [
-      ProperttyStatusEnum.SOLD,
-      ProperttyStatusEnum.AVAILABLE,
-      ProperttyStatusEnum.UNDER_RENOVATION,
+    [PropertyStatusEnum.FOR_SALE]: [
+      PropertyStatusEnum.SOLD,
+      PropertyStatusEnum.AVAILABLE,
+      PropertyStatusEnum.UNDER_RENOVATION,
     ],
-    [ProperttyStatusEnum.FOR_RENT]: [
-      ProperttyStatusEnum.RENTED,
-      ProperttyStatusEnum.AVAILABLE,
-      ProperttyStatusEnum.UNDER_RENOVATION,
+    [PropertyStatusEnum.FOR_RENT]: [
+      PropertyStatusEnum.RENTED,
+      PropertyStatusEnum.AVAILABLE,
+      PropertyStatusEnum.UNDER_RENOVATION,
     ],
-    [ProperttyStatusEnum.RENTED]: [
-      ProperttyStatusEnum.AVAILABLE,
-      ProperttyStatusEnum.FOR_RENT,
-      ProperttyStatusEnum.UNDER_RENOVATION,
+    [PropertyStatusEnum.RENTED]: [
+      PropertyStatusEnum.AVAILABLE,
+      PropertyStatusEnum.FOR_RENT,
+      PropertyStatusEnum.UNDER_RENOVATION,
     ],
-    [ProperttyStatusEnum.UNDER_RENOVATION]: [
-      ProperttyStatusEnum.AVAILABLE,
-      ProperttyStatusEnum.FOR_SALE,
-      ProperttyStatusEnum.FOR_RENT,
+    [PropertyStatusEnum.UNDER_RENOVATION]: [
+      PropertyStatusEnum.AVAILABLE,
+      PropertyStatusEnum.FOR_SALE,
+      PropertyStatusEnum.FOR_RENT,
     ],
-    [ProperttyStatusEnum.SOLD]: [], // Une fois vendu, plus de transition
+    [PropertyStatusEnum.SOLD]: [], // Une fois vendu, plus de transition
   };
   return rules[current] ?? [];
 }
 
 export function isPropertyTransitionAllowed(
-  current: ProperttyStatusEnum,
-  next: ProperttyStatusEnum,
+  current: PropertyStatusEnum,
+  next: PropertyStatusEnum,
 ): boolean {
   return getPropertyAllowedTransitions(current).includes(next);
 }
@@ -232,26 +231,26 @@ export function getUnitStatusLabel(status: UnitStatutEnum): string {
 
 export function getUnitStatusBadgeClass(status: UnitStatutEnum): string {
   const map: Record<UnitStatutEnum, string> = {
-    [UnitStatutEnum.AVAILABLE]: 'bg-green-100 text-green-700 border-green-200',
-    [UnitStatutEnum.SOLD]: 'bg-gray-100 text-gray-700 border-gray-200',
-    [UnitStatutEnum.RENTED]: 'bg-amber-100 text-amber-700 border-amber-200',
-    [UnitStatutEnum.FOR_SALE]: 'bg-blue-100 text-blue-700 border-blue-200',
-    [UnitStatutEnum.FOR_RENT]: 'bg-purple-100 text-purple-700 border-purple-200',
-    [UnitStatutEnum.UNDER_RENOVATION]: 'bg-orange-100 text-orange-700 border-orange-200',
+    [UnitStatutEnum.AVAILABLE]:        BADGE_CLASSES.success,
+    [UnitStatutEnum.SOLD]:             BADGE_CLASSES.neutral,
+    [UnitStatutEnum.RENTED]:           BADGE_CLASSES.warning,
+    [UnitStatutEnum.FOR_SALE]:         BADGE_CLASSES.info,
+    [UnitStatutEnum.FOR_RENT]:         BADGE_CLASSES.accent,
+    [UnitStatutEnum.UNDER_RENOVATION]: BADGE_CLASSES.caution,
   };
-  return map[status] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+  return map[status] ?? BADGE_CLASSES.neutral;
 }
 
 export function getUnitStatusDotClass(status: UnitStatutEnum): string {
   const map: Record<UnitStatutEnum, string> = {
-    [UnitStatutEnum.AVAILABLE]: 'bg-green-500',
-    [UnitStatutEnum.SOLD]: 'bg-gray-500',
-    [UnitStatutEnum.RENTED]: 'bg-amber-500',
-    [UnitStatutEnum.FOR_SALE]: 'bg-blue-500',
-    [UnitStatutEnum.FOR_RENT]: 'bg-purple-500',
-    [UnitStatutEnum.UNDER_RENOVATION]: 'bg-orange-500',
+    [UnitStatutEnum.AVAILABLE]:        DOT_CLASSES.success,
+    [UnitStatutEnum.SOLD]:             DOT_CLASSES.neutral,
+    [UnitStatutEnum.RENTED]:           DOT_CLASSES.warning,
+    [UnitStatutEnum.FOR_SALE]:         DOT_CLASSES.info,
+    [UnitStatutEnum.FOR_RENT]:         DOT_CLASSES.accent,
+    [UnitStatutEnum.UNDER_RENOVATION]: DOT_CLASSES.caution,
   };
-  return map[status] ?? 'bg-gray-400';
+  return map[status] ?? DOT_CLASSES.neutral;
 }
 
 export function getUnitFullName(unit: ILocationUnit): string {
@@ -342,24 +341,5 @@ export function getPropertyUnitsSummary(property: PropertyModel): string {
 }
 
 // ── Date / Temps ───────────────────────────────────────────
-
-export function propertyTimeAgo(iso: string): string {
-  if (!iso) return '—';
-  const diff = Date.now() - new Date(iso).getTime();
-  const min = Math.floor(diff / 60_000);
-  const h = Math.floor(min / 60);
-  const d = Math.floor(h / 24);
-  if (d > 0) return `il y a ${d}j`;
-  if (h > 0) return `il y a ${h}h`;
-  if (min > 0) return `il y a ${min}min`;
-  return "à l'instant";
-}
-
-export function formatPropertyDate(iso: string, locale = 'fr-GN'): string {
-  if (!iso) return '—';
-  return new Intl.DateTimeFormat(locale, {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(iso));
-}
+// Re-export depuis shared pour éviter la duplication
+export { timeAgo as propertyTimeAgo, formatDate as formatPropertyDate } from '../../../shared/utils/date.utils';

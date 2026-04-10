@@ -14,7 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { StructureModel } from '../../../models/structure.model';
 import { StructureService } from '../../../services/structure.service';
 import { PropertyTypeStyleConfig } from '../../../../properties/interfaces/property-type-styleConfig.interface';
-import { ProperttyStatusEnum } from '../../../../properties/enums/property-status.enum';
+import { PropertyStatusEnum } from '../../../../properties/enums/property-status.enum';
 
 @Component({
   selector: 'app-properties-tab',
@@ -36,7 +36,7 @@ export class PropertiesTab {
   @Input({ required: true }) structure!: StructureModel;
   
   protected readonly structureService = inject(StructureService);
-  protected readonly PropertyStatus = ProperttyStatusEnum;
+  protected readonly PropertyStatus = PropertyStatusEnum;
 
   // ── Configuration des styles par type de propriété ────────────
   protected readonly propertyTypeStyles: Record<string, PropertyTypeStyleConfig> = {
@@ -99,20 +99,20 @@ export class PropertiesTab {
 
   protected getStatusClass(status: string): string {
     const statusMap: Record<string, string> = {
-      [ProperttyStatusEnum.RENTED]: 'bg-green-100 text-green-700',
-      [ProperttyStatusEnum.AVAILABLE]: 'bg-blue-100 text-blue-700',
-      [ProperttyStatusEnum.UNDER_RENOVATION]: 'bg-orange-100 text-orange-700',
-      [ProperttyStatusEnum.SOLD]: 'bg-gray-100 text-gray-700',
+      [PropertyStatusEnum.RENTED]: 'bg-green-100 text-green-700',
+      [PropertyStatusEnum.AVAILABLE]: 'bg-blue-100 text-blue-700',
+      [PropertyStatusEnum.UNDER_RENOVATION]: 'bg-orange-100 text-orange-700',
+      [PropertyStatusEnum.SOLD]: 'bg-gray-100 text-gray-700',
     };
     return statusMap[status] ?? 'bg-gray-100 text-gray-600';
   }
 
   protected getStatusLabel(status: string): string {
     const statusMap: Record<string, string> = {
-      [ProperttyStatusEnum.RENTED]: 'Loué',
-      [ProperttyStatusEnum.AVAILABLE]: 'Disponible',
-      [ProperttyStatusEnum.SOLD]: 'Vendu',
-      [ProperttyStatusEnum.UNDER_RENOVATION]: 'Sous renovation',
+      [PropertyStatusEnum.RENTED]: 'Loué',
+      [PropertyStatusEnum.AVAILABLE]: 'Disponible',
+      [PropertyStatusEnum.SOLD]: 'Vendu',
+      [PropertyStatusEnum.UNDER_RENOVATION]: 'Sous renovation',
     };
     return statusMap[status] ?? status;
   }

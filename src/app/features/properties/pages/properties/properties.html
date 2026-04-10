@@ -140,12 +140,7 @@
 
     <!-- ══ ÉTATS MUTUELLEMENT EXCLUSIFS ══ -->
     @if (loading()) {
-      <div class="flex flex-col items-center justify-center py-24">
-        <div
-          class="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600"
-        ></div>
-        <p class="mt-4 text-primary-600">Chargement des biens...</p>
-      </div>
+      <app-loading message="Chargement des biens…" />
     } @else if (error(); as errorMsg) {
       <div
         class="flex flex-col items-center py-24 text-center bg-red-50 rounded-2xl border border-red-200"
@@ -162,29 +157,12 @@
         </button>
       </div>
     } @else if (filteredProperties().length === 0) {
-      <div
-        class="flex flex-col items-center py-24 text-center bg-white rounded-2xl border border-gray-200"
-      >
-        <div class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-4">
-          <ng-icon name="lucideSearchX" size="28" class="text-primary-400"></ng-icon>
-        </div>
-        <p class="font-semibold text-primary-600">Aucun bien trouvé</p>
-        <p class="text-sm text-primary-400 mt-1">
-          @if (allProperties().length > 0) {
-            Essayez d'autres filtres
-          } @else {
-            Aucun bien enregistré pour l'instant
-          }
-        </p>
-        @if (allProperties().length > 0) {
-          <button
-            (click)="resetFilters()"
-            class="mt-4 px-4 py-2 text-sm font-semibold text-secondary-600 bg-secondary-50 hover:bg-secondary-100 border border-secondary-200 rounded-xl transition-all"
-          >
-            Réinitialiser les filtres
-          </button>
-        }
-      </div>
+      <app-empty-state
+        [title]="allProperties().length > 0 ? 'Aucun bien trouvé' : 'Aucun bien enregistré'"
+        [subtitle]="allProperties().length > 0 ? 'Essayez d\'autres filtres' : 'Commencez par ajouter un bien'"
+        [actionLabel]="allProperties().length > 0 ? 'Réinitialiser les filtres' : 'Ajouter un bien'"
+        (action)="allProperties().length > 0 ? resetFilters() : addPropertyModal.set(true)"
+      />
     } @else {
       <!-- VUE GRILLE -->
       @if (viewMode() === 'grid') {
@@ -203,6 +181,15 @@
           (onDelete)="confirmDelete($event)"
         />
       }
+      <!-- PAGINATION -->
+      @if (totalPages() > 1) {
+        <app-pagination
+          [currentPage]="currentPage()"
+          [totalItems]="totalItems()"
+          [perPage]="itemsPerPage()"
+          (pageChange)="onPageChange($event)"
+        />
+      }
     }
     <!-- fin @else -->
   </div>
@@ -210,46 +197,13 @@
 
 <!-- ══ MODAL SUPPRESSION ══ -->
 @if (deleteTarget(); as target) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="cancelDelete()">
-    <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
-    <div
-      class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
-      (click)="$event.stopPropagation()"
-    >
-      <div class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
-        <ng-icon name="lucideTriangleAlert" size="24" class="text-red-500"></ng-icon>
-      </div>
-      <h3 class="font-bold text-primary-900 text-center mb-2">Supprimer ce bien ?</h3>
-      <p class="text-sm text-primary-500 text-center mb-5">
-        <strong class="text-primary-700">{{ target.name }}</strong> et toutes ses unités seront
-        définitivement supprimés. Cette action est irréversible.
-      </p>
-
-      <div class="flex gap-2">
-        <button
-          (click)="deleteProperty()"
-          [disabled]="deleteLoading()"
-          class="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          @if (deleteLoading()) {
-            <div
-              class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
-            ></div>
-            Suppression...
-          } @else {
-            Supprimer
-          }
-        </button>
-        <button
-          (click)="cancelDelete()"
-          [disabled]="deleteLoading()"
-          class="flex-1 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          Annuler
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-confirm-dialog
+    title="Supprimer ce bien ?"
+    [message]="'« ' + target.name + ' » et toutes ses unités seront définitivement supprimés.'"
+    [loading]="deleteLoading()"
+    (confirmed)="deleteProperty()"
+    (cancelled)="cancelDelete()"
+  />
 }
 @if (addPropertyModal()) {
   <app-add-property-modal

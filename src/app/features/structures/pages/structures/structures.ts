@@ -29,10 +29,20 @@ import {
 } from '../../utils/structure.utils';
 import { StructureKpis } from '../../models/structure-kpis.model';
 
+import { Pagination }           from '../../../../shared/components/pagination/pagination';
+import { LoadingComponent }     from '../../../../shared/components/loading/loading';
+import { EmptyStateComponent }  from '../../../../shared/components/empty-state/empty-state';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { ToastService }         from '../../../../shared/services/toast.service';
+
 @Component({
   selector: 'app-structures',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgIconComponent, StructureGridView, StructureListView],
+  imports: [
+    CommonModule, FormsModule, NgIconComponent,
+    StructureGridView, StructureListView,
+    Pagination, LoadingComponent, EmptyStateComponent, ConfirmDialogComponent,
+  ],
   templateUrl: './structures.html',
   viewProviders: [
     provideIcons({
@@ -47,7 +57,7 @@ import { StructureKpis } from '../../models/structure-kpis.model';
 export class Structures implements OnInit, OnDestroy {
 
   private readonly service  = inject(StructureService);
-  // Subject pour unsubscribe propre — une seule ligne dans ngOnDestroy
+  private readonly toast    = inject(ToastService);
   private readonly destroy$ = new Subject<void>();
 
   // Enums exposés au template
@@ -255,10 +265,13 @@ export class Structures implements OnInit, OnDestroy {
     this.service.changeStatus(data.id, data.status)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => this.loadAll(this.currentPage()),
-        error: (err) => this.error.set(
-          err?.error?.message ?? 'Erreur lors du changement de statut.'
-        ),
+        next: () => {
+          this.toast.success('Statut mis à jour avec succès.');
+          this.loadAll(this.currentPage());
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors du changement de statut.');
+        },
       });
   }
 
@@ -266,10 +279,13 @@ export class Structures implements OnInit, OnDestroy {
     this.service.togglePlan(id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => this.loadAll(this.currentPage()),
-        error: (err) => this.error.set(
-          err?.error?.message ?? 'Erreur lors du changement de plan.'
-        ),
+        next: () => {
+          this.toast.success('Plan mis à jour avec succès.');
+          this.loadAll(this.currentPage());
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors du changement de plan.');
+        },
       });
   }
 
@@ -308,16 +324,16 @@ export class Structures implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
+          this.toast.success(`Structure « ${target.name} » supprimée.`);
           this.deleteTarget.set(null);
           this.deleteLoading.set(false);
-          // Recharge la page courante — si elle devient vide, revenir à la précédente
           const newPage = this.allStructures().length === 1 && this.currentPage() > 1
             ? this.currentPage() - 1
             : this.currentPage();
           this.loadAll(newPage);
         },
         error: (err) => {
-          this.error.set(err?.error?.message ?? 'Erreur lors de la suppression.');
+          this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
           this.deleteLoading.set(false);
         },
       });

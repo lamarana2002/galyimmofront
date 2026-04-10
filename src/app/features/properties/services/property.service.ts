@@ -10,7 +10,7 @@ import { ApiResponse } from '../../../shared/interfaces/api-response.interface';
 import { PropertyKpis } from '../models/property-kpis.model';
 import { CreatePropertyPayload } from '../interfaces/create-property-payload.interface';
 import { UpdatePropertyPayload } from '../interfaces/update-property-payload.interface';
-import { ProperttyStatusEnum } from '../enums/property-status.enum';
+import { PropertyStatusEnum } from '../enums/property-status.enum';
 
 @Injectable({ providedIn: 'root' })
 export class PropertyService {
@@ -87,7 +87,7 @@ export class PropertyService {
   /**
    * Change le statut d'une propriété (comme structures)
    */
-  changeStatus(id: number, status: ProperttyStatusEnum): Observable<ApiResponse<PropertyModel>> {
+  changeStatus(id: number, status: PropertyStatusEnum): Observable<ApiResponse<PropertyModel>> {
     return this.http.patch<ApiResponse<PropertyModel>>(`${this.baseUrl}/${id}/status`, { status });
   }
 

@@ -1,0 +1,56 @@
+<!-- Backdrop -->
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-primary-900/40 backdrop-blur-sm px-4"
+  (click)="cancelled.emit()">
+
+  <!-- Carte -->
+  <div
+    class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 flex flex-col gap-5"
+    (click)="$event.stopPropagation()">
+
+    <!-- Bouton fermer -->
+    <button
+      (click)="cancelled.emit()"
+      class="absolute top-4 right-4 flex items-center justify-center w-7 h-7 rounded-lg
+             text-primary-400 hover:text-primary-700 hover:bg-primary-50 transition-colors">
+      <ng-icon name="lucideX" size="15" />
+    </button>
+
+    <!-- Icône + titre -->
+    <div class="flex flex-col items-center gap-3 text-center">
+      <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-red-50">
+        <ng-icon name="lucideTriangleAlert" size="26" class="text-red-500" />
+      </div>
+      <div>
+        <h3 class="text-base font-semibold text-primary-900">{{ title() }}</h3>
+        <p class="mt-1 text-sm text-primary-500 leading-relaxed">{{ message() }}</p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-3">
+      <button
+        (click)="cancelled.emit()"
+        class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border border-gray-200
+               text-primary-700 bg-white hover:bg-primary-50 transition-colors">
+        {{ cancelLabel() }}
+      </button>
+      <button
+        (click)="confirmed.emit()"
+        [disabled]="loading()"
+        class="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl
+               bg-red-500 text-white hover:bg-red-600 disabled:opacity-60
+               disabled:cursor-not-allowed transition-colors">
+        @if (loading()) {
+          <span class="inline-flex items-center gap-2">
+            <span class="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+            Suppression…
+          </span>
+        } @else {
+          {{ confirmLabel() }}
+        }
+      </button>
+    </div>
+
+  </div>
+</div>

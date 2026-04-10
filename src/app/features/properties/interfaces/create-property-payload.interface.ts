@@ -1,4 +1,4 @@
-import { ProperttyStatusEnum } from "../enums/property-status.enum";
+import { PropertyStatusEnum } from "../enums/property-status.enum";
 
 export interface CreatePropertyPayload {
   structure_id: number;
@@ -16,7 +16,7 @@ export interface CreatePropertyPayload {
   total_floors?: number;
   sale_price?: number;
   condo_fees?: number;
-  status: ProperttyStatusEnum;
+  status: PropertyStatusEnum;
   description?: string;
   cover_image?: File;
   amenities?: Record<string, any>;

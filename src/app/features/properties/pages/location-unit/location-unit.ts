@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeft, lucideBuilding2, lucideHome, lucideMapPin,
@@ -16,6 +16,7 @@ import {
 } from '@ng-icons/lucide';
 import { UnitStatutEnum } from '../../enums/unit-status.enum';
 import { LocationUnitService } from '../../services/location-unit.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 import { Subject, switchMap, takeUntil } from 'rxjs';
 import { ILocationUnit } from '../../models/location-unit.model';
 import { IUnitGallery } from '../../models/unit-gallery.model';
@@ -106,10 +107,10 @@ export interface UniteDetail {
   ]
 })
 export class LocationUnit implements OnInit, OnDestroy {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  private readonly route       = inject(ActivatedRoute);
   private readonly unitService = inject(LocationUnitService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly toast       = inject(ToastService);
+  private readonly destroy$    = new Subject<void>();
 
   // État
   isLoading = signal(true);
@@ -195,8 +196,9 @@ export class LocationUnit implements OnInit, OnDestroy {
           this.isLoading.set(false);
         },
         error: (err) => {
-          console.error('Erreur:', err);
-          this.error.set(err?.error?.message ?? 'Erreur lors du chargement de l\'unité.');
+          const msg = err?.error?.message ?? "Erreur lors du chargement de l'unité.";
+          this.error.set(msg);
+          this.toast.error(msg);
           this.isLoading.set(false);
         },
       });
@@ -243,10 +245,11 @@ export class LocationUnit implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (response.success) {
+            this.toast.success('Statut mis à jour avec succès.');
             this.loadUnit();
           }
         },
-        error: (err) => console.error('Erreur changement statut:', err)
+        error: (err) => this.toast.error(err?.error?.message ?? 'Erreur lors du changement de statut.')
       });
   }
 
@@ -259,7 +262,6 @@ export class LocationUnit implements OnInit, OnDestroy {
 
   affecterLocataire(): void {
     // TODO: Ouvrir modal d'affectation
-    console.log('Ouvrir formulaire affectation locataire');
   }
 
   // ── Galerie ────────────────────────────────────────────────────
@@ -289,12 +291,12 @@ export class LocationUnit implements OnInit, OnDestroy {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      console.error('Le fichier doit être une image');
+      this.toast.warning('Le fichier doit être une image.');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      console.error("L'image ne doit pas dépasser 5MB");
+      this.toast.warning("L'image ne doit pas dépasser 5 MB.");
       return;
     }
 

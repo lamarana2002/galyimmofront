@@ -45,7 +45,7 @@ import { Subject, switchMap, takeUntil } from 'rxjs';
 
 import { PropertyService } from '../../services/property.service';
 import { PropertyModel } from '../../models/property.model';
-import { ProperttyStatusEnum } from '../../enums/property-status.enum';
+import { PropertyStatusEnum } from '../../enums/property-status.enum';
 import { UnitStatutEnum } from '../../enums/unit-status.enum';
 import {
   CreateUnitPayload,
@@ -75,6 +75,7 @@ import { PropertyGallery } from '../../models/property-gallery.model';
 import { PropertyGalleryService } from '../../services/property-gallery.service';
 import { UnitFormModal } from '../../components/modals/units/unit-form-modal/unit-form-modal';
 import { ILocationUnit } from '../../models/location-unit.model';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-property-detail',
@@ -137,15 +138,16 @@ import { ILocationUnit } from '../../models/location-unit.model';
   ],
 })
 export class PropertyDetail implements OnInit, OnDestroy {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly service = inject(PropertyService);
-  private readonly unitService = inject(LocationUnitService);
+  private readonly route         = inject(ActivatedRoute);
+  private readonly router        = inject(Router);
+  private readonly service       = inject(PropertyService);
+  private readonly unitService   = inject(LocationUnitService);
   private readonly galleryService = inject(PropertyGalleryService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly toast         = inject(ToastService);
+  private readonly destroy$      = new Subject<void>();
 
   // ── Enums & utils exposés au template ─────────────────────────
-  readonly PropertyStatus = ProperttyStatusEnum;
+  readonly PropertyStatus = PropertyStatusEnum;
   readonly getStatutLabel = getPropertyStatusLabel;
   readonly getStatutClass = getPropertyStatusBadgeClass;
   readonly getStatutDotClass = getPropertyStatusDotClass;
@@ -258,8 +260,6 @@ export class PropertyDetail implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
-          console.log(response.data);
-          
           this.bien.set(response.data);
           this.isLoading.set(false);
         },
@@ -304,16 +304,15 @@ export class PropertyDetail implements OnInit, OnDestroy {
         .subscribe({
           next: (response) => {
             if (response.success) {
-              // Recharger les données
+              this.toast.success('Unité mise à jour avec succès.');
               this.loadProperty();
               this.closeUnitModal();
-              // Optionnel : message de succès
-              console.log('Unité mise à jour avec succès');
             }
+            this.unitSaving.set(false);
           },
           error: (err) => {
-            console.error('Erreur lors de la mise à jour:', err);
-            // Optionnel : afficher une notification d'erreur
+            this.toast.error(err?.error?.message ?? 'Erreur lors de la mise à jour.');
+            this.unitSaving.set(false);
           },
         });
     } else {
@@ -323,24 +322,18 @@ export class PropertyDetail implements OnInit, OnDestroy {
         .subscribe({
           next: (response) => {
             if (response.success) {
-              // Recharger les données
+              this.toast.success('Unité ajoutée avec succès.');
               this.loadProperty();
               this.closeUnitModal();
-              // Optionnel : message de succès
-              console.log('Unité créée avec succès');
             }
+            this.unitSaving.set(false);
           },
           error: (err) => {
-            console.error('Erreur lors de la création:', err);
-            // Optionnel : afficher une notification d'erreur
+            this.toast.error(err?.error?.message ?? 'Erreur lors de la création.');
+            this.unitSaving.set(false);
           },
         });
     }
-
-    // Simuler la fermeture en attendant l'endpoint
-    this.showUnitModal.set(false);
-    this.unitSaving.set(false);
-    this.editingUnit.set(null);
   }
 
   closeUnitModal(): void {
@@ -358,8 +351,8 @@ export class PropertyDetail implements OnInit, OnDestroy {
     const unit = this.deletingUnit();
     if (!unit) return;
 
-    // TODO: this.service.deleteUnit(unit.id).subscribe(...)
-    console.log('Delete unit:', unit.id);
+    // TODO: this.unitService.delete(unit.id).subscribe(...)
+    this.toast.info('Suppression d\'unité non encore implémentée.');
 
     // Optimistic update local en attendant l'endpoint
     this.bien.update((b) =>
@@ -408,13 +401,12 @@ export class PropertyDetail implements OnInit, OnDestroy {
 
     // Vérifier le type de fichier
     if (!file.type.startsWith('image/')) {
-      console.error('Le fichier doit être une image');
+      this.toast.warning('Le fichier doit être une image.');
       return;
     }
 
-    // Vérifier la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      console.error("L'image ne doit pas dépasser 5MB");
+      this.toast.warning("L'image ne doit pas dépasser 5 MB.");
       return;
     }
 
@@ -459,19 +451,17 @@ export class PropertyDetail implements OnInit, OnDestroy {
             const fileInput = document.getElementById('galleryInput') as HTMLInputElement;
             if (fileInput) fileInput.value = '';
 
-            console.log('Image uploadée avec succès');
+            this.toast.success('Image uploadée avec succès.');
           }
         },
         error: (err) => {
-          console.error("Erreur lors de l'upload:", err);
+          this.toast.error(err?.error?.message ?? "Erreur lors de l'upload.");
+          this.isUploading.set(false);
         },
         complete: () => {
           this.isUploading.set(false);
         },
       });
-    // TODO: this.service.uploadImage(propertyId, file).subscribe(...)
-    console.log('Upload image:', this.previewUrl());
-    this.previewUrl.set(null);
   }
 
   confirmDeleteImage(id: number): void {
@@ -518,17 +508,12 @@ export class PropertyDetail implements OnInit, OnDestroy {
               }
             }
 
-            console.log('Image supprimée avec succès');
+            this.toast.success('Image supprimée avec succès.');
           }
         },
         error: (err) => {
-          console.error('Erreur lors de la suppression:', err);
-          // Optionnel : afficher un message d'erreur à l'utilisateur
+          this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
         },
       });
-
-    this.showDeleteImage.set(false);
-    this.deletingImageId.set(null);
-    if (this.showLightbox()) this.closeLightbox();
   }
 }

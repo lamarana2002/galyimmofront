@@ -14,7 +14,7 @@ import {
   lucideWrench,
   lucideAlertTriangle,
 } from '@ng-icons/lucide';
-import { ProperttyStatusEnum } from '../../../enums/property-status.enum';
+import { PropertyStatusEnum } from '../../../enums/property-status.enum';
 import { PropertyModel } from '../../../models/property.model';
 
 @Component({

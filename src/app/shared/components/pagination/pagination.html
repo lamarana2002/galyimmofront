@@ -1,0 +1,62 @@
+<div class="flex items-center justify-between gap-4 px-1 py-3 select-none">
+
+  <!-- Texte info -->
+  <span class="text-sm text-primary-500 shrink-0">
+    {{ rangeText() }}
+  </span>
+
+  <!-- Contrôles -->
+  <nav class="flex items-center gap-1" aria-label="Pagination">
+
+    <!-- Premier -->
+    <button
+      (click)="first()"
+      [disabled]="!hasPrev()"
+      class="pagination-btn"
+      aria-label="Première page">
+      <ng-icon name="lucideChevronsLeft" size="14" />
+    </button>
+
+    <!-- Précédent -->
+    <button
+      (click)="prev()"
+      [disabled]="!hasPrev()"
+      class="pagination-btn"
+      aria-label="Page précédente">
+      <ng-icon name="lucideChevronLeft" size="14" />
+    </button>
+
+    <!-- Pages -->
+    @for (page of pages(); track page) {
+      @if (page === -1) {
+        <span class="px-2 text-primary-400 text-sm">…</span>
+      } @else {
+        <button
+          (click)="go(page)"
+          [class]="page === currentPage() ? 'pagination-btn-active' : 'pagination-btn'"
+          [attr.aria-current]="page === currentPage() ? 'page' : null">
+          {{ page }}
+        </button>
+      }
+    }
+
+    <!-- Suivant -->
+    <button
+      (click)="next()"
+      [disabled]="!hasNext()"
+      class="pagination-btn"
+      aria-label="Page suivante">
+      <ng-icon name="lucideChevronRight" size="14" />
+    </button>
+
+    <!-- Dernier -->
+    <button
+      (click)="last()"
+      [disabled]="!hasNext()"
+      class="pagination-btn"
+      aria-label="Dernière page">
+      <ng-icon name="lucideChevronsRight" size="14" />
+    </button>
+
+  </nav>
+</div>

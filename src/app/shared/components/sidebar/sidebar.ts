@@ -37,13 +37,13 @@ export class Sidebar implements OnInit, OnDestroy {
   userRoles = this.profile.roleNamesArray;  
 
   navs = [
-    { label: "Agences", icon: 'lucideBuilding2', link: '/structures', role: 'super_admin' },
-    { label: "Propriétés", icon: 'lucideHome', link: '/properties',  role: 'owner' },
-    { label: "Locataires", icon: 'lucideUserRound', link: '/locataires', role: 'owner' },
-    { label: "Contrats", icon: 'lucideFileText', link: '/contrats', role: 'owner' },
-    { label: "Utilisateurs", icon: 'lucideUsers', link: '/users', role: 'owner' },
-    { label: "Administrateurs", icon: 'lucideUserCog', link: '/admins', role: 'super_admin' },
-    { label: "Analytics", icon: 'lucideChartNoAxesCombined', link: '/analytics', role: 'super_admin' }, 
+    { label: "Agences", icon: 'lucideBuilding2', link: '/structures', role: 'super-admin' },
+    { label: "Propriétés", icon: 'lucideHome', link: '/properties',  role: 'proprietaire' },
+    { label: "Locataires", icon: 'lucideUserRound', link: '/locataires', role: 'proprietaire' },
+    { label: "Contrats", icon: 'lucideFileText', link: '/contrats', role: 'proprietaire' },
+    { label: "Utilisateurs", icon: 'lucideUsers', link: '/users', role: 'proprietaire' },
+    { label: "Administrateurs", icon: 'lucideUserCog', link: '/admins', role: 'super-admin' },
+    { label: "Analytics", icon: 'lucideChartNoAxesCombined', link: '/analytics', role: 'super-admin' }, 
   ]
 
   isOpen = false;

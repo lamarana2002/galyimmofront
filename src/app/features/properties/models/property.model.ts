@@ -1,4 +1,4 @@
-import { ProperttyStatusEnum } from '../enums/property-status.enum';
+import { PropertyStatusEnum } from '../enums/property-status.enum';
 import { PropertyGallery }     from './property-gallery.model';
 import { PropertyDocument }    from './property-document.model';
 import { PropertyStats }       from './property-stats.model';
@@ -42,7 +42,7 @@ export interface PropertyModel {
   condo_fees: number | null;
 
   // ── Statut ──────────────────────────────────────────────
-  status:      ProperttyStatusEnum;
+  status:      PropertyStatusEnum;
   description: string | null;
 
   // ── Médias ──────────────────────────────────────────────

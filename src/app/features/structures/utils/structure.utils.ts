@@ -2,6 +2,7 @@ import { StructureModel } from '../models/structure.model';
 import { StructureStatus }  from '../enums/structure-status.enum';
 import { StructurePlanType } from '../enums/structure-plan-type.enum';
 import { StructureStats } from '../models/structure-stats.model';
+import { BADGE_CLASSES, DOT_CLASSES } from '../../../shared/utils/status.utils';
 
 // ─────────────────────────────────────────────────────────────────
 // structure.utils.ts
@@ -24,22 +25,22 @@ export function getStatutLabel(status: StructureStatus): string {
 
 export function getStatusBadgeClass(status: StructureStatus): string {
   const map: Record<StructureStatus, string> = {
-    [StructureStatus.APPROUVED]: 'bg-green-100 text-green-700 border-green-200',
-    [StructureStatus.PENDING]:   'bg-amber-100 text-amber-700 border-amber-200',
-    [StructureStatus.SUSPENDED]: 'bg-orange-100 text-orange-700 border-orange-200',
-    [StructureStatus.REJECTED]:  'bg-red-100 text-red-700 border-red-200',
+    [StructureStatus.APPROUVED]: BADGE_CLASSES.success,
+    [StructureStatus.PENDING]:   BADGE_CLASSES.warning,
+    [StructureStatus.SUSPENDED]: BADGE_CLASSES.caution,
+    [StructureStatus.REJECTED]:  BADGE_CLASSES.danger,
   };
-  return map[status] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+  return map[status] ?? BADGE_CLASSES.neutral;
 }
 
 export function getStatusDotClass(status: StructureStatus): string {
   const map: Record<StructureStatus, string> = {
-    [StructureStatus.APPROUVED]: 'bg-green-500',
-    [StructureStatus.PENDING]:   'bg-amber-500',
-    [StructureStatus.SUSPENDED]: 'bg-orange-500',
-    [StructureStatus.REJECTED]:  'bg-red-500',
+    [StructureStatus.APPROUVED]: DOT_CLASSES.success,
+    [StructureStatus.PENDING]:   DOT_CLASSES.warning,
+    [StructureStatus.SUSPENDED]: DOT_CLASSES.caution,
+    [StructureStatus.REJECTED]:  DOT_CLASSES.danger,
   };
-  return map[status] ?? 'bg-gray-400';
+  return map[status] ?? DOT_CLASSES.neutral;
 }
 
 // Règles de transition — quels statuts sont accessibles depuis le statut actuel
@@ -134,24 +135,5 @@ export function getHealthTextClass(score: number): string {
 
 
 // ── Date / Temps ──────────────────────────────────────────────────
-
-export function timeAgo(iso: string): string {
-  if (!iso) return '—';
-  const diff = Date.now() - new Date(iso).getTime();
-  const min  = Math.floor(diff / 60_000);
-  const h    = Math.floor(min  / 60);
-  const d    = Math.floor(h    / 24);
-  if (d > 0)   return `il y a ${d}j`;
-  if (h > 0)   return `il y a ${h}h`;
-  if (min > 0) return `il y a ${min}min`;
-  return "à l'instant";
-}
-
-export function formatDate(iso: string, locale = 'fr-GN'): string {
-  if (!iso) return '—';
-  return new Intl.DateTimeFormat(locale, {
-    day:   '2-digit',
-    month: '2-digit',
-    year:  'numeric',
-  }).format(new Date(iso));
-}
+// Re-export depuis shared pour éviter la duplication
+export { timeAgo, formatDate } from '../../../shared/utils/date.utils';

@@ -15,7 +15,7 @@ import {
 } from '@ng-icons/lucide';
 
 import { PropertyModel } from '../../models/property.model';
-import { ProperttyStatusEnum } from '../../enums/property-status.enum';
+import { PropertyStatusEnum } from '../../enums/property-status.enum';
 import { PropertyService } from '../../services/property.service';
 import { FilterProperty } from '../../interfaces/filter-property.interface';
 import { PropertyKpis } from '../../models/property-kpis.model';
@@ -28,20 +28,20 @@ import { PropertyGridView } from "../../components/propertties/property-grid-vie
 import { ProfileService } from '../../../../core/auth/services/profile.service';
 import { PropertyListView } from "../../components/propertties/property-list-view/property-list-view";
 
+import { Pagination }             from '../../../../shared/components/pagination/pagination';
+import { LoadingComponent }       from '../../../../shared/components/loading/loading';
+import { EmptyStateComponent }    from '../../../../shared/components/empty-state/empty-state';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { ToastService }           from '../../../../shared/services/toast.service';
+
 @Component({
   selector: 'app-properties',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    NgIconComponent,
-    TitleCasePipe,
-    DecimalPipe,
-    AddPropertyModal,
-    PropertyGridView,
-    PropertyListView
-],
+    CommonModule, FormsModule, RouterLink, NgIconComponent, TitleCasePipe, DecimalPipe,
+    AddPropertyModal, PropertyGridView, PropertyListView,
+    Pagination, LoadingComponent, EmptyStateComponent, ConfirmDialogComponent,
+  ],
   templateUrl: './properties.html',
   styleUrls: ['./properties.css'],
   viewProviders: [
@@ -57,13 +57,14 @@ import { PropertyListView } from "../../components/propertties/property-list-vie
 })
 export class Properties implements OnInit, OnDestroy {
   
-  private readonly service = inject(PropertyService);
-  private profile = inject(ProfileService);
-  private router = inject(Router);
+  private readonly service  = inject(PropertyService);
+  private readonly toast    = inject(ToastService);
+  private readonly profile  = inject(ProfileService);
+  private readonly router   = inject(Router);
   private readonly destroy$ = new Subject<void>();
 
   // Enums exposés au template
-  readonly PropertyStatus = ProperttyStatusEnum;
+  readonly PropertyStatus = PropertyStatusEnum;
 
   // Utils exposés au template
   readonly propertyUtils = propertyUtils;
@@ -107,12 +108,12 @@ export class Properties implements OnInit, OnDestroy {
   // ── Filtres ───────────────────────────────────────────────────
   readonly statutFilters = [
     { label: 'Tous', value: 'all' },
-    { label: 'Disponible', value: ProperttyStatusEnum.AVAILABLE },
-    { label: 'À louer', value: ProperttyStatusEnum.FOR_RENT },
-    { label: 'En vente', value: ProperttyStatusEnum.FOR_SALE },
-    { label: 'Loué', value: ProperttyStatusEnum.RENTED },
-    { label: 'Vendu', value: ProperttyStatusEnum.SOLD },
-    { label: 'En travaux', value: ProperttyStatusEnum.UNDER_RENOVATION },
+    { label: 'Disponible', value: PropertyStatusEnum.AVAILABLE },
+    { label: 'À louer', value: PropertyStatusEnum.FOR_RENT },
+    { label: 'En vente', value: PropertyStatusEnum.FOR_SALE },
+    { label: 'Loué', value: PropertyStatusEnum.RENTED },
+    { label: 'Vendu', value: PropertyStatusEnum.SOLD },
+    { label: 'En travaux', value: PropertyStatusEnum.UNDER_RENOVATION },
   ];
 
   // Types (seront chargés depuis le backend)
@@ -295,14 +296,17 @@ export class Properties implements OnInit, OnDestroy {
   }
 
   // ── Actions ───────────────────────────────────────────────────
-  onStatusChanged(data: { id: number; status: ProperttyStatusEnum }): void {
+  onStatusChanged(data: { id: number; status: PropertyStatusEnum }): void {
     this.service.changeStatus(data.id, data.status)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => this.loadAll(this.currentPage()),
-        error: (err) => this.error.set(
-          err?.error?.message ?? 'Erreur lors du changement de statut.'
-        ),
+        next: () => {
+          this.toast.success('Statut mis à jour avec succès.');
+          this.loadAll(this.currentPage());
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors du changement de statut.');
+        },
       });
   }
 
@@ -325,16 +329,16 @@ export class Properties implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
+          this.toast.success(`Bien « ${target.name} » supprimé.`);
           this.deleteTarget.set(null);
           this.deleteLoading.set(false);
-          // Recharge la page courante
           const newPage = this.allProperties().length === 1 && this.currentPage() > 1
             ? this.currentPage() - 1
             : this.currentPage();
           this.loadAll(newPage);
         },
         error: (err) => {
-          this.error.set(err?.error?.message ?? 'Erreur lors de la suppression.');
+          this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
           this.deleteLoading.set(false);
         },
       });

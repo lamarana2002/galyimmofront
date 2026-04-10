@@ -1,13 +1,13 @@
 // ── INTERFACES POUR LES FILTRES ─────────────────────────────────────
 
-import { ProperttyStatusEnum } from "../enums/property-status.enum";
+import { PropertyStatusEnum } from "../enums/property-status.enum";
 
 export interface UnitFilters {
   /** ID de la propriété parent */
   property_id?: number;
   
   /** Statut de l'unité (loué, disponible, etc.) */
-  status?: ProperttyStatusEnum | 'all';
+  status?: PropertyStatusEnum | 'all';
   
   /** Type d'unité (appartement, studio, etc.) */
   unit_type_id?: number;

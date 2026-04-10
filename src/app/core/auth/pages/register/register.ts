@@ -189,12 +189,8 @@ export class RegisterComponent {
     };
 
     this.loading = true;
-    console.log(payload);
-    
     this.sub = this.authService.register(payload, this.files).subscribe({
       error: (err) => {
-        console.log(err);
-        
         this.loading = false;
         const errors = err?.error?.errors;
         if (errors) {

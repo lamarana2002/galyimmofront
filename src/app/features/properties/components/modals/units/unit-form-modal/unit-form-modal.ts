@@ -7,7 +7,7 @@ import {
   unitToUpdatePayload,
   UpdateUnitPayload,
 } from '../../../../interfaces/unit-payload.interface';
-import { ProperttyStatusEnum } from '../../../../enums/property-status.enum';
+import { PropertyStatusEnum } from '../../../../enums/property-status.enum';
 import { PropertyTypeService } from '../../../../services/property-type.service';
 import { LocationUnitService } from '../../../../services/location-unit.service';
 import { Subject } from 'rxjs';
@@ -29,7 +29,7 @@ export class UnitFormModal {
   @Output() close = new EventEmitter<void>();
   @Output() saveUnit = new EventEmitter<CreateUnitPayload | UpdateUnitPayload>();
   
-  readonly PropertyStatus = ProperttyStatusEnum;
+  readonly PropertyStatus = PropertyStatusEnum;
   
   // Signaux internes
   private _unitForm = signal<CreateUnitPayload | UpdateUnitPayload>(emptyUnitForm(0));

@@ -67,6 +67,7 @@ import { SettingsTab } from '../../components/structure-detail/settings-tab/sett
 import { AuditTab } from '../../components/structure-detail/audit-tab/audit-tab';
 import { ChangePlanModal } from '../../components/structure-detail/change-plan-modal/change-plan-modal';
 import { ContactStructureModal } from '../../components/structure-detail/contact-structure-modal/contact-structure-modal';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-structure-details',
@@ -133,9 +134,10 @@ import { ContactStructureModal } from '../../components/structure-detail/contact
   ],
 })
 export class StructureDetails implements OnInit, OnDestroy {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly service = inject(StructureService);
+  private readonly route    = inject(ActivatedRoute);
+  private readonly router   = inject(Router);
+  private readonly service  = inject(StructureService);
+  private readonly toast    = inject(ToastService);
   private readonly destroy$ = new Subject<void>();
 
   // Enums
@@ -248,9 +250,10 @@ export class StructureDetails implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           this.structure.update((current) => ({ ...current!, ...response.data }));
+          this.toast.success('Statut mis à jour avec succès.');
         },
         error: (err) => {
-          this.error.set(err?.error?.message ?? 'Erreur lors du changement de statut.');
+          this.toast.error(err?.error?.message ?? 'Erreur lors du changement de statut.');
         },
       });
   }
@@ -280,9 +283,10 @@ export class StructureDetails implements OnInit, OnDestroy {
         next: () => {
           this.structure.update((current) => ({ ...current!, plan: newPlan }));
           this.showPlanModal.set(false);
+          this.toast.success('Plan mis à jour avec succès.');
         },
         error: (err) => {
-          this.error.set(err?.error?.message ?? 'Erreur lors du changement de plan.');
+          this.toast.error(err?.error?.message ?? 'Erreur lors du changement de plan.');
         },
       });
   }
