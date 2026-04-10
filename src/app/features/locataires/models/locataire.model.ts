@@ -1,4 +1,5 @@
 import { ILocationModel } from "../../properties/models/location.model";
+import { UserStatusEnum } from "../enums/user-status.enum";
 
 export interface ILocataire {
   id: number;
@@ -10,7 +11,7 @@ export interface ILocataire {
   sexe: string | null;
   description: string | null;
   avatar: string;
-  status: 'actif' | 'archive';
+  status: UserStatusEnum;
   
   // Relations
   locations?: ILocationModel[];

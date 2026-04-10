@@ -1,1 +1,566 @@
-<p>locataires works!</p>
+<div class="min-h-screen" style="background: #f4f1ee">
+  <!-- ══ HEADER STICKY ══ -->
+  <div class="bg-white border-b border-gray-200 sticky top-16 z-30 shadow-sm">
+    <div class="px-6 py-4">
+      <div class="flex items-center justify-between gap-4 mb-4">
+        <div>
+          <h1
+            class="text-xl font-bold text-primary-900 flex items-center gap-2.5"
+            style="letter-spacing: -0.02em"
+          >
+            <div class="w-8 h-8 rounded-lg bg-primary-800 flex items-center justify-center">
+              <ng-icon name="lucideUsers" size="16" class="text-white"></ng-icon>
+            </div>
+            Locataires
+          </h1>
+          <p class="text-xs text-primary-400 mt-0.5 ml-10">
+            {{ filteredLocataires().length }}/{{ totalItems() }} locataire(s)
+          </p>
+        </div>
+        <button
+          (click)="openAdd()"
+          class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-primary-800 hover:bg-primary-900 rounded-xl shadow-sm transition-all"
+        >
+          <ng-icon name="lucidePlus" size="13"></ng-icon>
+          Nouveau locataire
+        </button>
+      </div>
+
+      <!-- Recherche + filtres + toggle vue -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="relative flex-1 min-w-[220px] max-w-xs">
+          <ng-icon
+            name="lucideSearch"
+            size="14"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300 pointer-events-none"
+          >
+          </ng-icon>
+          <input
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+            type="text"
+            placeholder="Nom, email, téléphone..."
+            class="w-full pl-9 pr-4 py-2 text-sm text-primary-800 placeholder-primary-300 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 focus:bg-white transition-all"
+          />
+        </div>
+
+        <!-- Filtre statut -->
+        <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          @for (f of statusFilters; track f.value) {
+            <button
+              (click)="onStatusFilterChange(f.value)"
+              class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+              [class]="
+                activeStatus() === f.value
+                  ? 'bg-white text-primary-900 shadow-sm'
+                  : 'text-primary-400 hover:text-primary-700'
+              "
+            >
+              {{ f.label }}
+              <span class="ml-1 text-[10px] opacity-60">({{ getStatusCount(f.value) }})</span>
+            </button>
+          }
+        </div>
+
+        <div class="flex-1"></div>
+
+        <!-- Toggle vue -->
+        <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          <button
+            (click)="viewMode.set('grid')"
+            class="p-1.5 rounded-lg transition-all"
+            [class]="
+              viewMode() === 'grid'
+                ? 'bg-white shadow-sm text-primary-900'
+                : 'text-primary-400 hover:text-primary-700'
+            "
+          >
+            <ng-icon name="lucideLayoutGrid" size="15"></ng-icon>
+          </button>
+          <button
+            (click)="viewMode.set('table')"
+            class="p-1.5 rounded-lg transition-all"
+            [class]="
+              viewMode() === 'table'
+                ? 'bg-white shadow-sm text-primary-900'
+                : 'text-primary-400 hover:text-primary-700'
+            "
+          >
+            <ng-icon name="lucideList" size="15"></ng-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 py-5">
+    <!-- ══ KPI CARDS ══ -->
+    <div class="grid grid-cols-3 gap-3 mb-5">
+      @for (kpi of kpis(); track kpi.label) {
+        <div
+          class="bg-white rounded-2xl border border-gray-200 px-5 py-4 flex items-center gap-3 shadow-sm"
+        >
+          <div
+            class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            [class]="kpi.bgClass"
+          >
+            <ng-icon [name]="kpi.icon" size="20" [class]="kpi.iconClass"></ng-icon>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-primary-900 leading-none">{{ kpi.value }}</p>
+            <p class="text-[11px] text-primary-400 mt-0.5 font-medium">{{ kpi.label }}</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- ══ ÉTATS ══ -->
+    @if (loading()) {
+      <div class="flex flex-col items-center justify-center py-24">
+        <div
+          class="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600"
+        ></div>
+        <p class="mt-4 text-primary-600">Chargement des locataires...</p>
+      </div>
+    } @else if (error(); as errorMsg) {
+      <div
+        class="flex flex-col items-center py-24 text-center bg-red-50 rounded-2xl border border-red-200"
+      >
+        <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-4">
+          <ng-icon name="lucideTriangleAlert" size="28" class="text-red-500"></ng-icon>
+        </div>
+        <p class="font-semibold text-red-600">{{ errorMsg }}</p>
+        <button
+          (click)="loadAll()"
+          class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-red-600 bg-red-100 hover:bg-red-200 rounded-xl transition-all"
+        >
+          <ng-icon name="lucideRefreshCw" size="13"></ng-icon>
+          Réessayer
+        </button>
+      </div>
+    } @else if (filteredLocataires().length === 0) {
+      <div
+        class="flex flex-col items-center py-24 text-center bg-white rounded-2xl border border-gray-200"
+      >
+        <div class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-4">
+          <ng-icon name="lucideSearchX" size="28" class="text-primary-400"></ng-icon>
+        </div>
+        <p class="font-semibold text-primary-600">Aucun locataire trouvé</p>
+        <p class="text-sm text-primary-400 mt-1">
+          @if (allLocataires().length > 0) {
+            Essayez d'autres filtres
+          } @else {
+            Aucun locataire enregistré pour l'instant
+          }
+        </p>
+        @if (allLocataires().length > 0) {
+          <button
+            (click)="resetFilters()"
+            class="mt-4 px-4 py-2 text-sm font-semibold text-secondary-600 bg-secondary-50 hover:bg-secondary-100 border border-secondary-200 rounded-xl transition-all"
+          >
+            Réinitialiser les filtres
+          </button>
+        }
+      </div>
+    } @else {
+      <!-- ══ VUE GRILLE ══ -->
+      @if (viewMode() === 'grid') {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          @for (l of filteredLocataires(); track l.id) {
+            <div
+              class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col overflow-hidden group"
+            >
+              <!-- Cover colorée -->
+              <div
+                class="h-16 flex-shrink-0"
+                style="
+                  background: linear-gradient(
+                    135deg,
+                    var(--color-primary-700),
+                    var(--color-primary-900)
+                  );
+                "
+              ></div>
+
+              <div class="px-4 pb-4 flex flex-col gap-2.5 -mt-8">
+                <!-- Avatar -->
+                <div class="flex items-end justify-between">
+                  <div
+                    class="w-16 h-16 rounded-2xl border-4 border-white shadow-md overflow-hidden flex-shrink-0"
+                  >
+                    @if (l.avatar && l.avatar !== 'avatar.png') {
+                      <img
+                        [src]="l.avatar"
+                        [alt]="l.full_name"
+                        class="w-full h-full object-cover"
+                      />
+                    } @else {
+                      <div
+                        class="w-full h-full bg-secondary-200 flex items-center justify-center text-lg font-bold text-secondary-700"
+                      >
+                        {{ getInitials(l) }}
+                      </div>
+                    }
+                  </div>
+                  <!-- Badge statut -->
+                  <span
+                    class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full border mt-8"
+                    [class]="
+                      l.status === UserStatus.ACTIF
+                        ? 'bg-green-100 text-green-700 border-green-200'
+                        : 'bg-orange-100 text-orange-700 border-orange-200'
+                    "
+                  >
+                    <span
+                      class="w-1.5 h-1.5 rounded-full"
+                      [class]="l.status === UserStatus.ACTIF ? 'bg-green-500' : 'bg-orange-500'"
+                    >
+                    </span>
+                    {{ l.status === UserStatus.ACTIF ? 'Actif' : 'Archivé' }}
+                  </span>
+                </div>
+
+                <!-- Nom -->
+                <div>
+                  <p class="font-bold text-primary-900 text-sm leading-tight">
+                    {{ l.full_name }}
+                  </p>
+                  @if (l.locations?.length) {
+                    <p class="text-[11px] text-secondary-500 font-semibold mt-0.5">
+                      {{ l.locations!.length }} location(s) active(s)
+                    </p>
+                  }
+                </div>
+
+                <!-- Contacts -->
+                <div class="space-y-1">
+                  <p class="flex items-center gap-1.5 text-xs text-primary-500 truncate">
+                    <ng-icon
+                      name="lucideMail"
+                      size="11"
+                      class="text-primary-300 flex-shrink-0"
+                    ></ng-icon>
+                    {{ l.email }}
+                  </p>
+                  <p class="flex items-center gap-1.5 text-xs text-primary-500">
+                    <ng-icon
+                      name="lucidePhone"
+                      size="11"
+                      class="text-primary-300 flex-shrink-0"
+                    ></ng-icon>
+                    {{ l.telephone }}
+                  </p>
+                </div>
+
+                <!-- Actions -->
+                <div class="grid grid-cols-3 gap-1.5 pt-1">
+                  <a
+                    [routerLink]="['/locataires', l.id]"
+                    class="flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-primary-600 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded-lg transition-all"
+                  >
+                    <ng-icon name="lucideEye" size="11"></ng-icon> Détail
+                  </a>
+                  <button
+                    (click)="openEdit(l)"
+                    class="flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-all"
+                  >
+                    <ng-icon name="lucidePencil" size="11"></ng-icon> Modifier
+                  </button>
+                  <button
+                    (click)="confirmDelete(l)"
+                    class="flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-red-500 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-all"
+                  >
+                    <ng-icon name="lucideTrash2" size="11"></ng-icon> Suppr.
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ══ VUE TABLEAU ══ -->
+      @if (viewMode() === 'table') {
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-100 bg-gray-50/80">
+                  <th
+                    class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+                  >
+                    Locataire
+                  </th>
+                  <th
+                    class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+                  >
+                    Contact
+                  </th>
+                  <th
+                    class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+                  >
+                    Statut
+                  </th>
+                  <th
+                    class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+                  >
+                    Locations
+                  </th>
+                  <th
+                    class="px-4 py-3.5 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+                  >
+                    Depuis
+                  </th>
+                  <th
+                    class="px-4 py-3.5 text-right text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-50">
+                @for (l of filteredLocataires(); track l.id) {
+                  <tr class="hover:bg-gray-50/60 transition-colors group">
+                    <!-- Locataire -->
+                    <td class="px-4 py-4">
+                      <div class="flex items-center gap-3">
+                        <div
+                          class="w-9 h-9 rounded-xl flex-shrink-0 overflow-hidden border border-gray-100"
+                        >
+                          @if (l.avatar && l.avatar !== 'avatar.png') {
+                            <img
+                              [src]="l.avatar"
+                              [alt]="l.full_name"
+                              class="w-full h-full object-cover"
+                            />
+                          } @else {
+                            <div
+                              class="w-full h-full bg-secondary-200 flex items-center justify-center text-xs font-bold text-secondary-700"
+                            >
+                              {{ getInitials(l) }}
+                            </div>
+                          }
+                        </div>
+                        <div>
+                          <p class="font-semibold text-primary-900 text-sm">{{ l.full_name }}</p>
+                          <p class="text-[11px] text-primary-400 mt-0.5">
+                            {{ l.sexe ?? '—' }}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- Contact -->
+                    <td class="px-4 py-4">
+                      <p class="text-xs text-primary-700 flex items-center gap-1">
+                        <ng-icon name="lucideMail" size="11" class="text-primary-300"></ng-icon>
+                        {{ l.email }}
+                      </p>
+                      <p class="text-xs text-primary-500 flex items-center gap-1 mt-1">
+                        <ng-icon name="lucidePhone" size="11" class="text-primary-300"></ng-icon>
+                        {{ l.telephone }}
+                      </p>
+                    </td>
+
+                    <!-- Statut -->
+                    <td class="px-4 py-4">
+                      <span
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full border"
+                        [class]="
+                          l.status === UserStatus.ACTIF
+                            ? 'bg-green-100 text-green-700 border-green-200'
+                            : 'bg-orange-100 text-orange-700 border-orange-200'
+                        "
+                      >
+                        <span
+                          class="w-1.5 h-1.5 rounded-full"
+                          [class]="l.status === UserStatus.ACTIF ? 'bg-green-500' : 'bg-orange-500'"
+                        >
+                        </span>
+                        {{ l.status === UserStatus.ACTIF ? 'Actif' : 'Archivé' }}
+                      </span>
+                    </td>
+
+                    <!-- Locations -->
+                    <td class="px-4 py-4">
+                      <span class="text-sm font-bold text-primary-900">
+                        {{ l.locations?.length ?? 0 }}
+                      </span>
+                      <span class="text-xs text-primary-400 ml-1">location(s)</span>
+                    </td>
+
+                    <!-- Date -->
+                    <td class="px-4 py-4 text-xs text-primary-500 whitespace-nowrap">
+                      {{ l.created_at | date: 'dd/MM/yyyy' }}
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="px-4 py-4">
+                      <div
+                        class="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <a
+                          [routerLink]="['/locataires', l.id]"
+                          class="p-1.5 text-primary-400 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-all"
+                          title="Voir le détail"
+                        >
+                          <ng-icon name="lucideEye" size="15"></ng-icon>
+                        </a>
+                        <button
+                          (click)="openEdit(l)"
+                          class="p-1.5 text-primary-400 hover:bg-amber-50 hover:text-amber-600 rounded-lg transition-all"
+                          title="Modifier"
+                        >
+                          <ng-icon name="lucidePencil" size="15"></ng-icon>
+                        </button>
+                        <button
+                          (click)="confirmDelete(l)"
+                          class="p-1.5 text-primary-300 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
+                          title="Supprimer"
+                        >
+                          <ng-icon name="lucideTrash2" size="15"></ng-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination tableau -->
+          @if (totalPages() > 1) {
+            <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between">
+              <p class="text-xs text-primary-400">
+                Page <span class="font-semibold text-primary-700">{{ currentPage() }}</span> sur
+                {{ totalPages() }} ·
+                <span class="font-semibold text-primary-700">{{ totalItems() }}</span> locataires
+              </p>
+              <div class="flex items-center gap-1">
+                <button
+                  (click)="onPageChange(currentPage() - 1)"
+                  [disabled]="!hasPrev()"
+                  class="px-3 py-1.5 text-xs font-medium text-primary-400 hover:text-primary-700 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  ← Précédent
+                </button>
+                @for (p of pagesArray(); track p) {
+                  <button
+                    (click)="onPageChange(p)"
+                    class="w-7 h-7 flex items-center justify-center text-xs font-semibold rounded-lg transition-all"
+                    [class]="
+                      currentPage() === p
+                        ? 'bg-secondary-500 text-white'
+                        : 'text-primary-500 hover:bg-gray-50'
+                    "
+                  >
+                    {{ p }}
+                  </button>
+                }
+                <button
+                  (click)="onPageChange(currentPage() + 1)"
+                  [disabled]="!hasNext()"
+                  class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Suivant →
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Pagination grille -->
+      @if (viewMode() === 'grid' && totalPages() > 1) {
+        <div class="flex items-center justify-between mt-6">
+          <p class="text-xs text-primary-400">
+            Page <span class="font-semibold text-primary-700">{{ currentPage() }}</span> sur
+            {{ totalPages() }}
+          </p>
+          <div class="flex items-center gap-1">
+            <button
+              (click)="onPageChange(currentPage() - 1)"
+              [disabled]="!hasPrev()"
+              class="px-3 py-1.5 text-xs font-medium text-primary-400 hover:text-primary-700 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              ← Précédent
+            </button>
+            @for (p of pagesArray(); track p) {
+              <button
+                (click)="onPageChange(p)"
+                class="w-7 h-7 flex items-center justify-center text-xs font-semibold rounded-lg transition-all"
+                [class]="
+                  currentPage() === p
+                    ? 'bg-secondary-500 text-white'
+                    : 'text-primary-500 hover:bg-gray-50'
+                "
+              >
+                {{ p }}
+              </button>
+            }
+            <button
+              (click)="onPageChange(currentPage() + 1)"
+              [disabled]="!hasNext()"
+              class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Suivant →
+            </button>
+          </div>
+        </div>
+      }
+    }
+    <!-- fin @else -->
+  </div>
+</div>
+
+<!-- ══ MODAL AJOUT / MODIFICATION ══ -->
+@if (showModal()) {
+  <app-locataire-modal
+    [locataire]="editingLocataire()"
+    (saved)="onSaved($event)"
+    (cancel)="closeModal()"
+  />
+}
+
+<!-- ══ MODAL SUPPRESSION ══ -->
+@if (deleteTarget(); as target) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="cancelDelete()">
+    <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
+    <div
+      class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
+        <ng-icon name="lucideTrash2" size="24" class="text-red-500"></ng-icon>
+      </div>
+      <h3 class="font-bold text-primary-900 text-center mb-2">Supprimer le locataire ?</h3>
+      <p class="text-sm text-primary-500 text-center mb-5">
+        <strong class="text-primary-700">{{ target.full_name }}</strong> sera définitivement
+        supprimé. Cette action est irréversible.
+      </p>
+      <div class="flex gap-2">
+        <button
+          (click)="deleteLocataire()"
+          [disabled]="deleteLoading()"
+          class="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          @if (deleteLoading()) {
+            <div
+              class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
+            ></div>
+            Suppression...
+          } @else {
+            Supprimer
+          }
+        </button>
+        <button
+          (click)="cancelDelete()"
+          [disabled]="deleteLoading()"
+          class="flex-1 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all disabled:opacity-60"
+        >
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+}

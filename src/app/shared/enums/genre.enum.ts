@@ -1,4 +1,6 @@
 export enum GenreEnum  {
-   MALE = 'Masculin' ,
-   FEMALE =  'Feminin',
+   MALE = 'homme' ,
+   FEMALE =  'femme',
 }
+
+export const GenreValues = Object.values(GenreEnum);

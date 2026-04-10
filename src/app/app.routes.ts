@@ -136,6 +136,7 @@ export const routes: Routes = [
       { path: 'properties', loadComponent: () => import('./features/properties/pages/properties/properties').then(m => m.Properties) },
       { path: 'properties/:propertyId', loadComponent: () => import('./features/properties/pages/property-detail/property-detail').then(m => m.PropertyDetail) },
       { path: 'properties/:propertyId/units/:unitId', loadComponent: () => import('./features/properties/pages/location-unit/location-unit').then(m => m.LocationUnit) },
+      { path: 'locataires', loadComponent: () => import('./features/locataires/pages/locataires/locataires').then(m => m.Locataires) },
     ]
   },
 ];
