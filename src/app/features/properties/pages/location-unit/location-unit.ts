@@ -27,6 +27,7 @@ import { CreateUnitPayload, UpdateUnitPayload } from '../../interfaces/unit-payl
 import { TenantTab } from '../../components/shared-tabs/tenant-tab/tenant-tab';
 import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
 import { GalleryTab } from '../../components/shared-tabs/gallery-tab/gallery-tab';
+import { CreateLocationModal } from '../../components/modals/create-location-modal/create-location-modal';
 
 
 export interface Locataire {
@@ -95,7 +96,8 @@ export interface UniteDetail {
   selector: 'app-property-detail',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, NgIconComponent,
-            DatePipe, DecimalPipe, TitleCasePipe, UnitFormModal, TenantTab, LeasesTab, GalleryTab],
+            DatePipe, DecimalPipe, TitleCasePipe, UnitFormModal, TenantTab, LeasesTab, GalleryTab,
+            CreateLocationModal],
   templateUrl: './location-unit.html',
   viewProviders: [
     provideIcons({
@@ -126,9 +128,10 @@ export class LocationUnit implements OnInit, OnDestroy {
   deleteLoading = signal(false);
 
   // Modal UI
-  showUnitModal = signal(false);
-  editingUnit = signal<ILocationUnit | null>(null);
-  unitSaving = signal(false);
+  showUnitModal     = signal(false);
+  editingUnit       = signal<ILocationUnit | null>(null);
+  unitSaving        = signal(false);
+  showLocationModal = signal(false);
 
   // UI
   activeTab = 'infos';
@@ -322,7 +325,17 @@ export class LocationUnit implements OnInit, OnDestroy {
   }
 
   affecterLocataire(): void {
-    // TODO: Ouvrir modal d'affectation
+    this.showLocationModal.set(true);
+  }
+
+  onLocationSaved(): void {
+    this.showLocationModal.set(false);
+    this.toast.success('Location créée avec succès.');
+    this.loadUnit();
+  }
+
+  onLocationError(message: string): void {
+    this.toast.error(message);
   }
 
   // ── Galerie ────────────────────────────────────────────────────
