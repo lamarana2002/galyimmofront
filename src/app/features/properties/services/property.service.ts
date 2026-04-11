@@ -146,6 +146,8 @@ export class PropertyService {
     Object.entries(payload).forEach(([key, value]) => {
       if (value instanceof File) {
         form.append(key, value);
+      } else if (typeof value === 'boolean') {
+        form.append(key, value ? '1' : '0');
       } else if (value !== undefined && value !== null) {
         form.append(key, value.toString());
       }

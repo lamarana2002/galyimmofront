@@ -68,6 +68,7 @@ import { AuditTab } from '../../components/structure-detail/audit-tab/audit-tab'
 import { ChangePlanModal } from '../../components/structure-detail/change-plan-modal/change-plan-modal';
 import { ContactStructureModal } from '../../components/structure-detail/contact-structure-modal/contact-structure-modal';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { AddStructureModal } from '../../components/modals/add-structure-modal/add-structure-modal';
 
 @Component({
   selector: 'app-structure-details',
@@ -88,6 +89,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
     AuditTab,
     ChangePlanModal,
     ContactStructureModal,
+    AddStructureModal,
   ],
   templateUrl: './structure-details.html',
   viewProviders: [
@@ -177,6 +179,8 @@ export class StructureDetails implements OnInit, OnDestroy {
   showContactModal = signal(false);
   showDeleteConfirm = signal(false);
   showPlanModal = signal(false);
+  showEditModal = signal(false);
+
   contactSubject = signal('');
   contactMessage = signal('');
 
@@ -302,6 +306,16 @@ export class StructureDetails implements OnInit, OnDestroy {
     this.showContactModal.set(false);
     this.contactSubject.set('');
     this.contactMessage.set('');
+  }
+
+  openEditStructure(): void {
+    this.showEditModal.set(true);
+  }
+
+  onStructureSaved(updated: StructureModel): void {
+    this.structure.update((s) => ({ ...s!, ...updated }));
+    // Optional: reload full detailed stats
+    this.loadStructure();
   }
 
   confirmDelete(): void {

@@ -23,285 +23,193 @@
     </div>
 
     <!-- Body scrollable -->
-    <div class="overflow-y-auto flex-1 p-6">
-      <div class="grid grid-cols-3 gap-4">
-        <!-- Nom du bien (required) -->
-        <div class="col-span-2">
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">
-            Nom du bien <span class="text-red-500">*</span>
-          </label>
-          <input
-            [(ngModel)]="form().name"
-            type="text"
-            placeholder="Ex: Résidence Les Palmiers"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-            [class.border-red-300]="errors['name']"
-          />
-          @if (errors['name']) {
-            <p class="text-red-500 text-[10px] mt-1">{{ errors['name'] }}</p>
-          }
-        </div>
-
-        <!-- Code / Référence -->
-        <div>
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Code / Réf.</label>
-          <input
-            [(ngModel)]="form().code"
-            type="text"
-            placeholder="Ex: IMM-2024-001"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-          />
-        </div>
-
-        <!-- Type de bien (required) -->
-        <div>
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">
-            Type <span class="text-red-500">*</span>
-          </label>
-          <select
-            [(ngModel)]="form().property_type_id"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white"
-            [class.border-red-300]="errors['property_type_id']"
-          >
-            <option value="">Sélectionner un type</option>
-            @for (type of propertyTypes(); track type.id) {
-              <option [value]="type.id.toString()">
-                <ng-icon [name]="type.icon" size="12" class="mr-1"></ng-icon>
-                {{ type.name }}
-              </option>
-            }
-          </select>
-          @if (errors['property_type_id']) {
-            <p class="text-red-500 text-[10px] mt-1">{{ errors['property_type_id'] }}</p>
-          }
-        </div>
-
-        <!-- Statut (required) -->
-        <div>
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">
-            Statut <span class="text-red-500">*</span>
-          </label>
-          <select
-            [(ngModel)]="form().status"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white"
-            [class.border-red-300]="errors['status']"
-          >
-            <option value="">Sélectionner un statut</option>
-            @for (status of statusOptions; track status.value) {
-              <option [value]="status.value">{{ status.label }}</option>
-            }
-          </select>
-          @if (errors['status']) {
-            <p class="text-red-500 text-[10px] mt-1">{{ errors['status'] }}</p>
-          }
-        </div>
-
-        <!-- Adresse -->
-        <div class="col-span-2">
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Adresse</label>
-          <input
-            [(ngModel)]="form().address"
-            type="text"
-            placeholder="Ex: Boulevard de la République"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-          />
-        </div>
-
-        <!-- Ville -->
-        <div>
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Ville</label>
-          <input
-            [(ngModel)]="form().city"
-            type="text"
-            placeholder="Ex: Abidjan"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-          />
-        </div>
-
-        <!-- Code postal -->
-        <div>
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Code postal</label>
-          <input
-            [(ngModel)]="form().postal_code"
-            type="text"
-            placeholder="Ex: 01 BP 1234"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-          />
-        </div>
-
-        <!-- Pays -->
-        <div>
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Pays</label>
-          <input
-            [(ngModel)]="form().country"
-            type="text"
-            placeholder="Ex: Côte d'Ivoire"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-          />
-        </div>
-
-        <!-- Surface totale -->
-        <div>
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Surface (m²)</label>
-          <input
-            [(ngModel)]="form().total_surface"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-          />
-        </div>
-
-        <!-- Nombre d'étages -->
-        <div>
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Nombre d'étages</label>
-          <input
-            [(ngModel)]="form().total_floors"
-            type="number"
-            min="0"
-            placeholder="0"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-          />
-        </div>
-
-        <!-- Prix de vente -->
-        <div>
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5"
-            >Prix de vente (GNF)</label
-          >
-          <input
-            [(ngModel)]="form().sale_price"
-            type="number"
-            min="0"
-            placeholder="0"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-          />
-        </div>
-
-        <!-- Frais de copropriété -->
-        <div>
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5"
-            >Charges copro. (GNF)</label
-          >
-          <input
-            [(ngModel)]="form().condo_fees"
-            type="number"
-            min="0"
-            placeholder="0"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-          />
-        </div>
-
-        <!-- Has Units (Checkbox) -->
-        <div class="flex items-end pb-2">
-          <label class="flex items-center gap-2.5 cursor-pointer">
-            <input
-              type="checkbox"
-              [(ngModel)]="form().has_units"
-              class="w-4 h-4 rounded text-secondary-500 border-gray-300 cursor-pointer"
-            />
-            <span class="text-sm font-medium text-primary-700">Bien avec unités</span>
-          </label>
-        </div>
-
-        <!-- Active (Checkbox) -->
-        <div class="flex items-end pb-2">
-          <label class="flex items-center gap-2.5 cursor-pointer">
-            <input
-              type="checkbox"
-              [(ngModel)]="form().is_active"
-              class="w-4 h-4 rounded text-secondary-500 border-gray-300 cursor-pointer"
-            />
-            <span class="text-sm font-medium text-primary-700">Bien actif</span>
-          </label>
-        </div>
-
-        <!-- Image de couverture -->
-        <div class="col-span-3">
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5"
-            >Image de couverture</label
-          >
-          <div class="flex items-center gap-3">
-            <div
-              class="w-20 h-20 rounded-xl border border-gray-200 overflow-hidden flex-shrink-0 bg-gray-50"
-            >
-              @if (form().cover_image_preview) {
-                <img [src]="form().cover_image_preview" class="w-full h-full object-cover" />
-              } @else {
-                <div class="w-full h-full flex items-center justify-center">
-                  <ng-icon name="lucideImage" size="24" class="text-primary-200"></ng-icon>
-                </div>
-              }
+    <div class="overflow-y-auto flex-1 p-6 bg-white">
+      <div class="space-y-6">
+        
+        <!-- SECTION: Informations Générales -->
+        <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5">
+          <h4 class="text-sm font-bold text-primary-800 mb-4 flex items-center gap-2">
+            <ng-icon name="lucideInfo" size="16" class="text-secondary-500"></ng-icon>
+            Informations Générales
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">
+                Nom du bien <span class="text-red-500">*</span>
+              </label>
+              <input [(ngModel)]="form().name" type="text" placeholder="Ex: Résidence Les Palmiers"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white"
+                [class.border-red-300]="errors['name']" />
+              @if (errors['name']) { <p class="text-red-500 text-[10px] mt-1">{{ errors['name'] }}</p> }
             </div>
-            <div class="flex-1">
-              <input
-                type="file"
-                (change)="onCoverImageSelected($event)"
-                accept="image/*"
-                class="hidden"
-                #fileInput
-              />
-              <button
-                type="button"
-                (click)="fileInput.click()"
-                class="px-4 py-2 text-xs font-semibold text-primary-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-all"
-              >
-                Choisir une image
-              </button>
-              <p class="text-[10px] text-primary-400 mt-1">PNG, JPG, JPEG max 2MB</p>
+
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Code / Réf.</label>
+              <input [(ngModel)]="form().code" type="text" placeholder="Ex: IMM-2024-001"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">
+                Type <span class="text-red-500">*</span>
+              </label>
+              <select [(ngModel)]="form().property_type_id"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white"
+                [class.border-red-300]="errors['property_type_id']">
+                <option value="">Sélectionner un type</option>
+                @for (type of propertyTypes(); track type.id) {
+                  <option [value]="type.id.toString()">{{ type.name }}</option>
+                }
+              </select>
+              @if (errors['property_type_id']) { <p class="text-red-500 text-[10px] mt-1">{{ errors['property_type_id'] }}</p> }
             </div>
           </div>
         </div>
 
-        <!-- Description (full width) -->
-        <div class="col-span-3">
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Description</label>
-          <textarea
-            [(ngModel)]="form().description"
-            rows="3"
-            placeholder="Description détaillée du bien..."
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 resize-none"
-          ></textarea>
+        <!-- SECTION: Configuration & Statut -->
+        <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5">
+          <h4 class="text-sm font-bold text-primary-800 mb-4 flex items-center gap-2">
+            <ng-icon name="lucideLayoutGrid" size="16" class="text-secondary-500"></ng-icon>
+            Configuration & Statut
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Surface (m²)</label>
+              <input [(ngModel)]="form().total_surface" type="number" step="0.01" min="0" placeholder="0"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Nbre d'étages</label>
+              <input [(ngModel)]="form().total_floors" type="number" min="0" placeholder="0"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">
+                Statut <span class="text-red-500">*</span>
+              </label>
+              <select [(ngModel)]="form().status"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white"
+                [class.border-red-300]="errors['status']">
+                <option value="">Sélectionner</option>
+                @for (status of statusOptions; track status.value) {
+                  <option [value]="status.value">{{ status.label }}</option>
+                }
+              </select>
+              @if (errors['status']) { <p class="text-red-500 text-[10px] mt-1">{{ errors['status'] }}</p> }
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-6 mt-4 pt-4 border-t border-gray-200/60">
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="form().has_units"
+                class="w-[18px] h-[18px] rounded text-secondary-500 border-gray-300 focus:ring-secondary-500 cursor-pointer" />
+              <span class="text-sm font-medium text-primary-700">Bien composé d'unités (ex: immeuble)</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="form().is_active"
+                class="w-[18px] h-[18px] rounded text-secondary-500 border-gray-300 focus:ring-secondary-500 cursor-pointer" />
+              <span class="text-sm font-medium text-primary-700">Rendre le bien actif</span>
+            </label>
+          </div>
         </div>
 
-        <!-- Amenities (JSON) - Optionnel -->
-        <!-- <div class="col-span-3">
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5"
-            >Équipements (JSON)</label
-          >
-          <textarea
-            [(ngModel)]="form().amenities"
-            rows="2"
-            placeholder='["ascenseur", "parking", "piscine"]'
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 resize-none font-mono"
-          ></textarea>
-          <p class="text-[10px] text-primary-400 mt-1">
-            Format JSON: ["équipement1", "équipement2"]
-          </p>
-        </div> -->
+        <!-- SECTION: Localisation -->
+        <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5">
+          <h4 class="text-sm font-bold text-primary-800 mb-4 flex items-center gap-2">
+            <ng-icon name="lucideMapPin" size="16" class="text-secondary-500"></ng-icon>
+            Localisation
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-3">
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Adresse exacte</label>
+              <input [(ngModel)]="form().address" type="text" placeholder="Ex: Boulevard de la République"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Ville</label>
+              <input [(ngModel)]="form().city" type="text" placeholder="Ex: Abidjan"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Code postal</label>
+              <input [(ngModel)]="form().postal_code" type="text" placeholder="Ex: 01 BP 1234"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Pays</label>
+              <input [(ngModel)]="form().country" type="text" placeholder="Ex: Côte d'Ivoire"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Latitude (GPS)</label>
+              <input [(ngModel)]="form().latitude" type="number" step="0.0001" placeholder="Ex: 5.3364"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Longitude (GPS)</label>
+              <input [(ngModel)]="form().longitude" type="number" step="0.0001" placeholder="Ex: -4.0267"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+          </div>
+        </div>
 
-        <!-- Coordonnées GPS -->
-        <div class="col-span-2">
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Latitude</label>
-          <input
-            [(ngModel)]="form().latitude"
-            type="number"
-            step="0.0001"
-            placeholder="Ex: 5.3364"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-          />
+        <!-- SECTION: Finances -->
+        <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5">
+          <h4 class="text-sm font-bold text-primary-800 mb-4 flex items-center gap-2">
+            <ng-icon name="lucideBanknote" size="16" class="text-secondary-500"></ng-icon>
+            Données Financières
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Prix de vente (GNF)</label>
+              <input [(ngModel)]="form().sale_price" type="number" min="0" placeholder="0"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Charges copro. (GNF)</label>
+              <input [(ngModel)]="form().condo_fees" type="number" min="0" placeholder="0"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Longitude</label>
-          <input
-            [(ngModel)]="form().longitude"
-            type="number"
-            step="0.0001"
-            placeholder="Ex: -4.0267"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
-          />
+
+        <!-- SECTION: Médias & Description -->
+        <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5">
+          <h4 class="text-sm font-bold text-primary-800 mb-4 flex items-center gap-2">
+            <ng-icon name="lucideImage" size="16" class="text-secondary-500"></ng-icon>
+            Médias & Description
+          </h4>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Image de couverture</label>
+              <div class="flex items-center gap-4">
+                <div class="w-20 h-20 rounded-xl border border-gray-200 overflow-hidden flex-shrink-0 bg-white shadow-sm">
+                  @if (form().cover_image_preview) {
+                    <img [src]="form().cover_image_preview" class="w-full h-full object-cover" />
+                  } @else {
+                    <div class="w-full h-full flex items-center justify-center">
+                      <ng-icon name="lucideImage" size="24" class="text-primary-200"></ng-icon>
+                    </div>
+                  }
+                </div>
+                <div>
+                  <input type="file" (change)="onCoverImageSelected($event)" accept="image/*" class="hidden" #fileInput />
+                  <button type="button" (click)="fileInput.click()"
+                    class="px-4 py-2 text-xs font-semibold text-primary-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl transition-all shadow-sm">
+                    Parcourir les fichiers
+                  </button>
+                  <p class="text-[10px] text-primary-400 mt-1.5">Format supporté : PNG, JPG, JPEG (Max 2MB)</p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Description complète</label>
+              <textarea [(ngModel)]="form().description" rows="3" placeholder="Idéalement situé, ce bien offre..."
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white resize-none"></textarea>
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
 

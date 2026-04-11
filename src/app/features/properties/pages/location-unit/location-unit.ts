@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeft, lucideBuilding2, lucideHome, lucideMapPin,
@@ -22,6 +22,11 @@ import { ILocationUnit } from '../../models/location-unit.model';
 import { IUnitGallery } from '../../models/unit-gallery.model';
 import { getUnitStatusBadgeClass, getUnitStatusLabel } from '../../utils/property.utils';
 import { ILocationModel } from '../../models/location.model';
+import { UnitFormModal } from '../../components/modals/units/unit-form-modal/unit-form-modal';
+import { CreateUnitPayload, UpdateUnitPayload } from '../../interfaces/unit-payload.interface';
+import { TenantTab } from '../../components/shared-tabs/tenant-tab/tenant-tab';
+import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
+import { GalleryTab } from '../../components/shared-tabs/gallery-tab/gallery-tab';
 
 
 export interface Locataire {
@@ -90,7 +95,7 @@ export interface UniteDetail {
   selector: 'app-property-detail',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, NgIconComponent,
-            DatePipe, DecimalPipe, TitleCasePipe],
+            DatePipe, DecimalPipe, TitleCasePipe, UnitFormModal, TenantTab, LeasesTab, GalleryTab],
   templateUrl: './location-unit.html',
   viewProviders: [
     provideIcons({
@@ -108,6 +113,7 @@ export interface UniteDetail {
 })
 export class LocationUnit implements OnInit, OnDestroy {
   private readonly route       = inject(ActivatedRoute);
+  private readonly router      = inject(Router);
   private readonly unitService = inject(LocationUnitService);
   private readonly toast       = inject(ToastService);
   private readonly destroy$    = new Subject<void>();
@@ -116,6 +122,13 @@ export class LocationUnit implements OnInit, OnDestroy {
   isLoading = signal(true);
   error = signal<string | null>(null);
   unite = signal<ILocationUnit | null>(null);
+  showDeleteConfirm = signal(false);
+  deleteLoading = signal(false);
+
+  // Modal UI
+  showUnitModal = signal(false);
+  editingUnit = signal<ILocationUnit | null>(null);
+  unitSaving = signal(false);
 
   // UI
   activeTab = 'infos';
@@ -236,6 +249,54 @@ export class LocationUnit implements OnInit, OnDestroy {
   }
 
   // ── Actions ───────────────────────────────────────────────────
+  openEditUnit(): void {
+    this.editingUnit.set(this.unite() ?? null);
+    this.showUnitModal.set(true);
+  }
+
+  confirmDeleteUnit(): void {
+    this.showDeleteConfirm.set(true);
+  }
+
+  deleteUnit(): void {
+    const u = this.unite();
+    if (!u) return;
+
+    this.deleteLoading.set(true);
+    this.unitService.delete(u.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.toast.success('Unité supprimée avec succès.');
+        this.deleteLoading.set(false);
+        this.router.navigate(['/properties', u.property_id]);
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
+        this.deleteLoading.set(false);
+        this.showDeleteConfirm.set(false);
+      }
+    });
+  }
+
+  saveUnit(payload: CreateUnitPayload | UpdateUnitPayload): void {
+    if (!payload) return;
+    this.unitSaving.set(true);
+
+    this.unitService.update(payload as UpdateUnitPayload).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toast.success('Unité mise à jour avec succès.');
+          this.loadUnit();
+          this.showUnitModal.set(false);
+        }
+        this.unitSaving.set(false);
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? 'Erreur lors de la mise à jour.');
+        this.unitSaving.set(false);
+      }
+    });
+  }
+
   changerStatut(statut: UnitStatutEnum): void {
     const unit = this.unite();
     if (!unit) return;

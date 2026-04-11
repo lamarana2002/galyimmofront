@@ -102,7 +102,7 @@
 // ];
 
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/auth/guards/auth-guard';
+import { authGuard, guestGuard, permissionGuard, roleGuard } from './core/auth/guards/auth-guard';
 
 export const routes: Routes = [
 
@@ -128,15 +128,52 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./layouts/app-layout/app-layout').then(m => m.AppLayout),
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'properties', pathMatch: 'full' }, // ← redirection par défaut
-      { path: 'structures', loadComponent: () => import('./features/structures/pages/structures/structures').then(m => m.Structures) },
-      { path: 'structures/:structureId', loadComponent: () => import('./features/structures/pages/structure-details/structure-details').then(m => m.StructureDetails) },
-      { path: 'properties', loadComponent: () => import('./features/properties/pages/properties/properties').then(m => m.Properties) },
-      { path: 'properties/:propertyId', loadComponent: () => import('./features/properties/pages/property-detail/property-detail').then(m => m.PropertyDetail) },
-      { path: 'properties/:propertyId/units/:unitId', loadComponent: () => import('./features/properties/pages/location-unit/location-unit').then(m => m.LocationUnit) },
-      { path: 'locataires', loadComponent: () => import('./features/locataires/pages/locataires/locataires').then(m => m.Locataires) },
+      
+      { 
+        path: 'structures', 
+        canActivate: [permissionGuard(['structures.index'])],
+        loadComponent: () => import('./features/structures/pages/structures/structures').then(m => m.Structures) 
+      },
+      { 
+        path: 'structures/:structureId', 
+        canActivate: [permissionGuard(['structures.show'])],
+        loadComponent: () => import('./features/structures/pages/structure-details/structure-details').then(m => m.StructureDetails) 
+      },
+      
+      { 
+        path: 'properties', 
+        canActivate: [permissionGuard(['properties.index'])],
+        loadComponent: () => import('./features/properties/pages/properties/properties').then(m => m.Properties) 
+      },
+      { 
+        path: 'properties/:propertyId', 
+        canActivate: [permissionGuard(['properties.show'])],
+        loadComponent: () => import('./features/properties/pages/property-detail/property-detail').then(m => m.PropertyDetail) 
+      },
+      { 
+        path: 'properties/:propertyId/units/:unitId', 
+        canActivate: [permissionGuard(['units.show'])],
+        loadComponent: () => import('./features/properties/pages/location-unit/location-unit').then(m => m.LocationUnit) 
+      },
+      
+      { 
+        path: 'locataires', 
+        canActivate: [permissionGuard(['locataires.index'])],
+        loadComponent: () => import('./features/locataires/pages/locataires/locataires').then(m => m.Locataires) 
+      },
     ]
+  },
+
+  // ── Erreurs ────────────────────────────────────────────────────────
+  {
+    path: '403',
+    loadComponent: () => import('./shared/pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
+  },
+  {
+    path: '**',
+    loadComponent: () => import('./shared/pages/not-found/not-found.component').then(m => m.NotFoundComponent),
   },
 ];

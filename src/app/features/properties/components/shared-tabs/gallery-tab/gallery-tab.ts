@@ -2,7 +2,11 @@ import { Component, Input, output } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
 import { provideIcons } from '@ng-icons/core';
 import { lucideUpload, lucideImage, lucideZoomIn, lucideTrash2 } from '@ng-icons/lucide';
-import { PropertyModel } from '../../../models/property.model';
+
+export interface IGalleryItem {
+  id: number;
+  image: string;
+}
 
 @Component({
   selector: 'app-gallery-tab',
@@ -17,7 +21,8 @@ export class GalleryTab {
   onUploadImage = output<void>();
   onCancelUpload = output<void>();
   onFileSelected = output<Event>();
-  @Input({ required: true }) bien!: PropertyModel;
+
+  @Input({ required: true }) gallery!: IGalleryItem[] | undefined | null;
   @Input() previewUrl: string | null = null;
   confirmDeleteImage(id: number) {
     this.onConfirmDelete.emit(id);

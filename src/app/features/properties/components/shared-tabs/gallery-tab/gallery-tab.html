@@ -51,20 +51,20 @@
   </div>
 
   <!-- Grille galerie -->
-  @if (!bien.gallery || bien.gallery.length === 0) {
+  @if (!gallery || gallery.length === 0) {
     <div class="flex flex-col items-center py-12 text-center">
       <ng-icon name="lucideImage" size="48" class="text-gray-200 mb-3"></ng-icon>
-      <p class="text-primary-400">Aucune photo pour ce bien</p>
+      <p class="text-primary-400">Aucune photo enregistrée</p>
     </div>
   } @else {
     <div class="flex items-center justify-between mb-3">
       <p class="text-xs text-primary-400">
-        <span class="font-semibold text-primary-700">{{ bien.gallery.length }}</span> photo(s)
+        <span class="font-semibold text-primary-700">{{ gallery.length }}</span> photo(s)
       </p>
     </div>
 
     <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))">
-      @for (img of bien.gallery; track img.id; let i = $index) {
+      @for (img of gallery; track img.id; let i = $index) {
         <div
           class="relative rounded-xl overflow-hidden group cursor-pointer"
           style="aspect-ratio: 4/3"

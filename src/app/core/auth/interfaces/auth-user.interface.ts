@@ -34,7 +34,15 @@ export interface AuthUser {
 }
 
 // ── Types ─────────────────────────────────────────────────────────
+export interface RolePermission {
+    id: number;
+    name: string;
+    guard_name?: string;
+}
+
 export interface UserRole {
     id: number;
     name: string;
+    guard_name?: string;
+    permissions?: RolePermission[];
 }

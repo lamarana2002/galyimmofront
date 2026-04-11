@@ -67,7 +67,7 @@ import {
 
 import { InfoTab } from '../../components/property-detail/info-tab/info-tab';
 import { UnitsTab } from '../../components/property-detail/units-tab/units-tab';
-import { GalleryTab } from '../../components/property-detail/gallery-tab/gallery-tab';
+import { GalleryTab } from '../../components/shared-tabs/gallery-tab/gallery-tab';
 import { DocumentTab } from '../../components/property-detail/document-tab/document-tab';
 import { FinancialTab } from '../../components/property-detail/financial-tab/financial-tab';
 import { LocationUnitService } from '../../services/location-unit.service';
@@ -76,6 +76,9 @@ import { PropertyGalleryService } from '../../services/property-gallery.service'
 import { UnitFormModal } from '../../components/modals/units/unit-form-modal/unit-form-modal';
 import { ILocationUnit } from '../../models/location-unit.model';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { AddPropertyModal } from '../../components/modals/add-property-modal/add-property-modal';
+import { TenantTab } from '../../components/shared-tabs/tenant-tab/tenant-tab';
+import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
 
 @Component({
   selector: 'app-property-detail',
@@ -94,6 +97,9 @@ import { ToastService } from '../../../../shared/services/toast.service';
     DocumentTab,
     FinancialTab,
     UnitFormModal,
+    AddPropertyModal,
+    TenantTab,
+    LeasesTab,
   ],
   templateUrl: './property-detail.html',
   viewProviders: [
@@ -143,7 +149,7 @@ export class PropertyDetail implements OnInit, OnDestroy {
   private readonly service       = inject(PropertyService);
   private readonly unitService   = inject(LocationUnitService);
   private readonly galleryService = inject(PropertyGalleryService);
-  private readonly toast         = inject(ToastService);
+  protected readonly toast         = inject(ToastService);
   private readonly destroy$      = new Subject<void>();
 
   // ── Enums & utils exposés au template ─────────────────────────
@@ -198,6 +204,10 @@ export class PropertyDetail implements OnInit, OnDestroy {
 
   // Formulaire unité — CreateUnitPayload ou UpdateUnitPayload
   unitForm = signal<CreateUnitPayload | UpdateUnitPayload>(emptyUnitForm(0));
+
+  showPropertyModal = signal(false);
+  showDeletePropertyConfirm = signal(false);
+  deletePropertyLoading = signal(false);
 
   // ── Galerie ───────────────────────────────────────────────────
   lightboxIndex = signal(0);
@@ -275,6 +285,37 @@ export class PropertyDetail implements OnInit, OnDestroy {
     this.activeTab.set(tab);
   }
 
+  // ── Actions Bien ──────────────────────────────────────────────
+  openEditProperty(): void {
+    this.showPropertyModal.set(true);
+  }
+
+  confirmDeleteProperty(): void {
+    this.showDeletePropertyConfirm.set(true);
+  }
+
+  deleteProperty(): void {
+    const p = this.bien();
+    if (!p) return;
+
+    this.deletePropertyLoading.set(true);
+    this.service
+      .delete(p.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.toast.success('Bien supprimé avec succès.');
+          this.deletePropertyLoading.set(false);
+          this.router.navigate(['/properties']);
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
+          this.deletePropertyLoading.set(false);
+          this.showDeletePropertyConfirm.set(false);
+        },
+      });
+  }
+
   // ── Actions unité ─────────────────────────────────────────────
   openAddUnit(): void {
     const propertyId = this.bien()?.id ?? 0;
@@ -289,17 +330,14 @@ export class PropertyDetail implements OnInit, OnDestroy {
     this.showUnitModal.set(true);
   }
 
-  saveUnit(): void {
-    const form = this.unitForm();
-    const editing = this.editingUnit();
-
-    if (!form) return;
+  saveUnit(payload: CreateUnitPayload | UpdateUnitPayload): void {
+    if (!payload) return;
 
     this.unitSaving.set(true);
 
-    if (editing) {
+    if (this.editingUnit()) {
       this.unitService
-        .update(form as UpdateUnitPayload)
+        .update(payload as UpdateUnitPayload)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
@@ -317,7 +355,7 @@ export class PropertyDetail implements OnInit, OnDestroy {
         });
     } else {
       this.unitService
-        .create(form as CreateUnitPayload)
+        .create(payload as CreateUnitPayload)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {

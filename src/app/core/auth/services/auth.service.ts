@@ -51,6 +51,17 @@ export class AuthService {
   readonly isSuperAdmin = this.createRoleCheck('super-admin');
   readonly isOwner = this.createRoleCheck('proprietaire');
   readonly isEmployee = this.createRoleCheck('gestionnaire');
+  readonly isAgent = this.createRoleCheck('agent');
+
+  readonly userRoles = computed(() => this._user()?.roles.map((r) => r.name) ?? []);
+  readonly userPermissions = computed(() => {
+    const roles = this._user()?.roles ?? [];
+    const permissions = new Set<string>();
+    roles.forEach((r) => {
+      r.permissions?.forEach((p) => permissions.add(p.name));
+    });
+    return Array.from(permissions);
+  });
   // email_verified_at (snake_case — champ réel de la migration)
   readonly emailVerified = computed(() => !!this._user()?.email_verified_at);
   // hasStructure : structure_id non null
@@ -202,9 +213,9 @@ export class AuthService {
     //   return;
     // }
 
-    const roleNames = user.roles?.map(r => r.name);
+    const roleNames = user.roles?.map(r => r.name) ?? [];
 
-    // Priorité : super_admin > owner > employee
+    // Priorité : super-admin > proprietaire > gestionnaire > agent
     if (roleNames.includes('super-admin')) {
       this.router.navigate(['/structures']);
     } else if (roleNames.includes('proprietaire')) {
@@ -213,11 +224,28 @@ export class AuthService {
       } else {
         this.router.navigate(['/properties']);
       }
-    } else if (roleNames.includes('gestionnaire')) {
-      this.router.navigate(['/biens']);
+    } else if (roleNames.includes('gestionnaire') || roleNames.includes('agent')) {
+      this.router.navigate(['/properties']);
     } else {
       this.router.navigate(['/auth/login']);
     }
+  }
+
+  // ── Vérifications Rôles & Permissions ──────────────────────────
+  hasRole(roleName: string): boolean {
+    return this.userRoles().includes(roleName);
+  }
+
+  hasAnyRole(roleNames: string[]): boolean {
+    return roleNames.some(role => this.hasRole(role));
+  }
+
+  hasPermission(permissionName: string): boolean {
+    return this.userPermissions().includes(permissionName);
+  }
+
+  hasAnyPermission(permissionNames: string[]): boolean {
+    return permissionNames.some(perm => this.hasPermission(perm));
   }
 
   // ── Session helpers ────────────────────────────────────────────
