@@ -103,7 +103,9 @@ export class LocationUnitService {
    * Crée plusieurs unités en une seule fois (pour un immeuble)
    */
   createMultiple(payloads: CreateUnitPayload[]): Observable<ApiResponse<ILocationUnit[]>> {
-    return this.http.post<ApiResponse<ILocationUnit[]>>(`${this.baseUrl}/bulk`, { units: payloads });
+    return this.http.post<ApiResponse<ILocationUnit[]>>(`${this.baseUrl}/bulk`, {
+      units: payloads,
+    });
   }
 
   // ── UPDATE ────────────────────────────────────────────────────────
@@ -135,7 +137,10 @@ export class LocationUnitService {
       sale_price?: number;
     },
   ): Observable<ApiResponse<ILocationUnit>> {
-    return this.http.patch<ApiResponse<ILocationUnit>>(`${this.baseUrl}/${id}/financials`, financials);
+    return this.http.patch<ApiResponse<ILocationUnit>>(
+      `${this.baseUrl}/${id}/financials`,
+      financials,
+    );
   }
 
   // ── DELETE ────────────────────────────────────────────────────────
@@ -167,7 +172,9 @@ export class LocationUnitService {
    * Récupère les statistiques pour une propriété
    */
   getStatsByPropertyId(propertyId: number): Observable<ApiResponse<UnitStats>> {
-    return this.http.get<ApiResponse<UnitStats>>(`${BASE_URL}/properties/${propertyId}/units/stats`);
+    return this.http.get<ApiResponse<UnitStats>>(
+      `${BASE_URL}/properties/${propertyId}/units/stats`,
+    );
   }
 
   // ── PRIVATE ───────────────────────────────────────────────────────

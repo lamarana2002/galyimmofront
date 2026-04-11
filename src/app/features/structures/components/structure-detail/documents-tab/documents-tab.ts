@@ -3,6 +3,9 @@ import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucideDownload, lucideFile, lucideFileX } from '@ng-icons/lucide';
 import { DatePipe, UpperCasePipe } from '@angular/common';
 
+import { LoadingComponent }    from '../../../../../shared/components/loading/loading';
+import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state';
+
 import { StructureModel } from '../../../models/structure.model';
 
 // ── Interface temporaire ───────────────────────────────────────
@@ -18,7 +21,7 @@ export interface StructureDocument {
 @Component({
   selector: 'app-documents-tab',
   standalone: true,
-  imports: [NgIconComponent, UpperCasePipe, DatePipe],
+  imports: [NgIconComponent, UpperCasePipe, DatePipe, LoadingComponent, EmptyStateComponent],
   templateUrl: './documents-tab.html',
   viewProviders: [provideIcons({ lucideFile, lucideDownload, lucideFileX })],
 })

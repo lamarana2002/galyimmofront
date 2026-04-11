@@ -193,6 +193,13 @@ export function getPropertyOccupationRateClass(rate: number): string {
   return 'text-gray-400';
 }
 
+export function getPropertyOccupationRateBarClass(rate: number): string {
+  if (rate >= 80) return 'bg-green-600';
+  if (rate >= 50) return 'bg-amber-600';
+  if (rate > 0) return 'bg-orange-600';
+  return 'bg-gray-400';
+}
+
 export function getPropertyAvailabilityStatus(property: PropertyModel): {
   label: string;
   class: string;

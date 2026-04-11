@@ -2,13 +2,15 @@ import { Component, computed, input, output } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucideShieldCheck, lucidePlus } from '@ng-icons/lucide';
+
+import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state';
 import { ILocationUnit } from '../../../models/location-unit.model';
 import { ILocationModel } from '../../../models/location.model';
 
 @Component({
   selector: 'app-leases-tab',
   standalone: true,
-  imports: [CommonModule, NgIconComponent, DatePipe, DecimalPipe, TitleCasePipe],
+  imports: [CommonModule, NgIconComponent, DatePipe, DecimalPipe, TitleCasePipe, EmptyStateComponent],
   templateUrl: './leases-tab.html',
   viewProviders: [
     provideIcons({

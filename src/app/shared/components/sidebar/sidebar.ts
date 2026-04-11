@@ -42,7 +42,7 @@ export class Sidebar implements OnInit, OnDestroy {
     { label: "Locataires", icon: 'lucideUserRound', link: '/locataires', role: 'proprietaire' },
     { label: "Contrats", icon: 'lucideFileText', link: '/contrats', role: 'proprietaire' },
     { label: "Utilisateurs", icon: 'lucideUsers', link: '/users', role: 'proprietaire' },
-    { label: "Administrateurs", icon: 'lucideUserCog', link: '/admins', role: 'super-admin' },
+    { label: "Administrateurs", icon: 'lucideUserCog', link: '/users', role: 'super-admin' },
     { label: "Analytics", icon: 'lucideChartNoAxesCombined', link: '/analytics', role: 'super-admin' }, 
   ]
 

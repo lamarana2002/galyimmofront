@@ -116,12 +116,7 @@
 
     <!-- ══ ÉTATS ══ -->
     @if (loading()) {
-      <div class="flex flex-col items-center justify-center py-24">
-        <div
-          class="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600"
-        ></div>
-        <p class="mt-4 text-primary-600">Chargement des locataires...</p>
-      </div>
+      <app-loading message="Chargement des locataires…" />
     } @else if (error(); as errorMsg) {
       <div
         class="flex flex-col items-center py-24 text-center bg-red-50 rounded-2xl border border-red-200"
@@ -139,29 +134,12 @@
         </button>
       </div>
     } @else if (filteredLocataires().length === 0) {
-      <div
-        class="flex flex-col items-center py-24 text-center bg-white rounded-2xl border border-gray-200"
-      >
-        <div class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-4">
-          <ng-icon name="lucideSearchX" size="28" class="text-primary-400"></ng-icon>
-        </div>
-        <p class="font-semibold text-primary-600">Aucun locataire trouvé</p>
-        <p class="text-sm text-primary-400 mt-1">
-          @if (allLocataires().length > 0) {
-            Essayez d'autres filtres
-          } @else {
-            Aucun locataire enregistré pour l'instant
-          }
-        </p>
-        @if (allLocataires().length > 0) {
-          <button
-            (click)="resetFilters()"
-            class="mt-4 px-4 py-2 text-sm font-semibold text-secondary-600 bg-secondary-50 hover:bg-secondary-100 border border-secondary-200 rounded-xl transition-all"
-          >
-            Réinitialiser les filtres
-          </button>
-        }
-      </div>
+      <app-empty-state
+        title="Aucun locataire trouvé"
+        [subtitle]="allLocataires().length > 0 ? 'Essayez d\'autres filtres' : 'Aucun locataire enregistré pour l\'instant'"
+        [actionLabel]="allLocataires().length > 0 ? 'Réinitialiser les filtres' : ''"
+        (action)="resetFilters()"
+      />
     } @else {
       <!-- ══ VUE GRILLE ══ -->
       @if (viewMode() === 'grid') {
@@ -430,41 +408,13 @@
 
           <!-- Pagination tableau -->
           @if (totalPages() > 1) {
-            <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between">
-              <p class="text-xs text-primary-400">
-                Page <span class="font-semibold text-primary-700">{{ currentPage() }}</span> sur
-                {{ totalPages() }} ·
-                <span class="font-semibold text-primary-700">{{ totalItems() }}</span> locataires
-              </p>
-              <div class="flex items-center gap-1">
-                <button
-                  (click)="onPageChange(currentPage() - 1)"
-                  [disabled]="!hasPrev()"
-                  class="px-3 py-1.5 text-xs font-medium text-primary-400 hover:text-primary-700 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  ← Précédent
-                </button>
-                @for (p of pagesArray(); track p) {
-                  <button
-                    (click)="onPageChange(p)"
-                    class="w-7 h-7 flex items-center justify-center text-xs font-semibold rounded-lg transition-all"
-                    [class]="
-                      currentPage() === p
-                        ? 'bg-secondary-500 text-white'
-                        : 'text-primary-500 hover:bg-gray-50'
-                    "
-                  >
-                    {{ p }}
-                  </button>
-                }
-                <button
-                  (click)="onPageChange(currentPage() + 1)"
-                  [disabled]="!hasNext()"
-                  class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  Suivant →
-                </button>
-              </div>
+            <div class="px-2 border-t border-gray-100">
+              <app-pagination
+                [currentPage]="currentPage()"
+                [totalItems]="totalItems()"
+                [perPage]="itemsPerPage()"
+                (pageChange)="onPageChange($event)"
+              />
             </div>
           }
         </div>
@@ -472,41 +422,13 @@
 
       <!-- Pagination grille -->
       @if (viewMode() === 'grid' && totalPages() > 1) {
-        <div class="flex items-center justify-between mt-6">
-          <p class="text-xs text-primary-400">
-            Page <span class="font-semibold text-primary-700">{{ currentPage() }}</span> sur
-            {{ totalPages() }}
-          </p>
-          <div class="flex items-center gap-1">
-            <button
-              (click)="onPageChange(currentPage() - 1)"
-              [disabled]="!hasPrev()"
-              class="px-3 py-1.5 text-xs font-medium text-primary-400 hover:text-primary-700 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              ← Précédent
-            </button>
-            @for (p of pagesArray(); track p) {
-              <button
-                (click)="onPageChange(p)"
-                class="w-7 h-7 flex items-center justify-center text-xs font-semibold rounded-lg transition-all"
-                [class]="
-                  currentPage() === p
-                    ? 'bg-secondary-500 text-white'
-                    : 'text-primary-500 hover:bg-gray-50'
-                "
-              >
-                {{ p }}
-              </button>
-            }
-            <button
-              (click)="onPageChange(currentPage() + 1)"
-              [disabled]="!hasNext()"
-              class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              Suivant →
-            </button>
-          </div>
-        </div>
+        <app-pagination
+          class="mt-4 block"
+          [currentPage]="currentPage()"
+          [totalItems]="totalItems()"
+          [perPage]="itemsPerPage()"
+          (pageChange)="onPageChange($event)"
+        />
       }
     }
     <!-- fin @else -->
@@ -523,44 +445,13 @@
 }
 
 <!-- ══ MODAL SUPPRESSION ══ -->
-@if (deleteTarget(); as target) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="cancelDelete()">
-    <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
-    <div
-      class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
-      (click)="$event.stopPropagation()"
-    >
-      <div class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
-        <ng-icon name="lucideTrash2" size="24" class="text-red-500"></ng-icon>
-      </div>
-      <h3 class="font-bold text-primary-900 text-center mb-2">Supprimer le locataire ?</h3>
-      <p class="text-sm text-primary-500 text-center mb-5">
-        <strong class="text-primary-700">{{ target.full_name }}</strong> sera définitivement
-        supprimé. Cette action est irréversible.
-      </p>
-      <div class="flex gap-2">
-        <button
-          (click)="deleteLocataire()"
-          [disabled]="deleteLoading()"
-          class="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          @if (deleteLoading()) {
-            <div
-              class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
-            ></div>
-            Suppression...
-          } @else {
-            Supprimer
-          }
-        </button>
-        <button
-          (click)="cancelDelete()"
-          [disabled]="deleteLoading()"
-          class="flex-1 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all disabled:opacity-60"
-        >
-          Annuler
-        </button>
-      </div>
-    </div>
-  </div>
+@if (deleteTarget()) {
+  <app-confirm-dialog
+    title="Supprimer le locataire ?"
+    [message]="deleteMessage()"
+    confirmLabel="Supprimer"
+    [loading]="deleteLoading()"
+    (confirmed)="deleteLocataire()"
+    (cancelled)="cancelDelete()"
+  />
 }

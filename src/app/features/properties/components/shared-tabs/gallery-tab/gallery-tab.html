@@ -52,10 +52,11 @@
 
   <!-- Grille galerie -->
   @if (!gallery || gallery.length === 0) {
-    <div class="flex flex-col items-center py-12 text-center">
-      <ng-icon name="lucideImage" size="48" class="text-gray-200 mb-3"></ng-icon>
-      <p class="text-primary-400">Aucune photo enregistrée</p>
-    </div>
+    <app-empty-state
+      icon="lucideImage"
+      title="Aucune photo enregistrée"
+      subtitle="Ajoutez des photos en utilisant la zone ci-dessus"
+    />
   } @else {
     <div class="flex items-center justify-between mb-3">
       <p class="text-xs text-primary-400">
@@ -104,3 +105,70 @@
     </div>
   }
 </div>
+
+<!-- Lightbox -->
+@if (showLightbox() && gallery && gallery.length > 0) {
+  <div class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+    <!-- Close button -->
+    <button
+      (click)="closeLightbox()"
+      class="absolute top-4 right-4 z-10 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+    >
+      <ng-icon name="lucideX" size="20"></ng-icon>
+    </button>
+
+    <!-- Previous button -->
+    @if (gallery.length > 1) {
+      <button
+        (click)="previousImage()"
+        class="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+      >
+        <ng-icon name="lucideChevronLeft" size="24"></ng-icon>
+      </button>
+    }
+
+    <!-- Image -->
+    <div class="max-w-4xl max-h-full relative">
+      <img
+        [src]="currentLightboxImage?.image"
+        [alt]="'Photo ' + (lightboxIndex() + 1)"
+        class="max-w-full max-h-full object-contain rounded-lg"
+      />
+    </div>
+
+    <!-- Next button -->
+    @if (gallery.length > 1) {
+      <button
+        (click)="nextImage()"
+        class="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+      >
+        <ng-icon name="lucideChevronRight" size="24"></ng-icon>
+      </button>
+    }
+
+    <!-- Counter -->
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm font-medium">
+      {{ lightboxIndex() + 1 }} / {{ gallery.length }}
+    </div>
+
+    <!-- Thumbnails -->
+    @if (gallery.length > 1) {
+      <div class="absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-2 max-w-full overflow-x-auto px-4">
+        @for (thumb of gallery; track thumb.id; let i = $index) {
+          <button
+            (click)="lightboxIndex.set(i)"
+            class="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all"
+            [class.border-white]="i === lightboxIndex()"
+            [class.border-transparent]="i !== lightboxIndex()"
+          >
+            <img
+              [src]="thumb.image"
+              [alt]="'Miniature ' + (i + 1)"
+              class="w-full h-full object-cover"
+            />
+          </button>
+        }
+      </div>
+    }
+  </div>
+}

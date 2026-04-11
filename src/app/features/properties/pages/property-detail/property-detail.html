@@ -289,19 +289,16 @@
 
         <!-- ══ LOCATAIRE ══ -->
         @if (activeTab() === 'locataire') {
-          <app-tenant-tab 
-            [unit]="b.units?.[0]" 
-            (onContact)="toast.info('Fonction contacter en cours...')"
-            (onAffect)="toast.info('Fonction affecter en cours...')"
+          <app-tenant-tab
+            [unit]="b.units?.[0]"
+            (onContact)="contacterLocataire()"
+            (onAffect)="affecterLocataire()"
           />
         }
 
         <!-- ══ CONTRATS ══ -->
         @if (activeTab() === 'contrats') {
-          <app-leases-tab 
-            [unit]="b.units?.[0]" 
-            (onNewLease)="toast.info('Fonction nouveau contrat en cours...')"
-          />
+          <app-leases-tab [unit]="b.units?.[0]" (onNewLease)="affecterLocataire()" />
         }
 
         <!-- ══ GALERIE — TODO: brancher quand endpoint prêt ══ -->
@@ -310,7 +307,6 @@
             [gallery]="bien()?.gallery"
             [previewUrl]="previewUrl()"
             (onConfirmDelete)="confirmDeleteImage($event)"
-            (onOpenLightbox)="openLightbox($event)"
             (onUploadImage)="uploadImage()"
             (onCancelUpload)="cancelUpload()"
             (onFileSelected)="onFileSelected($event)"
@@ -353,80 +349,22 @@
     <!-- ══ MODAL SUPPRESSION UNITÉ ══ -->
     @if (showDeleteUnit()) {
       @let delUnit = deletingUnit();
-      <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        (click)="showDeleteUnit.set(false)"
-      >
-        <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
-        <div
-          class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
-          (click)="$event.stopPropagation()"
-        >
-          <div
-            class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4"
-          >
-            <ng-icon name="lucideTrash2" size="24" class="text-red-500"></ng-icon>
-          </div>
-          <h3 class="font-bold text-primary-900 text-center mb-2">Supprimer l'unité ?</h3>
-          <p class="text-sm text-primary-500 text-center mb-5">
-            L'unité
-            <strong class="text-primary-700">{{
-              delUnit?.unit_number ?? delUnit?.unit_code
-            }}</strong>
-            sera définitivement supprimée.
-          </p>
-          <div class="flex gap-2">
-            <button
-              (click)="deleteUnit()"
-              class="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all"
-            >
-              Supprimer
-            </button>
-            <button
-              (click)="showDeleteUnit.set(false)"
-              class="flex-1 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all"
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
-      </div>
+      <app-confirm-dialog
+        title="Supprimer l'unité ?"
+        [message]="'L\'unité ' + (delUnit?.unit_number ?? delUnit?.unit_code) + ' sera définitivement supprimée.'"
+        (confirmed)="deleteUnit()"
+        (cancelled)="showDeleteUnit.set(false)"
+      />
     }
 
     <!-- ══ MODAL SUPPRESSION IMAGE ══ -->
     @if (showDeleteImage()) {
-      <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        (click)="showDeleteImage.set(false)"
-      >
-        <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
-        <div
-          class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
-          (click)="$event.stopPropagation()"
-        >
-          <div
-            class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4"
-          >
-            <ng-icon name="lucideImage" size="24" class="text-red-500"></ng-icon>
-          </div>
-          <h3 class="font-bold text-primary-900 text-center mb-2">Supprimer cette photo ?</h3>
-          <p class="text-sm text-primary-500 text-center mb-5">Cette action est irréversible.</p>
-          <div class="flex gap-2">
-            <button
-              (click)="deleteImage()"
-              class="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all"
-            >
-              Supprimer
-            </button>
-            <button
-              (click)="showDeleteImage.set(false)"
-              class="flex-1 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all"
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
-      </div>
+      <app-confirm-dialog
+        title="Supprimer cette photo ?"
+        message="Cette action est irréversible."
+        (confirmed)="deleteImage()"
+        (cancelled)="showDeleteImage.set(false)"
+      />
     }
 
     <!-- ══ MODAL MODIFICATION DU BIEN ══ -->
@@ -441,36 +379,41 @@
 
     <!-- ══ MODAL SUPPRESSION BIEN ══ -->
     @if (showDeletePropertyConfirm()) {
-      <div 
+      <div
         class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
         (click)="showDeletePropertyConfirm.set(false)"
       >
         <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
-        <div 
+        <div
           class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
           (click)="$event.stopPropagation()"
         >
-          <div class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
+          <div
+            class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4"
+          >
             <ng-icon name="lucideTrash2" size="24" class="text-red-500"></ng-icon>
           </div>
           <h3 class="font-bold text-primary-900 text-center mb-2">Supprimer le bien ?</h3>
           <p class="text-sm text-primary-500 text-center mb-5">
-            Le bien <strong class="text-primary-700">{{ bien()?.name }}</strong> et toutes ses données seront définitivement supprimés. Cette action est irréversible.
+            Le bien <strong class="text-primary-700">{{ bien()?.name }}</strong> et toutes ses
+            données seront définitivement supprimés. Cette action est irréversible.
           </p>
           <div class="flex gap-2">
-            <button 
+            <button
               (click)="deleteProperty()"
               [disabled]="deletePropertyLoading()"
               class="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all disabled:opacity-60 flex justify-center items-center gap-2"
             >
               @if (deletePropertyLoading()) {
-                <div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+                <div
+                  class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
+                ></div>
                 Suppression...
               } @else {
                 Supprimer
               }
             </button>
-            <button 
+            <button
               (click)="showDeletePropertyConfirm.set(false)"
               [disabled]="deletePropertyLoading()"
               class="flex-1 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all disabled:opacity-60"
@@ -481,90 +424,17 @@
         </div>
       </div>
     }
+    <!-- ══ DRAWER NOUVELLE LOCATION ══ -->
+    @if (showLocationModal()) {
+      @if (unitToAffect(); as currentUnit) {
+        <app-create-location-modal
+          [unit]="currentUnit"
+          (closed)="showLocationModal.set(false)"
+          (saved)="onLocationSaved()"
+          (locationError)="onLocationError($event)"
+        />
+      }
+    }
   }
   <!-- fin @else if (bien()) -->
 </div>
-<!-- ══════════════════════════════════════════════════════════
-     LIGHTBOX
-═══════════════════════════════════════════════════════════ -->
-@if (showLightbox() && bien()?.gallery && (bien()?.gallery?.length ?? 0) > 0) {
-  <div
-    class="fixed inset-0 z-[9999] flex items-center justify-center"
-    style="background: rgba(0, 0, 0, 0.92)"
-  >
-    <!-- Fermer -->
-    <button
-      (click)="closeLightbox()"
-      class="absolute top-5 right-6 w-11 h-11 flex items-center justify-center text-white rounded-full transition-all"
-      style="background: rgba(255, 255, 255, 0.15)"
-    >
-      <ng-icon name="lucideX" size="20"></ng-icon>
-    </button>
-
-    <!-- Compteur -->
-    <div
-      class="absolute top-6 left-1/2 -translate-x-1/2 text-white text-xs font-bold bg-black/40 px-4 py-1.5 rounded-full"
-    >
-      {{ lightboxIndex() + 1 }} / {{ bien()?.gallery?.length }}
-    </div>
-
-    <!-- Prev -->
-    <button
-      (click)="prevImage()"
-      class="absolute left-5 w-13 h-13 flex items-center justify-center text-white rounded-full transition-all"
-      style="background: rgba(255, 255, 255, 0.15); width: 52px; height: 52px"
-    >
-      <ng-icon name="lucideChevronLeft" size="28"></ng-icon>
-    </button>
-
-    <!-- Image centrale -->
-    <div class="max-w-[85vw] max-h-[80vh] text-center">
-      @if (currentLightboxImage) {
-        <img
-          [src]="currentLightboxImage.image"
-          class="max-w-full max-h-[78vh] rounded-xl object-contain shadow-2xl"
-        />
-        <!-- @if (currentLightboxImage.caption) {
-          <p class="text-white/70 text-sm mt-3">{{ currentLightboxImage.caption }}</p>
-        } -->
-      }
-    </div>
-
-    <!-- Next -->
-    <button
-      (click)="nextImage()"
-      class="absolute right-5 text-white rounded-full transition-all"
-      style="
-        background: rgba(255, 255, 255, 0.15);
-        width: 52px;
-        height: 52px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      "
-    >
-      <ng-icon name="lucideChevronRight" size="28"></ng-icon>
-    </button>
-
-    <!-- Thumbnails strip -->
-    @if ((bien()?.gallery?.length ?? 0) > 1) {
-      <div
-        class="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 px-4 py-2.5 rounded-full overflow-x-auto max-w-[90vw]"
-        style="background: rgba(0, 0, 0, 0.5)"
-      >
-        @for (thumb of bien()?.gallery; track thumb.id; let i = $index) {
-          <img
-            [src]="thumb.image"
-            (click)="openLightbox(i)"
-            class="w-11 h-11 object-cover rounded-lg flex-shrink-0 cursor-pointer transition-all"
-            [class]="
-              i === lightboxIndex()
-                ? 'border-2 border-secondary-400 opacity-100'
-                : 'border-2 border-transparent opacity-50 hover:opacity-80'
-            "
-          />
-        }
-      </div>
-    }
-  </div>
-}

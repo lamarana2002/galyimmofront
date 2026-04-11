@@ -9,19 +9,24 @@ import {
   lucideEye, lucidePencil, lucideTrash2, lucidePhone, lucideMail,
   lucideTriangleAlert, lucideRefreshCw,
 } from '@ng-icons/lucide';
-import { Subject, forkJoin, takeUntil } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 
 import { ILocataire }        from '../../models/locataire.model';
 import { UserStatusEnum }    from '../../enums/user-status.enum';
 import { LocataireService }  from '../../services/locataire.service';
 import { ToastService }      from '../../../../shared/services/toast.service';
-import { IQueryParam }       from '../../../../shared/interfaces/query-parms.interface';
-import { LocataireModal } from '../../components/modals/locataire-modal/locataire-modal';
+import { LocataireModal }    from '../../components/modals/locataire-modal/locataire-modal';
+
+import { Pagination }             from '../../../../shared/components/pagination/pagination';
+import { LoadingComponent }       from '../../../../shared/components/loading/loading';
+import { EmptyStateComponent }    from '../../../../shared/components/empty-state/empty-state';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-locataires',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, NgIconComponent, LocataireModal],
+  imports: [CommonModule, FormsModule, RouterLink, NgIconComponent, LocataireModal,
+            Pagination, LoadingComponent, EmptyStateComponent, ConfirmDialogComponent],
   templateUrl: './locataires.html',
   viewProviders: [provideIcons({
     lucideUsers, lucideUserCheck, lucideUserX, lucideSearch,
@@ -52,8 +57,6 @@ export class Locataires implements OnInit, OnDestroy {
   currentPage  = signal(1);
   itemsPerPage = signal(12);
   totalItems   = signal(0);
-  hasNext      = signal(false);
-  hasPrev      = signal(false);
 
   // ── UI ────────────────────────────────────────────────────────
   viewMode     = signal<'grid' | 'table'>('grid');
@@ -71,6 +74,12 @@ export class Locataires implements OnInit, OnDestroy {
     { label: 'Actifs',   value: UserStatusEnum.ACTIF  },
     { label: 'Archivés', value: UserStatusEnum.ARCHIVE },
   ];
+
+  // ── Computed ──────────────────────────────────────────────────
+  deleteMessage = computed(() => {
+    const t = this.deleteTarget();
+    return t ? `${t.full_name} sera définitivement supprimé. Cette action est irréversible.` : '';
+  });
 
   // ── Computed KPIs ─────────────────────────────────────────────
   kpis = computed(() => {
@@ -104,10 +113,6 @@ export class Locataires implements OnInit, OnDestroy {
     Math.ceil(this.totalItems() / this.itemsPerPage())
   );
 
-  pagesArray = computed(() =>
-    Array.from({ length: this.totalPages() }, (_, i) => i + 1)
-  );
-
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadAll();
@@ -133,8 +138,6 @@ export class Locataires implements OnInit, OnDestroy {
           this.currentPage.set(response.current_page);
           this.itemsPerPage.set(response.per_page);
           this.totalItems.set(response.total);
-          this.hasNext.set(!!response.next_page_url);
-          this.hasPrev.set(!!response.prev_page_url);
 
           this.loading.set(false);
         },
@@ -204,8 +207,8 @@ export class Locataires implements OnInit, OnDestroy {
   }
 
   onSaved(locataire: ILocataire): void {
-    this.closeModal();
     const isEdit = !!this.editingLocataire();
+    this.closeModal();
     this.toast.success(
       isEdit
         ? `Locataire « ${locataire.full_name} » modifié.`

@@ -64,7 +64,7 @@ export class UnitFormModal implements OnInit {
     this.editingUnit() ? "Modifier l'unité" : "Ajouter une unité"
   );
   
-  ngOnInit(): void {
+  ngOnInit(): void {    
     const editData = this.editingUnit();
     if (editData) {
       this._unitForm.set(unitToUpdatePayload(editData));

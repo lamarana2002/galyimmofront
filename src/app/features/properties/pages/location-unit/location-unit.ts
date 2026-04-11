@@ -4,19 +4,47 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
-  lucideArrowLeft, lucideBuilding2, lucideHome, lucideMapPin,
-  lucideRuler, lucideLayers, lucideLayoutGrid, lucideCalendar,
-  lucideKey, lucideBanknote, lucidePencil, lucideTrash2,
-  lucideX, lucidePlus, lucideChevronLeft, lucideChevronRight,
-  lucideZoomIn, lucideUpload, lucideImage, lucideFile, lucideDownload,
-  lucideUser, lucidePhone, lucideMail, lucideAlertTriangle,
-  lucideCheckCircle, lucideXCircle, lucideClock, lucideUserPlus,
-  lucideHistory, lucideSave, lucideInfo, lucideShieldCheck,
-  lucideWrench, lucideRefreshCw,
+  lucideArrowLeft,
+  lucideBuilding2,
+  lucideHome,
+  lucideMapPin,
+  lucideRuler,
+  lucideLayers,
+  lucideLayoutGrid,
+  lucideCalendar,
+  lucideKey,
+  lucideBanknote,
+  lucidePencil,
+  lucideTrash2,
+  lucideX,
+  lucidePlus,
+  lucideChevronLeft,
+  lucideChevronRight,
+  lucideZoomIn,
+  lucideUpload,
+  lucideImage,
+  lucideFile,
+  lucideDownload,
+  lucideUser,
+  lucidePhone,
+  lucideMail,
+  lucideAlertTriangle,
+  lucideCheckCircle,
+  lucideXCircle,
+  lucideClock,
+  lucideUserPlus,
+  lucideHistory,
+  lucideSave,
+  lucideInfo,
+  lucideShieldCheck,
+  lucideWrench,
+  lucideRefreshCw,
+  lucideRotateCcw,
 } from '@ng-icons/lucide';
 import { UnitStatutEnum } from '../../enums/unit-status.enum';
 import { LocationUnitService } from '../../services/location-unit.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { Subject, switchMap, takeUntil } from 'rxjs';
 import { ILocationUnit } from '../../models/location-unit.model';
 import { IUnitGallery } from '../../models/unit-gallery.model';
@@ -28,7 +56,7 @@ import { TenantTab } from '../../components/shared-tabs/tenant-tab/tenant-tab';
 import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
 import { GalleryTab } from '../../components/shared-tabs/gallery-tab/gallery-tab';
 import { CreateLocationModal } from '../../components/modals/create-location-modal/create-location-modal';
-
+import { LocationService } from '../../services/location.service';
 
 export interface Locataire {
   id: number;
@@ -95,30 +123,70 @@ export interface UniteDetail {
 @Component({
   selector: 'app-property-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, NgIconComponent,
-            DatePipe, DecimalPipe, TitleCasePipe, UnitFormModal, TenantTab, LeasesTab, GalleryTab,
-            CreateLocationModal],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    NgIconComponent,
+    DatePipe,
+    DecimalPipe,
+    TitleCasePipe,
+    UnitFormModal,
+    TenantTab,
+    LeasesTab,
+    GalleryTab,
+    CreateLocationModal,
+    ConfirmDialogComponent,
+  ],
   templateUrl: './location-unit.html',
   viewProviders: [
     provideIcons({
-      lucideArrowLeft, lucideBuilding2, lucideHome, lucideMapPin,
-      lucideRuler, lucideLayers, lucideLayoutGrid, lucideCalendar,
-      lucideKey, lucideBanknote, lucidePencil, lucideTrash2,
-      lucideX, lucidePlus, lucideChevronLeft, lucideChevronRight,
-      lucideZoomIn, lucideUpload, lucideImage, lucideFile, lucideDownload,
-      lucideUser, lucidePhone, lucideMail, lucideAlertTriangle,
-      lucideCheckCircle, lucideXCircle, lucideClock, lucideUserPlus,
-      lucideHistory, lucideSave, lucideInfo, lucideShieldCheck,
-      lucideWrench, lucideRefreshCw,
-    })
-  ]
+      lucideArrowLeft,
+      lucideBuilding2,
+      lucideHome,
+      lucideMapPin,
+      lucideRuler,
+      lucideLayers,
+      lucideLayoutGrid,
+      lucideCalendar,
+      lucideKey,
+      lucideBanknote,
+      lucidePencil,
+      lucideTrash2,
+      lucideX,
+      lucidePlus,
+      lucideChevronLeft,
+      lucideChevronRight,
+      lucideZoomIn,
+      lucideUpload,
+      lucideImage,
+      lucideFile,
+      lucideDownload,
+      lucideUser,
+      lucidePhone,
+      lucideMail,
+      lucideAlertTriangle,
+      lucideCheckCircle,
+      lucideXCircle,
+      lucideClock,
+      lucideUserPlus,
+      lucideHistory,
+      lucideSave,
+      lucideInfo,
+      lucideShieldCheck,
+      lucideWrench,
+      lucideRefreshCw,
+      lucideRotateCcw,
+    }),
+  ],
 })
 export class LocationUnit implements OnInit, OnDestroy {
-  private readonly route       = inject(ActivatedRoute);
-  private readonly router      = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly unitService = inject(LocationUnitService);
-  private readonly toast       = inject(ToastService);
-  private readonly destroy$    = new Subject<void>();
+  private readonly locationService = inject(LocationService);
+  private readonly toast = inject(ToastService);
+  private readonly destroy$ = new Subject<void>();
 
   // État
   isLoading = signal(true);
@@ -127,20 +195,26 @@ export class LocationUnit implements OnInit, OnDestroy {
   showDeleteConfirm = signal(false);
   deleteLoading = signal(false);
 
+  // Location actions
+  showRenewConfirm = signal(false);
+  showTerminateConfirm = signal(false);
+  renewingLocation = signal(false);
+  terminatingLocation = signal(false);
+
   // Modal UI
-  showUnitModal     = signal(false);
-  editingUnit       = signal<ILocationUnit | null>(null);
-  unitSaving        = signal(false);
+  showUnitModal = signal(false);
+  editingUnit = signal<ILocationUnit | null>(null);
+  unitSaving = signal(false);
   showLocationModal = signal(false);
 
   // UI
   activeTab = 'infos';
 
   tabs = [
-    { key: 'infos',      label: 'Informations', icon: 'lucideInfo'         },
-    { key: 'locataire',  label: 'Locataire',    icon: 'lucideUser'         },
-    { key: 'locations',  label: 'Locations',    icon: 'lucideShieldCheck'  },
-    { key: 'photos',     label: 'Photos',       icon: 'lucideImage'        },
+    { key: 'infos', label: 'Informations', icon: 'lucideInfo' },
+    { key: 'locataire', label: 'Locataire', icon: 'lucideUser' },
+    { key: 'locations', label: 'Locations', icon: 'lucideShieldCheck' },
+    { key: 'photos', label: 'Photos', icon: 'lucideImage' },
   ];
 
   UnitStatutEnum = UnitStatutEnum;
@@ -167,7 +241,7 @@ export class LocationUnit implements OnInit, OnDestroy {
     if (!unit) return [];
     const locations: ILocationModel[] = [...(unit.locations ?? [])];
     if (unit.current_location) {
-      const index = locations.findIndex(l => l.id === unit.current_location?.id);
+      const index = locations.findIndex((l) => l.id === unit.current_location?.id);
       if (index !== -1) locations.splice(index, 1);
       locations.unshift(unit.current_location);
     }
@@ -175,16 +249,10 @@ export class LocationUnit implements OnInit, OnDestroy {
   });
 
   // ── Galerie ────────────────────────────────────────────────────
-  lightboxIndex = 0;
-  showLightbox = false;
   showDeleteImage = false;
   deletingImageId: number | null = null;
   previewUrl: string | null = null;
   isUploading = signal(false);
-
-  get currentLightboxImage(): IUnitGallery | undefined {
-    return this.unite()?.gallery?.[this.lightboxIndex];
-  }
 
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
@@ -230,19 +298,24 @@ export class LocationUnit implements OnInit, OnDestroy {
   }
 
   getContratStatutClass(s: string): string {
-    return ({ 
-      'active': 'bg-green-100 text-green-700',
-      'expired': 'bg-gray-100 text-gray-500',
-      'terminated': 'bg-red-100 text-red-600',
-      'pending': 'bg-amber-100 text-amber-700' } as Record<string,string>)[s] ?? 'bg-gray-100 text-gray-500';
+    return (
+      (
+        {
+          active: 'bg-green-100 text-green-700',
+          expired: 'bg-gray-100 text-gray-500',
+          terminated: 'bg-red-100 text-red-600',
+          pending: 'bg-amber-100 text-amber-700',
+        } as Record<string, string>
+      )[s] ?? 'bg-gray-100 text-gray-500'
+    );
   }
 
   getLocationStatutClass(s: UnitStatutEnum): string {
     const classes: Record<string, string> = {
-      'active': 'bg-green-100 text-green-700',
-      'expired': 'bg-gray-100 text-gray-500',
-      'terminated': 'bg-red-100 text-red-600',
-      'pending': 'bg-amber-100 text-amber-700'
+      active: 'bg-green-100 text-green-700',
+      expired: 'bg-gray-100 text-gray-500',
+      terminated: 'bg-red-100 text-red-600',
+      pending: 'bg-amber-100 text-amber-700',
     };
     return classes[s] ?? 'bg-gray-100 text-gray-500';
   }
@@ -266,54 +339,95 @@ export class LocationUnit implements OnInit, OnDestroy {
     if (!u) return;
 
     this.deleteLoading.set(true);
-    this.unitService.delete(u.id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.toast.success('Unité supprimée avec succès.');
-        this.deleteLoading.set(false);
-        this.router.navigate(['/properties', u.property_id]);
-      },
-      error: (err) => {
-        this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
-        this.deleteLoading.set(false);
-        this.showDeleteConfirm.set(false);
-      }
-    });
+    this.unitService
+      .delete(u.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.toast.success('Unité supprimée avec succès.');
+          this.deleteLoading.set(false);
+          this.router.navigate(['/properties', u.property_id]);
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
+          this.deleteLoading.set(false);
+          this.showDeleteConfirm.set(false);
+        },
+      });
   }
 
   saveUnit(payload: CreateUnitPayload | UpdateUnitPayload): void {
     if (!payload) return;
     this.unitSaving.set(true);
 
-    this.unitService.update(payload as UpdateUnitPayload).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.toast.success('Unité mise à jour avec succès.');
-          this.loadUnit();
-          this.showUnitModal.set(false);
-        }
-        this.unitSaving.set(false);
-      },
-      error: (err) => {
-        this.toast.error(err?.error?.message ?? 'Erreur lors de la mise à jour.');
-        this.unitSaving.set(false);
-      }
-    });
+    this.unitService
+      .update(payload as UpdateUnitPayload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.toast.success('Unité mise à jour avec succès.');
+            this.loadUnit();
+            this.showUnitModal.set(false);
+          }
+          this.unitSaving.set(false);
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors de la mise à jour.');
+          this.unitSaving.set(false);
+        },
+      });
   }
 
-  changerStatut(statut: UnitStatutEnum): void {
-    const unit = this.unite();
-    if (!unit) return;
-    
-    this.unitService.changeStatus(unit.id, statut)
+  renewLocation(): void {
+    const currentLocation = this.unite()?.current_location;
+    if (!currentLocation) return;
+
+    if (this.renewingLocation()) return; // Prevent multiple clicks
+
+    this.renewingLocation.set(true);
+    this.locationService
+      .renew(currentLocation.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.success) {
-            this.toast.success('Statut mis à jour avec succès.');
+            this.toast.success('Contrat renouvelé avec succès.');
+            this.showRenewConfirm.set(false);
             this.loadUnit();
           }
+          this.renewingLocation.set(false);
         },
-        error: (err) => this.toast.error(err?.error?.message ?? 'Erreur lors du changement de statut.')
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors du renouvellement du contrat.');
+          this.renewingLocation.set(false);
+        },
+      });
+  }
+
+  terminateLocation(): void {
+    const currentLocation = this.unite()?.current_location;
+    if (!currentLocation) return;
+
+    if (this.terminatingLocation()) return; // Prevent multiple clicks
+
+    this.terminatingLocation.set(true);
+    this.locationService
+      .terminate(currentLocation.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toast.success('Contrat résilié avec succès.');
+            this.showTerminateConfirm.set(false);
+            this.loadUnit();
+          }
+          this.terminatingLocation.set(false);
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors de la résiliation du contrat.');
+          this.terminatingLocation.set(false);
+        },
       });
   }
 
@@ -339,26 +453,6 @@ export class LocationUnit implements OnInit, OnDestroy {
   }
 
   // ── Galerie ────────────────────────────────────────────────────
-  openLightbox(i: number): void {
-    this.lightboxIndex = i;
-    this.showLightbox = true;
-    document.body.style.overflow = 'hidden';
-  }
-
-  closeLightbox(): void {
-    this.showLightbox = false;
-    document.body.style.overflow = '';
-  }
-
-  prevImage(): void {
-    const len = this.unite()?.gallery?.length ?? 0;
-    this.lightboxIndex = (this.lightboxIndex - 1 + len) % len;
-  }
-
-  nextImage(): void {
-    const len = this.unite()?.gallery?.length ?? 0;
-    this.lightboxIndex = (this.lightboxIndex + 1) % len;
-  }
 
   onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -375,7 +469,7 @@ export class LocationUnit implements OnInit, OnDestroy {
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => this.previewUrl = e.target?.result as string;
+    reader.onload = (e) => (this.previewUrl = e.target?.result as string);
     reader.readAsDataURL(file);
   }
 
@@ -386,7 +480,7 @@ export class LocationUnit implements OnInit, OnDestroy {
     this.isUploading.set(true);
     // TODO: Appel API pour uploader l'image
     // this.unitService.uploadGalleryImage(unit.id, file).subscribe(...)
-    
+
     // Simulation temporaire
     setTimeout(() => {
       this.isUploading.set(false);
@@ -410,10 +504,9 @@ export class LocationUnit implements OnInit, OnDestroy {
 
     // TODO: Appel API pour supprimer l'image
     // this.unitService.deleteGalleryImage(id).subscribe(...)
-    
+
     this.showDeleteImage = false;
     this.deletingImageId = null;
-    if (this.showLightbox) this.closeLightbox();
     this.loadUnit();
   }
 }

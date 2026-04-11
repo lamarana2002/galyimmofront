@@ -8,12 +8,14 @@ import {
   lucideMapPin,
   lucideUserPlus,
 } from '@ng-icons/lucide';
+
+import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state';
 import { ILocationUnit } from '../../../models/location-unit.model';
 
 @Component({
   selector: 'app-tenant-tab',
   standalone: true,
-  imports: [CommonModule, NgIconComponent],
+  imports: [CommonModule, NgIconComponent, EmptyStateComponent],
   templateUrl: './tenant-tab.html',
   viewProviders: [
     provideIcons({

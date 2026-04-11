@@ -12,10 +12,11 @@
   </div>
 
   @if (allLocations().length === 0) {
-  <div class="flex flex-col items-center py-16 text-center">
-    <ng-icon name="lucideShieldCheck" size="40" class="text-gray-200 mb-3"></ng-icon>
-    <p class="text-primary-400">Aucun contrat enregistré pour cette unité.</p>
-  </div>
+    <app-empty-state
+      icon="lucideShieldCheck"
+      title="Aucun contrat enregistré"
+      subtitle="Cette unité n'a pas encore de contrat"
+    />
   } @else {
   <div class="space-y-3">
     @for (c of allLocations(); track c.id) {

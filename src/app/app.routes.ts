@@ -158,11 +158,21 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['units.show'])],
         loadComponent: () => import('./features/properties/pages/location-unit/location-unit').then(m => m.LocationUnit) 
       },
+      {
+        path: 'contrats',
+        canActivate: [permissionGuard(['properties.index'])],
+        loadComponent: () => import('./features/properties/pages/contrats/contrats').then(m => m.Contrats)
+      },
       
-      { 
-        path: 'locataires', 
+      {
+        path: 'locataires',
         canActivate: [permissionGuard(['locataires.index'])],
-        loadComponent: () => import('./features/locataires/pages/locataires/locataires').then(m => m.Locataires) 
+        loadComponent: () => import('./features/locataires/pages/locataires/locataires').then(m => m.Locataires)
+      },
+      {
+        path: 'users',
+        canActivate: [permissionGuard(['users.index'])],
+        loadComponent: () => import('./features/users/users').then(m => m.Users),
       },
     ]
   },

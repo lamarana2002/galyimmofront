@@ -1,6 +1,9 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
+
+import { LoadingComponent }    from '../../../../../shared/components/loading/loading';
+import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state';
 import {
   lucideCrown, lucideTrendingUp, lucideAlertTriangle,
   lucideCalendar, lucideShield,
@@ -25,7 +28,7 @@ export interface StructurePayment {
 @Component({
   selector: 'app-financial-tab',
   standalone: true,
-  imports: [CurrencyPipe, DatePipe, NgIconComponent],
+  imports: [CurrencyPipe, DatePipe, NgIconComponent, LoadingComponent, EmptyStateComponent],
   templateUrl: './financial-tab.html',
   viewProviders: [provideIcons({
     lucideCrown, lucideTrendingUp, lucideAlertTriangle,

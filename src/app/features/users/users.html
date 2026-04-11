@@ -1,1 +1,62 @@
-<p>users works!</p>
+<div class="min-h-screen" style="background: #f4f1ee">
+
+  <!-- ══ HEADER STICKY ══ -->
+  <div class="bg-white border-b border-gray-200 sticky top-16 z-30 shadow-sm">
+    <div class="px-6 py-4">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h1 class="text-xl font-bold text-primary-900 flex items-center gap-2.5"
+              style="letter-spacing: -0.02em">
+            <div class="w-8 h-8 rounded-lg bg-primary-800 flex items-center justify-center">
+              <ng-icon name="lucideSettings" size="16" class="text-white"></ng-icon>
+            </div>
+            Paramètres
+          </h1>
+          <p class="text-xs text-primary-400 mt-0.5 ml-10">
+            Utilisateurs, rôles et paramètres de votre agence
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ONGLETS dans le header ══ -->
+    <div class="px-6 pb-0">
+      <div class="flex gap-1">
+        @for (tab of tabs; track tab.key) {
+          <button (click)="activeTab.set(tab.key)"
+            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium
+                   border-b-2 transition-all whitespace-nowrap"
+            [class]="activeTab() === tab.key
+              ? 'border-secondary-500 text-secondary-600 font-semibold'
+              : 'border-transparent text-primary-400 hover:text-primary-700 hover:bg-primary-50'">
+            <ng-icon [name]="tab.icon" size="15"
+              [class]="activeTab() === tab.key ? 'text-secondary-500' : ''">
+            </ng-icon>
+            {{ tab.label }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CONTENU ══ -->
+  <div class="px-6 py-5">
+
+    <!-- ── Onglet Utilisateurs ── -->
+    @if (activeTab() === 'users') {
+      <app-users-handler-tab />
+    }
+
+    <!-- ── Onglet Rôles ── -->
+    @if (activeTab() === 'roles') {
+      <app-roles-tab></app-roles-tab>
+    }
+
+    <!-- ── Onglet Agence ── -->
+    @if (activeTab() === 'agence') {
+      <app-agence-tab></app-agence-tab>
+    }
+
+  </div>
+
+</div>

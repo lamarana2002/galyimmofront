@@ -2,6 +2,9 @@ import { Component, Input, OnInit } from '@angular/core';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucideActivity, lucideShield, lucideUser } from '@ng-icons/lucide';
 
+import { LoadingComponent }    from '../../../../../shared/components/loading/loading';
+import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state';
+
 import { StructureModel } from '../../../models/structure.model';
 import { getInitials } from '../../../utils/structure.utils';
 
@@ -20,7 +23,7 @@ export interface AuditLog {
 @Component({
   selector: 'app-audit-tab',
   standalone: true,
-  imports: [NgIconComponent],
+  imports: [NgIconComponent, LoadingComponent, EmptyStateComponent],
   templateUrl: './audit-tab.html',
   viewProviders: [provideIcons({ lucideActivity, lucideShield, lucideUser })],
 })

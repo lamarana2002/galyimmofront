@@ -87,13 +87,7 @@
               <div
                 class="h-full rounded-full transition-all duration-500"
                 [style.width.%]="propertyUtils.getPropertyOccupationRate(property)"
-                [class]="
-                  propertyUtils
-                    .getPropertyOccupationRateClass(
-                      propertyUtils.getPropertyOccupationRate(property)
-                    )
-                    .replace('text-', 'bg-')
-                "
+                [class]="propertyUtils.getPropertyOccupationRateBarClass(propertyUtils.getPropertyOccupationRate(property))"
               ></div>
             </div>
             <span

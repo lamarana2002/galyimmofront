@@ -1,8 +1,5 @@
 @if (loading) {
-  <div class="flex items-center justify-center py-12">
-    <div class="w-8 h-8 border-2 border-primary-200 border-t-primary-600
-                rounded-full animate-spin"></div>
-  </div>
+  <app-loading message="Chargement de l'historique…" />
 
 } @else if (error) {
   <div class="flex flex-col items-center py-10 text-center bg-red-50
@@ -11,14 +8,11 @@
   </div>
 
 } @else if (logs.length === 0) {
-  <div class="flex flex-col items-center py-12 text-center bg-gray-50
-              rounded-xl border border-dashed border-gray-200">
-    <ng-icon name="lucideActivity" size="28" class="text-primary-200 mb-3"></ng-icon>
-    <p class="text-sm font-semibold text-primary-400">Aucune activité enregistrée</p>
-    <p class="text-xs text-primary-300 mt-1">
-      L'historique apparaîtra ici une fois spatie/laravel-activitylog configuré
-    </p>
-  </div>
+  <app-empty-state
+    icon="lucideActivity"
+    title="Aucune activité enregistrée"
+    subtitle="L'historique apparaîtra ici une fois spatie/laravel-activitylog configuré"
+  />
 
 } @else {
   <div class="relative pl-6">

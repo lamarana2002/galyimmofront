@@ -78,7 +78,9 @@ import { ILocationUnit } from '../../models/location-unit.model';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { AddPropertyModal } from '../../components/modals/add-property-modal/add-property-modal';
 import { TenantTab } from '../../components/shared-tabs/tenant-tab/tenant-tab';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
+import { CreateLocationModal } from '../../components/modals/create-location-modal/create-location-modal';
 
 @Component({
   selector: 'app-property-detail',
@@ -100,6 +102,8 @@ import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
     AddPropertyModal,
     TenantTab,
     LeasesTab,
+    CreateLocationModal,
+    ConfirmDialogComponent,
   ],
   templateUrl: './property-detail.html',
   viewProviders: [
@@ -144,13 +148,13 @@ import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
   ],
 })
 export class PropertyDetail implements OnInit, OnDestroy {
-  private readonly route         = inject(ActivatedRoute);
-  private readonly router        = inject(Router);
-  private readonly service       = inject(PropertyService);
-  private readonly unitService   = inject(LocationUnitService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly service = inject(PropertyService);
+  private readonly unitService = inject(LocationUnitService);
   private readonly galleryService = inject(PropertyGalleryService);
-  protected readonly toast         = inject(ToastService);
-  private readonly destroy$      = new Subject<void>();
+  protected readonly toast = inject(ToastService);
+  private readonly destroy$ = new Subject<void>();
 
   // ── Enums & utils exposés au template ─────────────────────────
   readonly PropertyStatus = PropertyStatusEnum;
@@ -201,6 +205,9 @@ export class PropertyDetail implements OnInit, OnDestroy {
   editingUnit = signal<ILocationUnit | null>(null);
   deletingUnit = signal<ILocationUnit | null>(null);
   unitSaving = signal(false);
+  // ── Modal affectation locataire ─────────────────────────────────
+  showLocationModal = signal(false);
+  unitToAffect = signal<ILocationUnit | null>(null);
 
   // Formulaire unité — CreateUnitPayload ou UpdateUnitPayload
   unitForm = signal<CreateUnitPayload | UpdateUnitPayload>(emptyUnitForm(0));
@@ -210,8 +217,6 @@ export class PropertyDetail implements OnInit, OnDestroy {
   deletePropertyLoading = signal(false);
 
   // ── Galerie ───────────────────────────────────────────────────
-  lightboxIndex = signal(0);
-  showLightbox = signal(false);
   showDeleteImage = signal(false);
   deletingImageId = signal<number | null>(null);
   previewUrl = signal<string | null>(null);
@@ -250,7 +255,7 @@ export class PropertyDetail implements OnInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
-    this.loadProperty();    
+    this.loadProperty();
   }
 
   ngOnDestroy(): void {
@@ -390,7 +395,7 @@ export class PropertyDetail implements OnInit, OnDestroy {
     if (!unit) return;
 
     // TODO: this.unitService.delete(unit.id).subscribe(...)
-    this.toast.info('Suppression d\'unité non encore implémentée.');
+    this.toast.info("Suppression d'unité non encore implémentée.");
 
     // Optimistic update local en attendant l'endpoint
     this.bien.update((b) =>
@@ -407,31 +412,6 @@ export class PropertyDetail implements OnInit, OnDestroy {
   }
 
   // ── Galerie ───────────────────────────────────────────────────
-
-  get currentLightboxImage(): PropertyGallery | undefined {
-    return this.bien()?.gallery?.[this.lightboxIndex()];
-  }
-  openLightbox(index: number): void {
-    this.lightboxIndex.set(index);
-
-    this.showLightbox.set(true);
-    document.body.style.overflow = 'hidden';
-  }
-
-  closeLightbox(): void {
-    this.showLightbox.set(false);
-    document.body.style.overflow = '';
-  }
-
-  prevImage(): void {
-    const len = this.bien()?.gallery?.length ?? 0;
-    this.lightboxIndex.update((i) => (i - 1 + len) % len);
-  }
-
-  nextImage(): void {
-    const len = this.bien()?.gallery?.length ?? 0;
-    this.lightboxIndex.update((i) => (i + 1) % len);
-  }
 
   onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -530,22 +510,6 @@ export class PropertyDetail implements OnInit, OnDestroy {
             this.showDeleteImage.set(false);
             this.deletingImageId.set(null);
 
-            // Si la lightbox est ouverte et qu'on supprime l'image courante
-            if (this.showLightbox()) {
-              const currentIndex = this.lightboxIndex();
-              const galleryLength = this.bien()?.gallery?.length ?? 0;
-
-              // Si plus d'images, ajuster l'index
-              if (galleryLength > 0) {
-                if (currentIndex >= galleryLength) {
-                  this.lightboxIndex.set(galleryLength - 1);
-                }
-              } else {
-                // Plus d'images, fermer la lightbox
-                this.closeLightbox();
-              }
-            }
-
             this.toast.success('Image supprimée avec succès.');
           }
         },
@@ -553,5 +517,31 @@ export class PropertyDetail implements OnInit, OnDestroy {
           this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
         },
       });
+  }
+
+  // Affecter locataire ───────────────────────────────────────────────────────────────
+  affecterLocataire(): void {
+    const unit = this.bien()?.units?.[0];
+    if (!unit) {
+      this.toast.warning('Aucune unité trouvée pour ce bien.');
+      return;
+    }
+    this.unitToAffect.set(unit);
+    this.showLocationModal.set(true);
+  }
+  contacterLocataire(): void {
+    const locataire = this.bien()?.units?.[0]?.current_locataire;
+    if (locataire?.email) {
+      window.location.href = `mailto:${locataire.email}`;
+    }
+  }
+  onLocationSaved(): void {
+    this.showLocationModal.set(false);
+    this.toast.success('Location créée avec succès.');
+    this.loadProperty();
+  }
+
+  onLocationError(message: string): void {
+    this.toast.error(message);
   }
 }

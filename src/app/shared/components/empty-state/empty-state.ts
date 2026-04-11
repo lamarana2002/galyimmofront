@@ -23,7 +23,7 @@ import { lucideSearchX, lucideCirclePlus } from '@ng-icons/lucide';
         <button
           (click)="action.emit()"
           class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg
-                 bg-secondary-500 text-white hover:bg-secondary-600 transition-colors">
+                 bg-primary-800 text-white hover:bg-primary-900 transition-colors">
           <ng-icon name="lucideCirclePlus" size="16" />
           {{ actionLabel() }}
         </button>

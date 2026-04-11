@@ -1,5 +1,7 @@
 import { Component, inject, Input, computed } from '@angular/core';
-import { DatePipe, TitleCasePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
+
+import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state';
 
 import { StructureService } from '../../../services/structure.service';
 import { StructureModel } from '../../../models/structure.model';
@@ -11,7 +13,7 @@ import { getInitials, getOwnerFullName } from '../../../utils/structure.utils';
 @Component({
   selector: 'app-users-tab',
   standalone: true,
-  imports: [DatePipe, NgIcon],
+  imports: [DatePipe, NgIcon, EmptyStateComponent],
   templateUrl: './users-tab.html',
 })
 export class UsersTab {
