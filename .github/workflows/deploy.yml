@@ -27,16 +27,13 @@ jobs:
           SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key_enc
-          chmod 600 ~/.ssh/deploy_key_enc
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           ssh-keygen -p \
             -P "$SSH_PASSPHRASE" \
             -N "" \
-            -f ~/.ssh/deploy_key_enc
-          mv ~/.ssh/deploy_key_enc ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
+            -f ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-
       - name: Deploy via rsync
         run: |
           rsync -az --delete \
