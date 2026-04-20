@@ -1,0 +1,203 @@
+<div class="min-h-screen bg-slate-50">
+  <div class="bg-white border-b border-gray-200 sticky top-16 z-20 shadow-sm">
+    <div class="px-6 py-4">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-xl font-bold text-primary-900 flex items-center gap-3">
+            <span
+              class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-800 text-white"
+            >
+              <ng-icon name="lucideUsers" size="18"></ng-icon>
+            </span>
+            Membres
+          </h1>
+          <p class="text-xs text-primary-400 mt-1">
+            {{ filteredTeams().length }}/{{ totalItems() }} membre(s)
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-2xl bg-primary-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-900"
+          (click)="openAdd()"
+        >
+          <ng-icon name="lucidePlus" size="14"></ng-icon>
+          Nouveau membre
+        </button>
+      </div>
+
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="relative flex-1 min-w-[220px] max-w-md">
+          <ng-icon
+            name="lucideSearch"
+            size="14"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300"
+          ></ng-icon>
+          <input
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+            type="text"
+            placeholder="Rechercher par nom, fonction ou description"
+            class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-10 py-3 text-sm text-primary-900 focus:border-secondary-500 focus:bg-white focus:outline-none"
+          />
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-primary-700 hover:bg-gray-50"
+          (click)="resetFilters()"
+        >
+          <ng-icon name="lucideRefreshCw" size="14"></ng-icon>
+          Réinitialiser
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 py-6">
+    @if (loading()) {
+      <app-loading message="Chargement des membres…" />
+    } @else if (error(); as errorMessage) {
+      <div class="rounded-3xl border border-red-200 bg-red-50 p-8 text-center text-sm text-red-700">
+        <p class="font-semibold">{{ errorMessage }}</p>
+        <button
+          type="button"
+          class="mt-4 inline-flex items-center gap-2 rounded-2xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+          (click)="loadAll(currentPage())"
+        >
+          <ng-icon name="lucideRefreshCw" size="14"></ng-icon>
+          Réessayer
+        </button>
+      </div>
+    } @else if (filteredTeams().length === 0) {
+      <app-empty-state
+        title="Aucun membre trouvé"
+        [subtitle]="
+          allTeams().length > 0
+            ? 'Essayez une autre recherche.'
+            : 'Aucun membre enregistré pour le moment.'
+        "
+        [actionLabel]="allTeams().length > 0 ? 'Réinitialiser' : 'Créer un membre'"
+        (action)="allTeams().length > 0 ? resetFilters() : openAdd()"
+      />
+    } @else {
+      <div class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+        <table class="min-w-full divide-y divide-gray-200 text-left text-sm text-primary-900">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-4 py-4 font-semibold uppercase tracking-wide text-xs text-primary-500">
+                Membre
+              </th>
+              <th class="px-4 py-4 font-semibold uppercase tracking-wide text-xs text-primary-500">
+                Fonction
+              </th>
+              <th class="px-4 py-4 font-semibold uppercase tracking-wide text-xs text-primary-500">
+                Description
+              </th>
+              <th class="px-4 py-4 font-semibold uppercase tracking-wide text-xs text-primary-500">
+                Publique
+              </th>
+              <th class="px-4 py-4 font-semibold uppercase tracking-wide text-xs text-primary-500">
+                Ordre
+              </th>
+              <th class="px-4 py-4 font-semibold uppercase tracking-wide text-xs text-primary-500">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white">
+            @for (team of filteredTeams() || []; track team.id) {
+              <tr class="hover:bg-gray-50/60 transition-colors group">
+                <td class="px-4 py-4 align-top">
+                  <div class="flex items-start gap-3">
+                    @if (team.image) {
+                      <img
+                        src="{{ team.image }}"
+                        alt="{{ team.name }}"
+                        class="h-12 w-12 rounded-2xl object-cover"
+                      />
+                    } @else {
+                      <span
+                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-100 text-sm font-bold text-primary-700"
+                      >
+                        {{ team.name?.charAt(0) | uppercase }}
+                      </span>
+                    }
+                    <div>
+                      <p class="font-semibold text-primary-900">{{ team.name }}</p>
+                      <p class="text-xs text-primary-400">
+                        Créée le
+                        {{ team.created_at ? (team.created_at | date: 'dd/MM/yyyy') : '—' }}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-4 align-top">{{ team.role || '—' }}</td>
+                <td class="px-4 py-4 align-top text-sm text-primary-500">
+                  {{ team.description || '—' }}
+                </td>
+                <td class="px-4 py-4 align-top">
+                  <span
+                    class="inline-flex rounded-full px-3 py-1 text-[11px] font-semibold"
+                    [class]="
+                      team.is_public ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
+                    "
+                  >
+                    {{ team.is_public ? 'Oui' : 'Non' }}
+                  </span>
+                </td>
+                <td class="px-4 py-4 align-top">{{ team.sort_order }}</td>
+                <td class="px-4 py-4 text-right">
+                  <div
+                    class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <button
+                      type="button"
+                      class="p-2 text-primary-400 hover:text-primary-700 rounded-lg hover:bg-primary-50 transition-all"
+                      (click)="openEdit(team)"
+                      title="Modifier"
+                    >
+                      <ng-icon name="lucidePencil" size="15"></ng-icon>
+                    </button>
+                    <button
+                      type="button"
+                      class="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50 transition-all"
+                      (click)="confirmDelete(team)"
+                      title="Supprimer"
+                    >
+                      <ng-icon name="lucideTrash2" size="15"></ng-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs text-primary-400">Affichage de {{ filteredTeams().length }} membre(s)</p>
+        <app-pagination
+          [currentPage]="currentPage()"
+          [totalItems]="totalItems()"
+          [perPage]="itemsPerPage()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+    }
+  </div>
+
+  @if (showModal()) {
+    <app-team-modal [team]="editingTeam()" (saved)="onSaved($event)" (cancel)="closeModal()" />
+  }
+
+  @if (deleteTarget()) {
+    <app-confirm-dialog
+      title="Supprimer le membre"
+      [message]="deleteMessage()"
+      [loading]="deleteLoading()"
+      (confirmed)="deleteTeam()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+</div>

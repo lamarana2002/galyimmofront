@@ -3,6 +3,7 @@ import { PropertyService } from '../../../services/property.service';
 import { PropertyTypeService } from '../../../services/property-type.service';
 import { PropertyStatusEnum } from '../../../enums/property-status.enum';
 import { PropertyTypeModel } from '../../../models/propety-type.model';
+import { PropertyModel } from '../../../models/property.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { FormsModule } from '@angular/forms';
 import {
@@ -52,7 +53,7 @@ export class AddPropertyModal implements OnInit {
   private toast               = inject(ToastService);
 
   // Inputs
-  editingId = input<number | null>(null);
+  editingProperty = input<PropertyModel | null>(null);
   structureId = input.required<number>();
 
   // Outputs
@@ -100,8 +101,30 @@ export class AddPropertyModal implements OnInit {
 
   ngOnInit(): void {
     this.loadPropertyTypes();
-    if (this.editingId()) {
-      this.loadProperty();
+    const property = this.editingProperty();
+    if (property) {
+      this.form.set({
+        name: property.name,
+        code: property.code,
+        property_type_id: String(property.property_type.id),
+        status: property.status,
+        address: property.address,
+        city: property.city,
+        postal_code: property.postal_code,
+        country: property.country || "Côte d'Ivoire",
+        latitude: property.latitude,
+        longitude: property.longitude,
+        total_surface: property.total_surface,
+        total_floors: property.total_floors,
+        sale_price: property.sale_price,
+        condo_fees: property.condo_fees,
+        has_units: property.has_units,
+        is_active: property.is_active,
+        description: property.description,
+        cover_image: null,
+        cover_image_preview: property.cover_image,
+        amenities: property.amenities ? JSON.stringify(property.amenities, null, 2) : '',
+      });
     }
   }
 
@@ -109,37 +132,6 @@ export class AddPropertyModal implements OnInit {
     this.propertyTypeService.findAll().subscribe({
       next: (response) => this.propertyTypes.set(response.data),
       error: () => this.toast.error('Impossible de charger les types de bien.'),
-    });
-  }
-
-  loadProperty(): void {
-    this.propertyService.findById(this.editingId()!).subscribe({
-      next: (response) => {
-        const property = response.data;
-        this.form.set({
-          name: property.name,
-          code: property.code,
-          property_type_id: String(property.property_type.id), // Convertir en string si nécessaire
-          status: property.status,
-          address: property.address,
-          city: property.city,
-          postal_code: property.postal_code,
-          country: property.country || "Côte d'Ivoire",
-          latitude: property.latitude,
-          longitude: property.longitude,
-          total_surface: property.total_surface,
-          total_floors: property.total_floors,
-          sale_price: property.sale_price,
-          condo_fees: property.condo_fees,
-          has_units: property.has_units,
-          is_active: property.is_active,
-          description: property.description,
-          cover_image: null, // On ne peut pas récupérer le File depuis l'API
-          cover_image_preview: property.cover_image, // <- Maintenant c'est autorisé (string | null)
-          amenities: property.amenities ? JSON.stringify(property.amenities, null, 2) : '',
-        });
-      },
-      error: () => this.toast.error('Impossible de charger les données du bien.'),
     });
   }
 
@@ -215,13 +207,14 @@ export class AddPropertyModal implements OnInit {
       payload.cover_image = current.cover_image;
     }
 
-    const request = this.editingId()
-      ? this.propertyService.update({ id: this.editingId()!, ...payload })
+    const editingProperty = this.editingProperty();
+    const request = editingProperty
+      ? this.propertyService.update({ id: editingProperty.id, ...payload })
       : this.propertyService.create(payload);
 
     request.subscribe({
       next: () => {
-        this.toast.success(this.editingId() ? 'Bien mis à jour avec succès.' : 'Bien créé avec succès.');
+        this.toast.success(editingProperty ? 'Bien mis à jour avec succès.' : 'Bien créé avec succès.');
         this.saved.emit();
         this.closeModal();
       },

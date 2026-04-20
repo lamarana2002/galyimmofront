@@ -3,48 +3,65 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
-  lucideX, lucideSave, lucideUser, lucideMail, lucidePhone,
-  lucideAlignLeft, lucideUpload, lucideLoader,
+  lucideX,
+  lucideSave,
+  lucideUser,
+  lucideMail,
+  lucidePhone,
+  lucideAlignLeft,
+  lucideUpload,
+  lucideLoader,
 } from '@ng-icons/lucide';
 import { Subject, takeUntil } from 'rxjs';
 import { ILocataire } from '../../../models/locataire.model';
 import { LocataireService } from '../../../services/locataire.service';
-import { CreateLocatairePayload, emptyLocataireForm, locataireToUpdatePayload, UpdateLocatairePayload } from '../../../interfaces/locataire-payload.interface';
+import {
+  CreateLocatairePayload,
+  emptyLocataireForm,
+  locataireToUpdatePayload,
+  UpdateLocatairePayload,
+} from '../../../interfaces/locataire-payload.interface';
 import { GenreEnum } from '../../../../../shared/enums/genre.enum';
-
 
 @Component({
   selector: 'app-locataire-modal',
   standalone: true,
   imports: [CommonModule, FormsModule, NgIconComponent],
   templateUrl: './locataire-modal.html',
-  viewProviders: [provideIcons({
-    lucideX, lucideSave, lucideUser, lucideMail, lucidePhone,
-    lucideAlignLeft, lucideUpload, lucideLoader,
-  })],
+  viewProviders: [
+    provideIcons({
+      lucideX,
+      lucideSave,
+      lucideUser,
+      lucideMail,
+      lucidePhone,
+      lucideAlignLeft,
+      lucideUpload,
+      lucideLoader,
+    }),
+  ],
 })
 export class LocataireModal implements OnInit {
-
   // null = création, ILocataire = modification
   @Input() locataire: ILocataire | null = null;
 
   // Emis après sauvegarde réussie — renvoie le locataire créé/modifié
   // Utile pour pré-sélectionner le locataire dans le formulaire de location
-  readonly saved  = output<ILocataire>();
+  readonly saved = output<ILocataire>();
   readonly cancel = output<void>();
 
-  private readonly service  = inject(LocataireService);
+  private readonly service = inject(LocataireService);
   private readonly destroy$ = new Subject<void>();
 
   // ── État ──────────────────────────────────────────────────────
-  saving      = signal(false);
-  error       = signal<string | null>(null);
+  saving = signal(false);
+  error = signal<string | null>(null);
   avatarPreview = signal<string | null>(null);
 
   // ── Genre Enum ─────────────────────────────────────────────────
   genreOptions = [
     { value: GenreEnum.MALE, label: GenreEnum.MALE },
-    { value: GenreEnum.FEMALE, label: GenreEnum.FEMALE }
+    { value: GenreEnum.FEMALE, label: GenreEnum.FEMALE },
   ];
 
   // ── Formulaire ────────────────────────────────────────────────
@@ -53,36 +70,42 @@ export class LocataireModal implements OnInit {
   // ── Computed ──────────────────────────────────────────────────
   isEdit = computed(() => !!this.locataire);
 
-  title = computed(() =>
-    this.isEdit() ? 'Modifier le locataire' : 'Ajouter un locataire'
-  );
+  title = computed(() => (this.isEdit() ? 'Modifier le locataire' : 'Ajouter un locataire'));
 
   // Validation simple — champs obligatoires
   isValid = computed(() => {
     const f = this.form();
     return (
-      f.nom.trim() !== '' &&
-      f.prenom.trim() !== '' &&
-      f.sexe.trim() !== '' &&
-      f.telephone.trim() !== '' &&
-      f.email.trim() !== '' &&
-      (this.isEdit() || f.description.trim() !== '') // description requis seulement en création
+      (f.nom || '').trim() !== '' &&
+      (f.prenom || '').trim() !== '' &&
+      (f.sexe || '').trim() !== '' &&
+      (f.telephone || '').trim() !== '' &&
+      (f.email || '').trim() !== '' &&
+      (this.isEdit() || (f.description || '').trim() !== '') // description requis seulement en création
     );
   });
 
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
+    // Réinitialiser l'état complètement
+    this.saving.set(false);
+    this.error.set(null);
+    this.avatarPreview.set(null);
+    this.form.set(emptyLocataireForm());
+
     if (this.locataire) {
       // Mode édition — pré-remplir le formulaire
       const payload = locataireToUpdatePayload(this.locataire);
       this.form.set({
-        nom:        payload.nom,
-        prenom:      payload.prenom,
-        sexe:        payload.sexe,
-        telephone:   payload.telephone,
-        email:       payload.email,
-        description: payload.description ?? '',
+        nom: payload.nom || '',
+        prenom: payload.prenom || '',
+        sexe: payload.sexe || '',
+        telephone: payload.telephone || '',
+        email: payload.email || '',
+        description: payload.description || '',
+        avatar: undefined,
       });
+
       // Afficher l'avatar actuel
       if (this.locataire.avatar) {
         this.avatarPreview.set(this.locataire.avatar);
@@ -97,11 +120,11 @@ export class LocataireModal implements OnInit {
 
     // Preview immédiat
     const reader = new FileReader();
-    reader.onload = e => this.avatarPreview.set(e.target?.result as string);
+    reader.onload = (e) => this.avatarPreview.set(e.target?.result as string);
     reader.readAsDataURL(file);
 
     // Stocker le fichier dans le formulaire
-    this.form.update(f => ({ ...f, avatar: file }));
+    this.form.update((f) => ({ ...f, avatar: file }));
   }
 
   save(): void {
@@ -123,7 +146,7 @@ export class LocataireModal implements OnInit {
         this.saving.set(false);
         this.error.set(
           err?.error?.message ??
-          (this.isEdit() ? 'Erreur lors de la modification.' : 'Erreur lors de la création.')
+            (this.isEdit() ? 'Erreur lors de la modification.' : 'Erreur lors de la création.'),
         );
       },
     });

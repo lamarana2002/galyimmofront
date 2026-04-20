@@ -1,0 +1,194 @@
+<div class="min-h-screen bg-slate-50">
+  <div class="bg-white border-b border-gray-200 sticky top-16 z-20 shadow-sm">
+    <div class="px-6 py-4">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-xl font-bold text-primary-900 flex items-center gap-3">
+            <span
+              class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-800 text-white"
+            >
+              <ng-icon name="lucideMessageSquare" size="18"></ng-icon>
+            </span>
+            Témoignages
+          </h1>
+          <p class="text-xs text-primary-400 mt-1">
+            {{ (filteredTestimonials() || []).length }}/{{ totalItems() || 0 }} Témoignage(s)
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-2xl bg-primary-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-900"
+          (click)="openAdd()"
+        >
+          <ng-icon name="lucidePlus" size="14"></ng-icon>
+          Nouveau Témoignage
+        </button>
+      </div>
+
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="relative flex-1 min-w-[220px] max-w-md">
+          <ng-icon
+            name="lucideSearch"
+            size="14"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300"
+          ></ng-icon>
+          <input
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+            type="text"
+            placeholder="Rechercher par nom, rôle ou contenu"
+            class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-10 py-3 text-sm text-primary-900 focus:border-secondary-500 focus:bg-white focus:outline-none"
+          />
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-primary-700 hover:bg-gray-50"
+          (click)="resetFilters()"
+        >
+          <ng-icon name="lucideRefreshCw" size="14"></ng-icon>
+          Réinitialiser
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 py-6">
+    @if (loading()) {
+      <app-loading message="Chargement des Témoignages…" />
+    } @else if (error(); as errorMessage) {
+      <div class="rounded-3xl border border-red-200 bg-red-50 p-8 text-center text-sm text-red-700">
+        <p class="font-semibold">{{ errorMessage }}</p>
+        <button
+          type="button"
+          class="mt-4 inline-flex items-center gap-2 rounded-2xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+          (click)="loadAll(currentPage())"
+        >
+          <ng-icon name="lucideRefreshCw" size="14"></ng-icon>
+          Réessayer
+        </button>
+      </div>
+    } @else if (filteredTestimonials().length === 0) {
+      <app-empty-state
+        title="Aucun Témoignage trouvé"
+        [subtitle]="
+          allTestimonials().length > 0
+            ? 'Essayez une autre recherche.'
+            : 'Aucun témoignage enregistré pour le moment.'
+        "
+        [actionLabel]="allTestimonials().length > 0 ? 'Réinitialiser' : 'Créer un Témoignage'"
+        (action)="allTestimonials().length > 0 ? resetFilters() : openAdd()"
+      />
+    } @else {
+      <div class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+        <table class="min-w-full divide-y divide-gray-200 text-left text-sm text-primary-900">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-4 py-4 font-semibold uppercase tracking-wide text-xs text-primary-500">
+                Auteur
+              </th>
+              <th class="px-4 py-4 font-semibold uppercase tracking-wide text-xs text-primary-500">
+                Contenu
+              </th>
+              <th class="px-4 py-4 font-semibold uppercase tracking-wide text-xs text-primary-500">
+                Note
+              </th>
+              <th class="px-4 py-4 font-semibold uppercase tracking-wide text-xs text-primary-500">
+                Visible
+              </th>
+              <th class="px-4 py-4 font-semibold uppercase tracking-wide text-xs text-primary-500">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white">
+            @for (testimonial of filteredTestimonials() || []; track testimonial.id) {
+              <tr class="hover:bg-gray-50/60 transition-colors group">
+                <td class="px-4 py-4 align-top max-w-xs">
+                  <div class="flex items-center gap-3">
+                    @if (testimonial.image) {
+                      <img [src]="testimonial.image" alt="Avatar" class="h-10 w-10 rounded-full object-cover shrink-0">
+                    } @else {
+                      <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold shrink-0">
+                        {{ testimonial.name.substring(0, 2).toUpperCase() }}
+                      </div>
+                    }
+                    <div>
+                      <p class="font-bold text-primary-900">{{ testimonial.name }}</p>
+                      @if (testimonial.role) {
+                        <p class="text-xs text-primary-500">{{ testimonial.role }}</p>
+                      }
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-4 align-top max-w-sm">
+                  <p class="text-sm text-primary-500 line-clamp-3">{{ testimonial.content }}</p>
+                </td>
+                <td class="px-4 py-4 align-top text-primary-900 font-semibold">
+                  {{ testimonial.note }}/5
+                </td>
+                <td class="px-4 py-4 align-top">
+                  <span
+                    class="inline-flex rounded-full px-3 py-1 text-[11px] font-semibold"
+                    [class]="
+                      testimonial.is_visible ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
+                    "
+                  >
+                    {{ testimonial.is_visible ? 'Oui' : 'Non' }}
+                  </span>
+                </td>
+                <td class="px-4 py-4 text-right">
+                  <div
+                    class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <button
+                      type="button"
+                      class="p-2 text-primary-400 hover:text-primary-700 rounded-lg hover:bg-primary-50 transition-all"
+                      (click)="openEdit(testimonial)"
+                      title="Modifier"
+                    >
+                      <ng-icon name="lucidePencil" size="15"></ng-icon>
+                    </button>
+                    <button
+                      type="button"
+                      class="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50 transition-all"
+                      (click)="confirmDelete(testimonial)"
+                      title="Supprimer"
+                    >
+                      <ng-icon name="lucideTrash2" size="15"></ng-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs text-primary-400">Affichage de {{ (filteredTestimonials() || []).length }} Témoignage(s)</p>
+        <app-pagination
+          [currentPage]="currentPage()"
+          [totalItems]="totalItems()"
+          [perPage]="itemsPerPage()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+    }
+  </div>
+
+  @if (showModal()) {
+    <app-testimonial-modal [testimonial]="editingTestimonial()" (saved)="onSaved($event)" (cancel)="closeModal()" />
+  }
+
+  @if (deleteTarget()) {
+    <app-confirm-dialog
+      title="Supprimer le Témoignage"
+      [message]="deleteMessage()"
+      [loading]="deleteLoading()"
+      (confirmed)="deleteTestimonial()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+</div>

@@ -68,7 +68,7 @@ import {
 import { InfoTab } from '../../components/property-detail/info-tab/info-tab';
 import { UnitsTab } from '../../components/property-detail/units-tab/units-tab';
 import { GalleryTab } from '../../components/shared-tabs/gallery-tab/gallery-tab';
-import { DocumentTab } from '../../components/property-detail/document-tab/document-tab';
+import { DocumentsTab } from '../../components/shared-tabs/documents-tab/documents-tab';
 import { FinancialTab } from '../../components/property-detail/financial-tab/financial-tab';
 import { LocationUnitService } from '../../services/location-unit.service';
 import { PropertyGallery } from '../../models/property-gallery.model';
@@ -81,6 +81,8 @@ import { TenantTab } from '../../components/shared-tabs/tenant-tab/tenant-tab';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
 import { CreateLocationModal } from '../../components/modals/create-location-modal/create-location-modal';
+import { PropertyDocumentService } from '../../services/property-document.service';
+import { UploadPropertyDocumentPayload } from '../../interfaces/upload-property-document-payload.interface';
 
 @Component({
   selector: 'app-property-detail',
@@ -96,7 +98,7 @@ import { CreateLocationModal } from '../../components/modals/create-location-mod
     InfoTab,
     UnitsTab,
     GalleryTab,
-    DocumentTab,
+    DocumentsTab,
     FinancialTab,
     UnitFormModal,
     AddPropertyModal,
@@ -154,6 +156,7 @@ export class PropertyDetail implements OnInit, OnDestroy {
   private readonly unitService = inject(LocationUnitService);
   private readonly galleryService = inject(PropertyGalleryService);
   protected readonly toast = inject(ToastService);
+  private readonly documentService = inject(PropertyDocumentService);
   private readonly destroy$ = new Subject<void>();
 
   // ── Enums & utils exposés au template ─────────────────────────
@@ -543,5 +546,32 @@ export class PropertyDetail implements OnInit, OnDestroy {
 
   onLocationError(message: string): void {
     this.toast.error(message);
+  }
+
+  // ── Documents ───────────────────────────────────────────────────
+  uploadDocument(payload: UploadPropertyDocumentPayload): void {
+    this.documentService.upload(payload).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.bien.update(b => b ? { ...b, documents: [...(b.documents || []), res.data!] } : b);
+          this.toast.success('Document ajouté avec succès.');
+        }
+      },
+      error: (err) => this.toast.error(err?.error?.message ?? "Erreur lors de l'envoi du document.")
+    });
+  }
+
+  deleteDocument(id: number): void {
+    this.documentService.delete(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.bien.update(b => b ? { ...b, documents: b.documents?.filter(d => d.id !== id) } : b);
+        this.toast.success('Document supprimé avec succès.');
+      },
+      error: (err) => this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.')
+    });
+  }
+
+  downloadDocument(id: number): void {
+    this.documentService.openDocument(id);
   }
 }

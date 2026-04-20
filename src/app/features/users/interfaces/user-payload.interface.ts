@@ -12,7 +12,7 @@ export interface CreateUserPayload {
   password:              string;
   password_confirmation: string;
   avatar?:               File;
-  roles?:                string[];
+  roles?:                number[];
 }
 
 export interface UpdateUserPayload {
@@ -30,4 +30,5 @@ export interface UpdateUserPayload {
   password?:              string;
   password_confirmation?: string;
   avatar?:                File;
+  roles?:                 number[];
 }

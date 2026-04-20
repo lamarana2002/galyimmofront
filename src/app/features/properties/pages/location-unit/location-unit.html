@@ -508,7 +508,7 @@
       }
 
       <!-- ── ACTIONS CONTRAT ── -->
-      @if (unite()?.current_location && unite()?.current_location?.status === 'active') {
+      @if (unite()?.current_location && unite()?.current_location?.status === LocationStatusEnum.ACTIVE) {
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div class="px-5 py-3.5 border-b border-gray-100 bg-gray-50/80">
             <p

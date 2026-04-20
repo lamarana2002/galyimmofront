@@ -27,6 +27,8 @@ import { ToastService } from '../../../../shared/services/toast.service';
 import { Pagination } from '../../../../shared/components/pagination/pagination';
 import { LoadingComponent } from '../../../../shared/components/loading/loading';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state';
+import { LocationStatusEnum } from '../../enums/location-status.enum';
+import { LocationHelper } from '../../utils/location.utils';
 
 @Component({
   selector: 'app-contrats',
@@ -66,6 +68,10 @@ export class Contrats implements OnInit, OnDestroy {
   private readonly locationService = inject(LocationService);
   private readonly toast = inject(ToastService);
   private readonly destroy$ = new Subject<void>();
+
+  LocationStatusEnum = LocationStatusEnum;
+  LocationHelper = LocationHelper;
+
 
   loading = signal(true);
   error = signal<string | null>(null);
@@ -108,7 +114,7 @@ export class Contrats implements OnInit, OnDestroy {
       },
       {
         label: 'Contrats actifs',
-        value: all.filter((location) => location.status === 'active').length,
+        value: all.filter((location) => location.status === LocationStatusEnum.ACTIVE).length,
         icon: 'lucideShieldCheck',
         bgClass: 'bg-green-100',
         iconClass: 'text-green-600',
@@ -249,32 +255,6 @@ export class Contrats implements OnInit, OnDestroy {
           this.terminatingId.set(null);
         },
       });
-  }
-
-  getStatusBadgeClass(status: string): string {
-    return (
-      (
-        {
-          active: 'bg-green-100 text-green-700 border-green-200',
-          expired: 'bg-gray-100 text-gray-500 border-gray-200',
-          terminated: 'bg-red-100 text-red-600 border-red-200',
-          pending: 'bg-amber-100 text-amber-700 border-amber-200',
-        } as Record<string, string>
-      )[status] ?? 'bg-gray-100 text-gray-500 border-gray-200'
-    );
-  }
-
-  getStatusLabel(status: string): string {
-    return (
-      (
-        {
-          active: 'Actif',
-          expired: 'Expiré',
-          terminated: 'Résilié',
-          pending: 'En attente',
-        } as Record<string, string>
-      )[status] ?? '—'
-    );
   }
 
   getStatusCount(status: string): number {

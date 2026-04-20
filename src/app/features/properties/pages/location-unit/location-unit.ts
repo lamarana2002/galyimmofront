@@ -57,6 +57,7 @@ import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
 import { GalleryTab } from '../../components/shared-tabs/gallery-tab/gallery-tab';
 import { CreateLocationModal } from '../../components/modals/create-location-modal/create-location-modal';
 import { LocationService } from '../../services/location.service';
+import { LocationStatusEnum } from '../../enums/location-status.enum';
 
 export interface Locataire {
   id: number;
@@ -188,6 +189,8 @@ export class LocationUnit implements OnInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly destroy$ = new Subject<void>();
 
+  LocationStatusEnum = LocationStatusEnum
+
   // État
   isLoading = signal(true);
   error = signal<string | null>(null);
@@ -233,7 +236,7 @@ export class LocationUnit implements OnInit, OnDestroy {
   });
 
   locationExpire = computed(() => {
-    return this.joursRestants() === 0 && this.unite()?.current_location?.status === 'active';
+    return this.joursRestants() === 0 && this.unite()?.current_location?.status === LocationStatusEnum.ACTIVE;
   });
 
   allLocations = computed(() => {

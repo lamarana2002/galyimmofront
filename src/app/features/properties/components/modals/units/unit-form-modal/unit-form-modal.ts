@@ -21,6 +21,8 @@ import {
 } from '../../../../interfaces/unit-payload.interface';
 import { PropertyStatusEnum } from '../../../../enums/property-status.enum';
 import { ILocationUnit } from '../../../../models/location-unit.model';
+import { PropertyTypeService } from '../../../../services/property-type.service';
+import { PropertyTypeModel } from '../../../../models/propety-type.model';
 
 @Component({
   selector: 'app-unit-form-modal',
@@ -43,28 +45,34 @@ import { ILocationUnit } from '../../../../models/location-unit.model';
   ]
 })
 export class UnitFormModal implements OnInit {
-  // Inputs modernes
+  private propertyTypeService = inject(PropertyTypeService);
+
+  // Inputs
   editingUnit = input<ILocationUnit | null>(null);
   propertyId = input<number>(0);
-  
+
   // Outputs
   close = output<void>();
   saveUnit = output<CreateUnitPayload | UpdateUnitPayload>();
-  
+
   readonly PropertyStatus = PropertyStatusEnum;
-  
+
   // Signal interne pour le formulaire
   private _unitForm = signal<CreateUnitPayload | UpdateUnitPayload>(emptyUnitForm(0));
   isSaving = signal(false);
-  
+  propertyTypes = signal<PropertyTypeModel[]>([]);
+
   // Computed (lecture seule) pour le template HTML
   unitForm = this._unitForm.asReadonly();
-  
-  modalTitle = computed(() => 
+
+  modalTitle = computed(() =>
     this.editingUnit() ? "Modifier l'unité" : "Ajouter une unité"
   );
-  
-  ngOnInit(): void {    
+
+  ngOnInit(): void {
+    this.propertyTypeService.findAll().subscribe({
+      next: (res) => this.propertyTypes.set(res.data),
+    });
     const editData = this.editingUnit();
     if (editData) {
       this._unitForm.set(unitToUpdatePayload(editData));
@@ -76,11 +84,16 @@ export class UnitFormModal implements OnInit {
   updateForm(field: keyof CreateUnitPayload, value: any): void {
     this._unitForm.update(f => ({ ...f, [field]: value }));
   }
-  
+
+  onModel3dSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    this._unitForm.update(f => ({ ...f, model_3d: file }));
+  }
+
   closeModal(): void {
     this.close.emit();
   }
-  
+
   save(): void {
     this.isSaving.set(true);
     this.saveUnit.emit(this._unitForm());

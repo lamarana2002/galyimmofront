@@ -21,7 +21,7 @@ export interface DocumentFilters {
 @Injectable({ providedIn: 'root' })
 export class PropertyDocumentService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${BASE_URL}/property-documents`;
+  private readonly baseUrl = `${BASE_URL}/documents`; // Shared base if applicable, or generic name
 
   // ── READ ──────────────────────────────────────────────────────────
 
@@ -42,14 +42,15 @@ export class PropertyDocumentService {
   }
 
   /**
-   * Récupère tous les documents d'une propriété spécifique
+   * Récupère tous les documents d'une entité (propriété ou structure)
    */
-  findByPropertyId(
-    propertyId: number,
+  findByOwner(
+    ownerId: number,
+    ownerType: 'properties' | 'structures',
     params?: IQueryParam,
   ): Observable<ApiResponse<PropertyDocument[]>> {
     return this.http.get<ApiResponse<PropertyDocument[]>>(
-      `${BASE_URL}/properties/${propertyId}/documents`,
+      `${BASE_URL}/${ownerType}/${ownerId}/documents`,
       { params: this.buildParams(params) },
     );
   }
@@ -91,10 +92,18 @@ export class PropertyDocumentService {
    */
   upload(payload: UploadPropertyDocumentPayload): Observable<ApiResponse<PropertyDocument>> {
     const formData = new FormData();
-    formData.append('property_id', payload.property_id.toString());
+    const endpoint = payload.property_id ? 'properties' : 'structures';
+    
+    if (payload.property_id) {
+      formData.append('property_id', payload.property_id.toString());
+    }
+    if (payload.structure_id) {
+      formData.append('structure_id', payload.structure_id.toString());
+    }
+
     formData.append('type', payload.type);
     formData.append('title', payload.title);
-    formData.append('file', payload.file);
+    formData.append('document', payload.file); // Backend expects 'document'
     
     if (payload.description) {
       formData.append('description', payload.description);
@@ -109,10 +118,10 @@ export class PropertyDocumentService {
       formData.append('expiry_date', payload.expiry_date);
     }
     if (payload.is_public !== undefined) {
-      formData.append('is_public', payload.is_public.toString());
+      formData.append('is_public', payload.is_public ? '1' : '0');
     }
 
-    return this.http.post<ApiResponse<PropertyDocument>>(`${this.baseUrl}/upload`, formData);
+    return this.http.post<ApiResponse<PropertyDocument>>(`${BASE_URL}/${endpoint}/documents`, formData);
   }
 
   // ── UPDATE ────────────────────────────────────────────────────────
@@ -160,7 +169,8 @@ export class PropertyDocumentService {
    * Télécharge un fichier
    */
   download(id: number): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/${id}/download`, {
+    // Assuming a shared download endpoint, otherwise need context
+    return this.http.get(`${BASE_URL}/documents/${id}/download`, {
       responseType: 'blob',
     });
   }

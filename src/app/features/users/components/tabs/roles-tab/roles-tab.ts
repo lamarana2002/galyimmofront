@@ -64,7 +64,12 @@ export class RolesTab implements OnInit, OnDestroy {
   loadRoles(): void {
     this.loading.set(true);
     this.roleService.findAll().pipe(takeUntil(this.destroy$)).subscribe({
-      next:  r => { this.roles.set(r.data); this.loading.set(false); },
+      next:  r => { 
+        // Filtrer le rôle super-admin
+        const filteredRoles = r.data.filter(role => role.name !== 'super-admin');
+        this.roles.set(filteredRoles); 
+        this.loading.set(false); 
+      },
       error: () => this.loading.set(false),
     });
   }

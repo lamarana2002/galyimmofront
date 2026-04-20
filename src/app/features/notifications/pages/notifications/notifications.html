@@ -1,0 +1,227 @@
+<div class="min-h-screen bg-slate-50">
+  <div class="bg-white border-b border-gray-200 sticky top-16 z-20 shadow-sm">
+    <div class="px-6 py-4">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-xl font-bold text-primary-900 flex items-center gap-3">
+            <span
+              class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-800 text-white"
+            >
+              <ng-icon name="lucideBell" size="18"></ng-icon>
+            </span>
+            Notifications
+          </h1>
+          <p class="text-xs text-primary-400 mt-1">
+            {{ unreadCount() }} non lue(s) · {{ totalCount() }} total
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="relative flex-1 min-w-[220px] max-w-md">
+          <ng-icon
+            name="lucideSearch"
+            size="14"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300"
+          ></ng-icon>
+          <input
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+            type="text"
+            placeholder="Rechercher par mot-clé, source ou message"
+            class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-10 py-3 text-sm text-primary-900 focus:border-secondary-500 focus:bg-white focus:outline-none"
+          />
+        </div>
+
+        <div
+          class="inline-flex overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+        >
+          <button
+            type="button"
+            class="px-4 py-3 text-sm font-semibold transition-colors"
+            [class]="
+              filter() === 'all' ? 'bg-primary-800 text-white' : 'text-primary-700 hover:bg-gray-50'
+            "
+            (click)="setFilter('all')"
+          >
+            Toutes
+          </button>
+          <button
+            type="button"
+            class="px-4 py-3 text-sm font-semibold transition-colors"
+            [class]="
+              filter() === 'unread'
+                ? 'bg-primary-800 text-white'
+                : 'text-primary-700 hover:bg-gray-50'
+            "
+            (click)="setFilter('unread')"
+          >
+            Non lues
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-primary-700 hover:bg-gray-50"
+          (click)="markAllRead()"
+        >
+          <ng-icon name="lucideCheck" size="14"></ng-icon>
+          Tout marquer lu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 py-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+      <div
+        class="bg-white rounded-2xl border border-gray-200 px-5 py-4 flex items-center gap-4 shadow-sm"
+      >
+        <div
+          class="w-12 h-12 rounded-2xl bg-secondary-100 text-secondary-700 flex items-center justify-center"
+        >
+          <ng-icon name="lucideMail" size="18" />
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-primary-900">
+            {{ notifications().filter((n) => n.category === 'contact').length }}
+          </p>
+          <p class="text-[11px] text-primary-400 mt-1 uppercase tracking-wide font-semibold">
+            Demandes de contact
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="bg-white rounded-2xl border border-gray-200 px-5 py-4 flex items-center gap-4 shadow-sm"
+      >
+        <div
+          class="w-12 h-12 rounded-2xl bg-primary-100 text-primary-700 flex items-center justify-center"
+        >
+          <ng-icon name="lucideClock" size="18" />
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-primary-900">
+            {{ notifications().filter((n) => n.category === 'visit').length }}
+          </p>
+          <p class="text-[11px] text-primary-400 mt-1 uppercase tracking-wide font-semibold">
+            Visites
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="bg-white rounded-2xl border border-gray-200 px-5 py-4 flex items-center gap-4 shadow-sm"
+      >
+        <div
+          class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center"
+        >
+          <ng-icon name="lucideCheck" size="18" />
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-primary-900">
+            {{ notifications().filter((n) => n.category === 'payment').length }}
+          </p>
+          <p class="text-[11px] text-primary-400 mt-1 uppercase tracking-wide font-semibold">
+            Paiements
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <p class="text-sm font-semibold text-primary-900">Historique des notifications</p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-primary-900">
+          <thead
+            class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-primary-500"
+          >
+            <tr>
+              <th class="px-4 py-4">Type</th>
+              <th class="px-4 py-4">Message</th>
+              <th class="px-4 py-4">Source</th>
+              <th class="px-4 py-4">Date</th>
+              <th class="px-4 py-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (notification of filteredNotifications() || []; track notification.id) {
+              <tr
+                class="transition-colors hover:bg-gray-50"
+                [class]="notification.read ? 'bg-white' : 'bg-gray-50'"
+              >
+                <td class="px-4 py-4 align-top">
+                  <span
+                    class="inline-flex rounded-full px-3 py-1 text-[11px] font-semibold"
+                    [class]="
+                      notification.category === 'contact'
+                        ? 'bg-secondary-100 text-secondary-700'
+                        : notification.category === 'visit'
+                          ? 'bg-primary-100 text-primary-700'
+                          : notification.category === 'payment'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-slate-100 text-slate-600'
+                    "
+                  >
+                    {{
+                      notification.category === 'contact'
+                        ? 'Contact'
+                        : notification.category === 'visit'
+                          ? 'Visite'
+                          : notification.category === 'payment'
+                            ? 'Paiement'
+                            : 'Système'
+                    }}
+                  </span>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  <p class="font-semibold text-primary-900">{{ notification.title }}</p>
+                  <p class="text-xs text-primary-500 mt-1">{{ notification.description }}</p>
+                </td>
+                <td class="px-4 py-4 align-top text-primary-500">{{ notification.source }}</td>
+                <td class="px-4 py-4 align-top text-primary-500">{{ notification.created_at }}</td>
+                <td class="px-4 py-4 align-top text-right">
+                  <div class="inline-flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-primary-500 hover:bg-gray-50 transition-all"
+                      (click)="markAsRead(notification.id)"
+                      [disabled]="notification.read"
+                      title="Marquer comme lu"
+                    >
+                      <ng-icon name="lucideCheck" size="14"></ng-icon>
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-primary-500 hover:bg-gray-50 transition-all"
+                      title="Voir"
+                    >
+                      <ng-icon name="lucideEye" size="14"></ng-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (filteredNotifications().length === 0) {
+        <div class="px-6 py-12">
+          <app-empty-state
+            title="Aucune notification"
+            [subtitle]="
+              filter() === 'unread'
+                ? 'Toutes les notifications non lues sont traitées.'
+                : 'Aucune notification ne correspond à votre recherche.'
+            "
+            [actionLabel]="filter() === 'unread' ? 'Voir toutes' : ''"
+            (action)="setFilter('all')"
+          />
+        </div>
+      }
+    </div>
+  </div>
+</div>

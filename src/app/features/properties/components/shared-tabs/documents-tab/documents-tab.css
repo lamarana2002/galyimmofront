@@ -1,0 +1,28 @@
+/* Animations */
+.animate-in {
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  animation-name: fade-in;
+}
+
+.slide-in-from-top-4 {
+  @keyframes slide-in-from-top {
+    from { transform: translateY(-1rem); }
+    to { transform: translateY(0); }
+  }
+  animation-name: slide-in-from-top;
+}
+
+/* Custom Scrollbar for the list if needed */
+.min-h-empty {
+  min-height: 300px;
+}
+
+/* State peer logic for checkbox handled via tailwind-like classes in HTML */

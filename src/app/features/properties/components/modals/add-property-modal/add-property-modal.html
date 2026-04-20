@@ -11,11 +11,11 @@
     >
       <h3 class="font-bold text-primary-900 flex items-center gap-2">
         <ng-icon
-          [name]="editingId !== null ? 'lucidePencil' : 'lucidePlus'"
+          [name]="editingProperty() !== null ? 'lucidePencil' : 'lucidePlus'"
           size="16"
           class="text-secondary-500"
         ></ng-icon>
-        {{ editingId !== null ? 'Modifier le bien' : 'Ajouter un bien' }}
+        {{ editingProperty() !== null ? 'Modifier le bien' : 'Ajouter un bien' }}
       </h3>
       <button (click)="closeModal()" class="p-1.5 hover:bg-gray-200 rounded-lg transition-all">
         <ng-icon name="lucideX" size="16" class="text-primary-400"></ng-icon>
@@ -232,10 +232,10 @@
           <div
             class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
           ></div>
-          {{ editingId() ? 'Modification...' : 'Enregistrement...' }}
+          {{ editingProperty() ? 'Modification...' : 'Enregistrement...' }}
         } @else {
           <ng-icon name="lucideSave" size="14"></ng-icon>
-          {{ editingId() ? 'Modifier' : 'Enregistrer' }}
+          {{ editingProperty() ? 'Modifier' : 'Enregistrer' }}
         }
       </button>
     </div>

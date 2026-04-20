@@ -6,6 +6,8 @@ import { lucideShieldCheck, lucidePlus } from '@ng-icons/lucide';
 import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state';
 import { ILocationUnit } from '../../../models/location-unit.model';
 import { ILocationModel } from '../../../models/location.model';
+import { LocationStatusEnum } from '../../../enums/location-status.enum';
+import { LocationHelper } from '../../../utils/location.utils';
 
 @Component({
   selector: 'app-leases-tab',
@@ -21,6 +23,8 @@ import { ILocationModel } from '../../../models/location.model';
 })
 export class LeasesTab {
   unit = input.required<ILocationUnit | undefined | null>();
+  LocationStatutEnum = LocationStatusEnum;
+  LocationHelper = LocationHelper;
 
   onNewLease = output<void>();
 
@@ -38,16 +42,5 @@ export class LeasesTab {
 
   getInitials(nom: string, prenom: string): string {
     return `${prenom?.[0] ?? ''}${nom?.[0] ?? ''}`.toUpperCase();
-  }
-
-  getContratStatutClass(s: string): string {
-    return (
-      ({
-        active: 'bg-green-100 text-green-700',
-        expired: 'bg-gray-100 text-gray-500',
-        terminated: 'bg-red-100 text-red-600',
-        pending: 'bg-amber-100 text-amber-700',
-      } as Record<string, string>)[s] ?? 'bg-gray-100 text-gray-500'
-    );
   }
 }

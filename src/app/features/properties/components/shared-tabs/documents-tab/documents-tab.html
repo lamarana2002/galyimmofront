@@ -1,0 +1,261 @@
+<div>
+  <!-- Zone Header / Upload Toggle -->
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-2">
+      <h3 class="text-sm font-bold text-primary-900">Documents</h3>
+      <span class="px-2 py-0.5 text-[10px] font-bold bg-primary-100 text-primary-600 rounded-full">
+        {{ documents()?.length || 0 }}
+      </span>
+    </div>
+    <button
+      (click)="toggleUploadForm()"
+      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all shadow-sm"
+    >
+      <ng-icon [name]="showUploadForm() ? 'lucideX' : 'lucidePlus'" size="14"></ng-icon>
+      {{ showUploadForm() ? 'Annuler' : 'Ajouter un document' }}
+    </button>
+  </div>
+
+  <!-- Formulaire d'upload -->
+  @if (showUploadForm()) {
+    <div class="mb-8 p-6 bg-white border border-gray-100 rounded-2xl shadow-sm space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Zone Drop/Select -->
+        <div class="space-y-4">
+          <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider">Fichier du document</label>
+          <div
+            class="relative border-2 border-dashed border-gray-200 rounded-2xl p-8 bg-gray-50/50 hover:bg-gray-50 hover:border-secondary-300 transition-all text-center cursor-pointer group"
+            (click)="fileInput.click()"
+          >
+            <input #fileInput type="file" (change)="fileSelected($event)" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+            
+            @if (!form().file) {
+              <div class="space-y-2">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm group-hover:scale-110 transition-transform">
+                  <ng-icon name="lucideUpload" size="20" class="text-primary-400"></ng-icon>
+                </div>
+                <p class="text-sm font-semibold text-primary-700">Cliquez pour parcourir</p>
+                <p class="text-[10px] text-primary-400">PDF, JPG, PNG — Max 10 Mo</p>
+              </div>
+            } @else {
+              <div class="space-y-2">
+                <div class="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                  <ng-icon name="lucideFile" size="20" class="text-secondary-600"></ng-icon>
+                </div>
+                <p class="text-sm font-bold text-primary-800 truncate px-4">{{ form().file?.name }}</p>
+                <button
+                  type="button"
+                  (click)="$event.stopPropagation(); resetForm();"
+                  class="text-xs font-semibold text-red-500 hover:text-red-600"
+                >
+                  Supprimer
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Métadonnées -->
+        <div class="grid grid-cols-1 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-primary-800 mb-1.5 uppercase tracking-wider">Titre du document <span class="text-red-500">*</span></label>
+            <div class="relative">
+              <ng-icon name="lucideInfo" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300" size="14"></ng-icon>
+              <input
+                [(ngModel)]="form().title"
+                type="text"
+                placeholder="Ex: Titre de propriété"
+                class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-primary-800 mb-1.5 uppercase tracking-wider">Type de document <span class="text-red-500">*</span></label>
+            <select
+              [(ngModel)]="form().type"
+              class="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white"
+            >
+              @for (type of docTypes; track type.value) {
+                <option [value]="type.value">{{ type.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-primary-800 mb-1.5 uppercase tracking-wider">N° Référence (Optionnel)</label>
+            <div class="relative">
+              <ng-icon name="lucideHash" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300" size="14"></ng-icon>
+              <input
+                [(ngModel)]="form().reference_number"
+                type="text"
+                placeholder="Ex: REF-12345"
+                class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dates & Description -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-50">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-primary-800 mb-1.5 uppercase tracking-wider">Date d'émission</label>
+            <div class="relative">
+              <ng-icon name="lucideCalendar" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-400" size="14"></ng-icon>
+              <input
+                [(ngModel)]="form().issue_date"
+                type="date"
+                class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white"
+              />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-primary-800 mb-1.5 uppercase tracking-wider">Date d'expiration</label>
+            <div class="relative">
+              <ng-icon name="lucideCalendar" class="absolute left-3 top-1/2 -translate-y-1/2 text-red-400" size="14"></ng-icon>
+              <input
+                [(ngModel)]="form().expiry_date"
+                type="date"
+                class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex items-end pb-1">
+          <label class="flex items-center gap-3 cursor-pointer group">
+            <div class="relative">
+              <input
+                type="checkbox"
+                [(ngModel)]="form().is_public"
+                class="sr-only peer"
+              />
+              <div class="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary-500"></div>
+            </div>
+            <span class="text-xs font-bold text-primary-700">Rendre ce document public</span>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-primary-800 mb-1.5 uppercase tracking-wider">Description / Notes (Optionnel)</label>
+        <textarea
+          [(ngModel)]="form().description"
+          rows="2"
+          placeholder="Détails supplémentaires sur le document..."
+          class="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white resize-none"
+        ></textarea>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button
+          (click)="submitUpload()"
+          [disabled]="!form().file || !form().title || isUploading()"
+          class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all disabled:opacity-50 shadow-md"
+        >
+          <ng-icon [name]="isUploading() ? 'lucidePlus' : 'lucideUpload'" size="16" [class.animate-spin]="isUploading()"></ng-icon>
+          {{ isUploading() ? 'Chargement...' : 'Enregistrer le document' }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Suppression Document -->
+  @if (documentToDelete()) {
+    <app-confirm-dialog
+      title="Supprimer le document ?"
+      [message]="'Le document « ' + documentToDelete()?.title + ' » sera définitivement supprimé.'"
+      (confirmed)="confirmDelete()"
+      (cancelled)="documentToDelete.set(null)"
+    />
+  }
+
+  <!-- Liste des documents -->
+  @if (!documents() || documents()?.length === 0) {
+    @if (!showUploadForm()) {
+      <app-empty-state
+        icon="lucideFile"
+        title="Aucun document"
+        subtitle="Enregistrez les documents officiels liés à cette entité"
+      />
+    }
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      @for (doc of documents(); track doc.id) {
+        <div class="bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-md transition-all group">
+          <div
+            class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105"
+            [ngClass]="getDocIconColor(doc.mime_type)"
+          >
+            <ng-icon [name]="getDocIcon(doc.mime_type)" size="20"></ng-icon>
+          </div>
+          
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between">
+              <div>
+                <h4 class="text-sm font-bold text-primary-900 truncate pr-2" [title]="doc.title">
+                  {{ doc.title }}
+                </h4>
+                <p class="text-[10px] font-bold text-secondary-500 uppercase tracking-wider">
+                  {{ PropertyDocumentHelper.getFileExtension(doc.original_name) }} • {{ PropertyDocumentHelper.getFileSizeFormatted(doc.file_size) }}
+                </p>
+              </div>
+              <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  (click)="downloadDocument(doc.id)"
+                  class="p-1.5 text-primary-400 hover:text-primary-800 hover:bg-gray-100 rounded-lg transition-all"
+                  title="Télécharger"
+                >
+                  <ng-icon name="lucideDownload" size="16"></ng-icon>
+                </button>
+                <button
+                  (click)="requestDelete(doc)"
+                  class="p-1.5 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                  title="Supprimer"
+                >
+                  <ng-icon name="lucideTrash2" size="16"></ng-icon>
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span class="text-[10px] font-semibold text-primary-400 flex items-center gap-1">
+                <ng-icon name="lucideCheckSquare" size="10"></ng-icon>
+                {{ doc.type_label || doc.type }}
+              </span>
+              @if (doc.issue_date) {
+                <span class="text-[10px] font-semibold text-primary-400 flex items-center gap-1">
+                  <ng-icon name="lucideCalendar" size="10"></ng-icon>
+                  {{ doc.issue_date | date:'dd/MM/yyyy' }}
+                </span>
+              }
+              @if (doc.reference_number) {
+                <span class="text-[10px] font-semibold text-primary-400 flex items-center gap-1">
+                  <ng-icon name="lucideHash" size="10"></ng-icon>
+                  {{ doc.reference_number }}
+                </span>
+              }
+            </div>
+            
+            @if (doc.expiry_date) {
+              <div class="mt-1.5">
+                <span
+                  class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight"
+                  [ngClass]="PropertyDocumentHelper.isExpired(doc) ? 'bg-red-100 text-red-600' : (PropertyDocumentHelper.isExpiringSoon(doc) ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600')"
+                >
+                  @if (PropertyDocumentHelper.isExpired(doc)) {
+                    Expiré
+                  } @else {
+                    Expire le {{ doc.expiry_date | date:'dd/MM/yyyy' }}
+                  }
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

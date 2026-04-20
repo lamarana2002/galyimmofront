@@ -154,9 +154,9 @@
                   <td class="px-4 py-4">
                     <span
                       class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full border"
-                      [class]="getStatusBadgeClass(location.status)"
+                      [class]="LocationHelper.getStatusBadgeClass(location.status)"
                     >
-                      {{ getStatusLabel(location.status) }}
+                      {{ LocationHelper.getStatusLabel(location.status) }}
                     </span>
                   </td>
                   <td class="px-4 py-4 text-[13px] text-primary-500 whitespace-nowrap">
@@ -192,7 +192,7 @@
                           <ng-icon name="lucideHome" size="15"></ng-icon>
                         </a>
                       }
-                      @if (location.status === 'active') {
+                      @if (location.status === LocationStatusEnum.ACTIVE) {
                         <button
                           (click)="renewContract(location)"
                           [disabled]="renewingId() === location.id"

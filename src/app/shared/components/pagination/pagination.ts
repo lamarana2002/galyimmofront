@@ -14,7 +14,12 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, NgIconComponent],
   viewProviders: [
-    provideIcons({ lucideChevronLeft, lucideChevronRight, lucideChevronsLeft, lucideChevronsRight }),
+    provideIcons({
+      lucideChevronLeft,
+      lucideChevronRight,
+      lucideChevronsLeft,
+      lucideChevronsRight,
+    }),
   ],
   templateUrl: './pagination.html',
 })
@@ -22,23 +27,27 @@ export class Pagination {
   /** Page courante (1-based). */
   currentPage = input.required<number>();
   /** Nombre total d'éléments. */
-  totalItems  = input.required<number>();
+  totalItems = input.required<number>();
   /** Éléments par page. */
-  perPage     = input<number>(10);
+  perPage = input<number>(10);
 
   /** Émis quand l'utilisateur change de page. */
   pageChange = output<number>();
 
   // ── Computed ─────────────────────────────────────────────
-  totalPages = computed(() => Math.max(1, Math.ceil(this.totalItems() / this.perPage())));
+  totalPages = computed(() => {
+    const total = Number(this.totalItems()) || 0;
+    const perPage = Number(this.perPage()) || 10;
+    return Math.max(1, Math.ceil(total / perPage));
+  });
 
-  hasPrev = computed(() => this.currentPage() > 1);
-  hasNext = computed(() => this.currentPage() < this.totalPages());
+  hasPrev = computed(() => (Number(this.currentPage()) || 1) > 1);
+  hasNext = computed(() => (Number(this.currentPage()) || 1) < this.totalPages());
 
   /** Tableau de numéros de pages à afficher (avec ellipsis sous forme de -1). */
   pages = computed<(number | -1)[]>(() => {
-    const total   = this.totalPages();
-    const current = this.currentPage();
+    const total = this.totalPages();
+    const current = Number(this.currentPage()) || 1;
 
     if (total <= 7) {
       return Array.from({ length: total }, (_, i) => i + 1);
@@ -46,11 +55,11 @@ export class Pagination {
 
     const pages: (number | -1)[] = [1];
 
-    if (current > 3)          pages.push(-1);          // ellipsis gauche
+    if (current > 3) pages.push(-1); // ellipsis gauche
     const start = Math.max(2, current - 1);
-    const end   = Math.min(total - 1, current + 1);
+    const end = Math.min(total - 1, current + 1);
     for (let i = start; i <= end; i++) pages.push(i);
-    if (current < total - 2) pages.push(-1);            // ellipsis droit
+    if (current < total - 2) pages.push(-1); // ellipsis droit
     pages.push(total);
 
     return pages;
@@ -58,9 +67,13 @@ export class Pagination {
 
   /** Texte d'info "X–Y sur Z". */
   rangeText = computed(() => {
-    const from = (this.currentPage() - 1) * this.perPage() + 1;
-    const to   = Math.min(this.currentPage() * this.perPage(), this.totalItems());
-    return `${from}–${to} sur ${this.totalItems()}`;
+    const currentPage = Number(this.currentPage()) || 1;
+    const perPage = Number(this.perPage()) || 10;
+    const totalItems = Number(this.totalItems()) || 0;
+
+    const from = (currentPage - 1) * perPage + 1;
+    const to = Math.min(currentPage * perPage, totalItems);
+    return `${from}–${to} sur ${totalItems}`;
   });
 
   // ── Actions ──────────────────────────────────────────────
@@ -71,8 +84,16 @@ export class Pagination {
     this.pageChange.emit(page);
   }
 
-  prev(): void { this.go(this.currentPage() - 1); }
-  next(): void { this.go(this.currentPage() + 1); }
-  first(): void { this.go(1); }
-  last(): void  { this.go(this.totalPages()); }
+  prev(): void {
+    this.go(this.currentPage() - 1);
+  }
+  next(): void {
+    this.go(this.currentPage() + 1);
+  }
+  first(): void {
+    this.go(1);
+  }
+  last(): void {
+    this.go(this.totalPages());
+  }
 }

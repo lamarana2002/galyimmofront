@@ -92,7 +92,7 @@ export class UserService {
     const form = new FormData();
     Object.entries(payload).forEach(([key, value]) => {
       if (key === 'roles' && Array.isArray(value)) {
-        value.forEach(r => form.append('roles[]', r));
+        value.forEach(r => form.append('roles[]', r.toString()));
       } else if (value instanceof File) {
         form.append(key, value);
       } else if (value !== undefined && value !== null) {

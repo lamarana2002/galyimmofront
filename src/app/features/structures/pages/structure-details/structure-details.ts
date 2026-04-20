@@ -58,17 +58,21 @@ import {
   getOwnerFullName,
 } from '../../utils/structure.utils';
 
-import { PropertiesTab } from '../../components/structure-detail/properties-tab/properties-tab';
-import { OwnerTap } from '../../components/structure-detail/owner-tap/owner-tap';
-import { UsersTab } from '../../components/structure-detail/users-tab/users-tab';
-import { DocumentsTab } from '../../components/structure-detail/documents-tab/documents-tab';
-import { FinancialTab } from '../../components/structure-detail/financial-tab/financial-tab';
-import { SettingsTab } from '../../components/structure-detail/settings-tab/settings-tab';
-import { AuditTab } from '../../components/structure-detail/audit-tab/audit-tab';
-import { ChangePlanModal } from '../../components/structure-detail/change-plan-modal/change-plan-modal';
-import { ContactStructureModal } from '../../components/structure-detail/contact-structure-modal/contact-structure-modal';
-import { ToastService } from '../../../../shared/services/toast.service';
-import { AddStructureModal } from '../../components/modals/add-structure-modal/add-structure-modal';
+import { PropertiesTab }      from '../../components/structure-detail/properties-tab/properties-tab';
+import { OwnerTap }            from '../../components/structure-detail/owner-tap/owner-tap';
+import { UsersTab }            from '../../components/structure-detail/users-tab/users-tab';
+import { DocumentsTab }        from '../../../properties/components/shared-tabs/documents-tab/documents-tab';
+import { FinancialTab }        from '../../components/structure-detail/financial-tab/financial-tab';
+import { SettingsTab }         from '../../components/structure-detail/settings-tab/settings-tab';
+import { AuditTab }            from '../../components/structure-detail/audit-tab/audit-tab';
+import { ChangePlanModal }     from '../../components/structure-detail/change-plan-modal/change-plan-modal';
+import { ContactModal }        from '../../../../shared/components/modals/contact-modal/contact-modal';
+import { ToastService }        from '../../../../shared/services/toast.service';
+import { AddStructureModal }   from '../../components/modals/add-structure-modal/add-structure-modal';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { PropertyDocumentService } from '../../../properties/services/property-document.service';
+import { UploadPropertyDocumentPayload } from '../../../properties/interfaces/upload-property-document-payload.interface';
+import { PropertyDocument } from '../../../properties/models/property-document.model';
 
 @Component({
   selector: 'app-structure-details',
@@ -88,8 +92,9 @@ import { AddStructureModal } from '../../components/modals/add-structure-modal/a
     SettingsTab,
     AuditTab,
     ChangePlanModal,
-    ContactStructureModal,
+    ContactModal,
     AddStructureModal,
+    ConfirmDialogComponent,
   ],
   templateUrl: './structure-details.html',
   viewProviders: [
@@ -140,6 +145,7 @@ export class StructureDetails implements OnInit, OnDestroy {
   private readonly router   = inject(Router);
   private readonly service  = inject(StructureService);
   private readonly toast    = inject(ToastService);
+  private readonly documentService = inject(PropertyDocumentService);
   private readonly destroy$ = new Subject<void>();
 
   // Enums
@@ -301,8 +307,8 @@ export class StructureDetails implements OnInit, OnDestroy {
     this.showContactModal.set(true);
   }
 
-  sendContactMessage(): void {
-    // TODO: this.service.sendContact(...).subscribe(...)
+  sendContactMessage(data?: { subject: string, message: string }): void {
+    // TODO: this.service.sendContact(data).subscribe(...)
     this.showContactModal.set(false);
     this.contactSubject.set('');
     this.contactMessage.set('');
@@ -342,5 +348,32 @@ export class StructureDetails implements OnInit, OnDestroy {
           this.showDeleteConfirm.set(false);
         },
       });
+  }
+
+  // ── Documents ───────────────────────────────────────────────────
+  uploadDocument(payload: UploadPropertyDocumentPayload): void {
+    this.documentService.upload(payload).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.structure.update(s => s ? { ...s, documents: [...(s.documents || []), res.data!] } : s);
+          this.toast.success('Document ajouté avec succès.');
+        }
+      },
+      error: (err) => this.toast.error(err?.error?.message ?? "Erreur lors de l'envoi du document.")
+    });
+  }
+
+  deleteDocument(id: number): void {
+    this.documentService.delete(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.structure.update(s => s ? { ...s, documents: s.documents?.filter(d => d.id !== id) } : s);
+        this.toast.success('Document supprimé avec succès.');
+      },
+      error: (err) => this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.')
+    });
+  }
+
+  downloadDocument(id: number): void {
+    this.documentService.openDocument(id);
   }
 }

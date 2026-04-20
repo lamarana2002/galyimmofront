@@ -10,24 +10,24 @@
     <div class="flex items-center justify-between mb-5">
       <h3 class="font-bold text-primary-900 flex items-center gap-2">
         <ng-icon name="lucideMessageSquare" size="16" class="text-secondary-500"></ng-icon>
-        Contacter le propriétaire
+        {{ title }}
       </h3>
       <button (click)="cancelToSendMessage()" class="p-1.5 hover:bg-gray-100 rounded-lg">
         <ng-icon name="lucideX" size="16" class="text-primary-400"></ng-icon>
       </button>
     </div>
-    @if (structure.owner) {
+    @if (recipientFullName || recipientEmail) {
       <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-4">
         <div
           class="w-9 h-9 rounded-full bg-secondary-200 flex items-center justify-center text-sm font-bold text-secondary-700"
         >
-          {{ getInitials(getOwnerName(structure.owner.nom, structure.owner.prenom)) }}
+          {{ getInitials(recipientFullName) }}
         </div>
         <div>
           <p class="text-sm font-semibold text-primary-800">
-            {{ getOwnerName(structure.owner.nom, structure.owner.prenom) }}
+            {{ recipientFullName }}
           </p>
-          <p class="text-xs text-primary-400">{{ structure.owner.email }}</p>
+          <p class="text-xs text-primary-400">{{ recipientEmail }}</p>
         </div>
       </div>
     }
@@ -54,7 +54,8 @@
     <div class="flex gap-2">
       <button
         (click)="sendContactMessage()"
-        class="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all"
+        [disabled]="!contactMessage.trim()"
+        class="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all disabled:opacity-50"
       >
         <ng-icon name="lucideSend" size="14"></ng-icon> Envoyer
       </button>
