@@ -22,18 +22,21 @@ jobs:
         run: npm run build -- --configuration production
 
       - name: Setup SSH key
-        env:
-          SSH_KEY: ${{ secrets.SSH_KEY }}
-          SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keygen -p \
-            -P "$SSH_PASSPHRASE" \
-            -N "" \
-            -f ~/.ssh/deploy_key
-          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+              env:
+                SSH_KEY: ${{ secrets.SSH_KEY }}
+                SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
+              run: |
+                set -x
+                mkdir -p ~/.ssh
+                printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+                chmod 600 ~/.ssh/deploy_key
+                ssh-keygen -p \
+                  -P "$SSH_PASSPHRASE" \
+                  -N "" \
+                  -f ~/.ssh/deploy_key
+                echo "ssh-keygen done"
+                ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+                echo "keyscan done"
       - name: Deploy via rsync
         run: |
           rsync -az --delete \
