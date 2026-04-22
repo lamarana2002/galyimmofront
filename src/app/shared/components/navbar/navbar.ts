@@ -26,24 +26,49 @@ interface Language {
   flag: string;
 }
 
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { 
+  lucideUser, 
+  lucideSettings, 
+  lucideLogOut, 
+  lucideBell, 
+  lucideGlobe, 
+  lucideChevronDown, 
+  lucideMoon, 
+  lucideSun,
+  lucideMenu
+} from '@ng-icons/lucide';
+
+import { RouterLink } from '@angular/router';
+
 @Component({
   selector: 'app-navbar',
-  imports: [],
+  standalone: true,
+  imports: [NgIconComponent, RouterLink],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
+  viewProviders: [
+    provideIcons({
+      lucideUser,
+      lucideSettings,
+      lucideLogOut,
+      lucideBell,
+      lucideGlobe,
+      lucideChevronDown,
+      lucideMoon,
+      lucideSun,
+      lucideMenu
+    }),
+  ],
 })
 export class Navbar {
 
   profile = inject(ProfileService);
   authService = inject(AuthService);
-  get fullName(): string{ return `${this.profile.currentUser?.nom} ${this.profile.currentUser?.prenom}`};
 
-  currentUser: User = {
-    name: 'Neil Sims',
-    email: 'neil.sims@flowbite.com',
-    role: 'Administrateur',
-    avatar: 'https://flowbite.com/docs/images/people/profile-picture-5.jpg'
-  };
+  fullName = this.authService.fullName;
+  initials = this.authService.initials;
+  avatarUrl = this.authService.avatarUrl;
 
   // ── Dark mode ──
   isDarkMode = false;

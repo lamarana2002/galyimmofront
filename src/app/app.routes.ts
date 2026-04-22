@@ -210,6 +210,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/faq/pages/faqs/faqs').then((m) => m.Faqs),
       },
       {
+        path: 'profile',
+        loadComponent: () => import('./features/users/pages/profile/profile').then((m) => m.ProfileComponent),
+      },
+      {
         path: 'testimonials',
         // canActivate: [permissionGuard(['testimonials.index'])],
         loadComponent: () => import('./features/testimonials/pages/testimonials/testimonials').then((m) => m.Testimonials),

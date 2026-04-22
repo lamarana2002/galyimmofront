@@ -114,20 +114,20 @@
 
       <!-- Footer -->
       <div class="px-4 pb-4 flex items-center gap-1.5">
-        <a
+        <button
           [routerLink]="['/properties', property.id]"
           class="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-semibold text-primary-600 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded-xl transition-all"
         >
           <ng-icon name="lucideEye" size="12"></ng-icon>
           Voir
-        </a>
-        <a
+      </button>
+        <button
           (click)="editPropertty(property.id)"
           class="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-all"
         >
           <ng-icon name="lucidePencil" size="12"></ng-icon>
           Modifier
-        </a>
+    </button>
         <button
           (click)="confirmDelete(property)"
           class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 rounded-xl transition-all"
