@@ -1,0 +1,43 @@
+<!-- Conteneur fixe — haut droite -->
+<div
+  class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 w-80 pointer-events-none"
+  aria-live="polite"
+  aria-label="Notifications">
+
+  @for (toast of toasts(); track trackById($index, toast)) {
+    @let config = getConfig(toast.type);
+
+    <div
+      class="relative overflow-hidden flex items-start gap-3 p-4 rounded-xl border shadow-lg shadow-primary-900/10 pointer-events-auto animate-toast-in"
+      [class]="config.wrapperClass"
+      role="alert">
+
+      <!-- Icône -->
+      <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg" [class]="config.iconClass">
+        <ng-icon [name]="config.icon" size="16" />
+      </span>
+
+      <!-- Message -->
+      <p class="flex-1 text-sm font-medium text-primary-800 pt-1 pr-1 leading-snug">
+        {{ toast.message }}
+      </p>
+
+      <!-- Bouton fermer -->
+      <button
+        (click)="dismiss(toast.id)"
+        class="shrink-0 flex items-center justify-center w-6 h-6 rounded-md text-primary-400 hover:text-primary-700 hover:bg-primary-50 transition-colors"
+        aria-label="Fermer">
+        <ng-icon name="lucideX" size="14" />
+      </button>
+
+      <!-- Barre de progression (bottom) -->
+      <span
+        class="absolute bottom-0 left-0 h-[3px] animate-toast-bar rounded-full"
+        [class]="config.barClass"
+        [style.animation-duration]="toast.duration + 'ms'">
+      </span>
+
+    </div>
+  }
+
+</div>

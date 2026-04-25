@@ -1,0 +1,57 @@
+/* Animation pour l'apparition des éléments */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Tab container behavior */
+.tabs-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.tabs-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom form styles */
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-secondary-400) !important;
+}
+
+input[readonly] {
+  background-color: #f9fafb;
+  cursor: not-allowed;
+}
+
+/* Avatar hover effect */
+.avatar-container {
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.avatar-container:hover {
+  transform: scale(1.02);
+}
+
+/* Header blur effect if desired */
+.sticky-header {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sticky-header {
+    top: 56px; /* Adjust based on navbar height for mobile */
+  }
+}

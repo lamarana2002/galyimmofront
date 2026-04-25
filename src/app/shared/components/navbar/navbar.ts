@@ -1,22 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { SidebarService } from '../sidebar/sidebar.service';
-
-interface User {
-  name: string;
-  email: string;
-  role: string;
-  avatar?: string;
-}
-
-interface Notification {
-  id: number;
-  type: 'contract' | 'visit' | 'payment';
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-}
+import { AuthService } from '../../../core/auth/services/auth.service';
+import { ProfileService } from '../../../core/auth/services/profile.service';
+import { NotificationService } from '../../../features/notifications/services/notification.service';
+import { NotificationModel } from '../../../features/notifications/models/notification.model';
 
 interface Language {
   code: string;
@@ -24,20 +12,56 @@ interface Language {
   flag: string;
 }
 
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { 
+  lucideUser, 
+  lucideSettings, 
+  lucideLogOut, 
+  lucideBell, 
+  lucideGlobe, 
+  lucideChevronDown, 
+  lucideMoon, 
+  lucideSun,
+  lucideMenu,
+  lucideTrash2,
+  lucideBellOff
+} from '@ng-icons/lucide';
+
+import { RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+
 @Component({
   selector: 'app-navbar',
-  imports: [],
+  standalone: true,
+  imports: [NgIconComponent, RouterLink, CommonModule],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
+  viewProviders: [
+    provideIcons({
+      lucideUser,
+      lucideSettings,
+      lucideLogOut,
+      lucideBell,
+      lucideGlobe,
+      lucideChevronDown,
+      lucideMoon,
+      lucideSun,
+      lucideMenu,
+      lucideTrash2,
+      lucideBellOff
+    }),
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Navbar {
+export class Navbar implements OnInit {
 
-  currentUser: User = {
-    name: 'Neil Sims',
-    email: 'neil.sims@flowbite.com',
-    role: 'Administrateur',
-    avatar: 'https://flowbite.com/docs/images/people/profile-picture-5.jpg'
-  };
+  profile = inject(ProfileService);
+  authService = inject(AuthService);
+  private readonly notificationService = inject(NotificationService);
+
+  fullName = this.authService.fullName;
+  initials = this.authService.initials;
+  avatarUrl = this.authService.avatarUrl;
 
   // ── Dark mode ──
   isDarkMode = false;
@@ -53,16 +77,8 @@ export class Navbar {
 
   // ── Notifications ──
   isNotifDropdownOpen = false;
-  notifications: Notification[] = [
-    { id: 1, type: 'contract',  title: 'Contrat signé',         message: 'Appartement Plateau – Locataire Koné',   time: 'Il y a 5 min',  read: false },
-    { id: 2, type: 'visit',     title: 'Visite programmée',     message: 'Villa Cocody – demain à 10h00',          time: 'Il y a 30 min', read: false },
-    { id: 3, type: 'payment',   title: 'Loyer reçu',            message: 'Studio Marcory – 180 000 FCFA',          time: 'Il y a 2h',     read: true  },
-    { id: 4, type: 'contract',  title: 'Bail expirant bientôt', message: 'Magasin Adjamé – expire dans 15 jours',  time: 'Hier',          read: true  },
-  ];
-
-  get unreadNotifs(): number {
-    return this.notifications.filter(n => !n.read).length;
-  }
+  notifications = signal<NotificationModel[]>([]);
+  unreadCount = computed(() => this.notifications().filter(n => !n.lu).length);
 
   // ── User dropdown ──
   isUserDropdownOpen = false;
@@ -71,6 +87,19 @@ export class Navbar {
     private router: Router,
     private sidebarService: SidebarService
   ) {}
+
+  ngOnInit(): void {
+    this.loadNotifications();
+  }
+
+  loadNotifications(): void {
+    this.notificationService.findAll().subscribe({
+      next: (res) => {
+        // On ne garde que les 5 dernières pour le dropdown
+        this.notifications.set(res.data);
+      }
+    });
+  }
 
   toggleSideBar(): void {
     this.sidebarService.toggle();
@@ -90,17 +119,25 @@ export class Navbar {
   setLanguage(code: string): void {
     this.currentLang = code;
     this.isLangDropdownOpen = false;
-    // Brancher ici ton service de traduction (ngx-translate, etc.)
   }
 
   toggleNotifDropdown(): void {
     this.isNotifDropdownOpen = !this.isNotifDropdownOpen;
     this.isLangDropdownOpen = false;
     this.isUserDropdownOpen = false;
+    
+    // Si on ouvre et qu'il y a des notifs, on pourrait rafraîchir
+    if (this.isNotifDropdownOpen) {
+      this.loadNotifications();
+    }
   }
 
   markAllRead(): void {
-    this.notifications = this.notifications.map(n => ({ ...n, read: true }));
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        this.notifications.update(list => list.map(n => ({ ...n, lu: true })));
+      }
+    });
   }
 
   toggleUserDropdown(): void {
@@ -117,6 +154,6 @@ export class Navbar {
 
   onSignOut(): void {
     this.closeAllDropdowns();
-    this.router.navigate(['/login']);
+    this.authService.logout();
   }
 }

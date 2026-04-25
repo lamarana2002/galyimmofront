@@ -1,7 +1,5 @@
 <div class="min-h-screen" style="background: #f4f1ee">
-  <!-- ══════════════════════════════════════════════════
-       HEADER STICKY
-  ═════════════════════════════════════════════════════ -->
+  <!-- ══ HEADER STICKY ══ -->
   <div class="bg-white border-b border-gray-200 sticky top-16 z-30 shadow-sm">
     <div class="px-6 py-4">
       <div class="flex items-center justify-between gap-4 mb-4">
@@ -16,9 +14,10 @@
             Gestion des Structures
           </h1>
           <p class="text-xs text-primary-400 mt-0.5 ml-10">
-            {{ filteredStructures.length }}/{{ allStructures.length }} structure(s) affichée(s)
+            {{ filteredStructures().length }}/{{ allStructures().length }} structure(s) affichée(s)
           </p>
         </div>
+
         <div class="flex items-center gap-2">
           <button
             class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-primary-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-all"
@@ -35,7 +34,7 @@
         </div>
       </div>
 
-      <!-- Recherche + filtres + toggle -->
+      <!-- Recherche + filtres + toggle vue -->
       <div class="flex items-center gap-3 flex-wrap">
         <div class="relative flex-1 min-w-[220px] max-w-xs">
           <ng-icon
@@ -45,21 +44,22 @@
           >
           </ng-icon>
           <input
-            [(ngModel)]="searchQuery"
-            (ngModelChange)="applyFilters(buildFilterData())"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
             type="text"
             placeholder="Rechercher une structure..."
             class="w-full pl-9 pr-4 py-2 text-sm text-primary-800 placeholder-primary-300 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 focus:bg-white transition-all"
           />
         </div>
 
+        <!-- Filtre plan -->
         <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
           @for (f of planFilters; track f.value) {
             <button
-              (click)="activePlan = f.value; applyFilters(buildFilterData())"
+              (click)="onPlanFilterChange(f.value)"
               class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
               [class]="
-                activePlan === f.value
+                activePlan() === f.value
                   ? 'bg-white text-primary-900 shadow-sm'
                   : 'text-primary-400 hover:text-primary-700'
               "
@@ -70,13 +70,14 @@
           }
         </div>
 
+        <!-- Filtre statut -->
         <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
           @for (f of statutFilters; track f.value) {
             <button
-              (click)="activeStatut = f.value; applyFilters(buildFilterData())"
+              (click)="onStatusFilterChange(f.value)"
               class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
               [class]="
-                activeStatut === f.value
+                activeStatut() === f.value
                   ? 'bg-white text-primary-900 shadow-sm'
                   : 'text-primary-400 hover:text-primary-700'
               "
@@ -88,12 +89,13 @@
 
         <div class="flex-1"></div>
 
+        <!-- Toggle vue -->
         <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
           <button
-            (click)="viewMode = 'grid'"
+            (click)="onViewModeChange('grid')"
             class="p-1.5 rounded-lg transition-all"
             [class]="
-              viewMode === 'grid'
+              viewMode() === 'grid'
                 ? 'bg-white shadow-sm text-primary-900'
                 : 'text-primary-400 hover:text-primary-700'
             "
@@ -101,10 +103,10 @@
             <ng-icon name="lucideLayoutGrid" size="15"></ng-icon>
           </button>
           <button
-            (click)="viewMode = 'table'"
+            (click)="onViewModeChange('table')"
             class="p-1.5 rounded-lg transition-all"
             [class]="
-              viewMode === 'table'
+              viewMode() === 'table'
                 ? 'bg-white shadow-sm text-primary-900'
                 : 'text-primary-400 hover:text-primary-700'
             "
@@ -119,7 +121,7 @@
   <div class="px-6 py-5">
     <!-- KPI CARDS -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-      @for (kpi of kpis; track kpi.label) {
+      @for (kpi of kpis(); track kpi.label) {
         <div
           class="bg-white rounded-2xl border border-gray-200 px-5 py-4 flex items-center gap-3 shadow-sm"
         >
@@ -133,97 +135,93 @@
             <p class="text-2xl font-bold text-primary-900 leading-none">{{ kpi.value }}</p>
             <p class="text-[11px] text-primary-400 mt-0.5 font-medium">{{ kpi.label }}</p>
           </div>
-          <div class="text-right flex-shrink-0">
-            <p
-              class="text-xs font-bold"
-              [class]="kpi.trend > 0 ? 'text-green-600' : 'text-red-500'"
-            >
-              {{ kpi.trend > 0 ? '↑ +' : '↓ ' }}{{ kpi.trend }}%
-            </p>
-            <p class="text-[10px] text-primary-300">ce mois</p>
-          </div>
+          <!-- Trend masqué si 0 -->
+          @if (kpi.trend !== 0) {
+            <div class="text-right flex-shrink-0">
+              <p
+                class="text-xs font-bold"
+                [class]="kpi.trend > 0 ? 'text-green-600' : 'text-red-500'"
+              >
+                {{ kpi.trend > 0 ? '↑ +' : '↓ ' }}{{ kpi.trend }}%
+              </p>
+              <p class="text-[10px] text-primary-300">ce mois</p>
+            </div>
+          }
         </div>
       }
     </div>
 
     <!-- ══ ÉTATS MUTUELLEMENT EXCLUSIFS ══ -->
-    @if (loading) {
-      <div class="flex flex-col items-center justify-center py-24">
-        <div
-          class="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600"
-        ></div>
-        <p class="mt-4 text-primary-600">Chargement des structures...</p>
-      </div>
-    } @else if (error) {
+    @if (loading()) {
+      <app-loading message="Chargement des structures…" />
+    } @else if (error(); as errorMsg) {
       <div
         class="flex flex-col items-center py-24 text-center bg-red-50 rounded-2xl border border-red-200"
       >
         <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-4">
           <ng-icon name="lucideTriangleAlert" size="28" class="text-red-500"></ng-icon>
         </div>
-        <p class="font-semibold text-red-600">{{ error }}</p>
+        <p class="font-semibold text-red-600">{{ errorMsg }}</p>
         <button
-          (click)="loadStructures()"
+          (click)="loadAll(currentPage())"
           class="mt-4 px-4 py-2 text-sm font-semibold text-red-600 bg-red-100 hover:bg-red-200 rounded-xl transition-all"
         >
           Réessayer
         </button>
       </div>
-    } @else if (filteredStructures.length === 0) {
-      <div
-        class="flex flex-col items-center py-24 text-center bg-white rounded-2xl border border-gray-200"
-      >
-        <div class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-4">
-          <ng-icon name="lucideSearchX" size="28" class="text-primary-400"></ng-icon>
-        </div>
-        <p class="font-semibold text-primary-600">Aucune structure trouvée</p>
-        <p class="text-sm text-primary-400 mt-1">
-          @if (allStructures.length > 0) {
-            Essayez d'autres filtres
-          } @else {
-            Aucune structure enregistrée pour l'instant
-          }
-        </p>
-        @if (allStructures.length > 0) {
-          <button
-            (click)="resetFilters()"
-            class="mt-4 px-4 py-2 text-sm font-semibold text-secondary-600 bg-secondary-50 hover:bg-secondary-100 border border-secondary-200 rounded-xl transition-all"
-          >
-            Réinitialiser les filtres
-          </button>
-        }
-      </div>
+    } @else if (filteredStructures().length === 0) {
+      <app-empty-state
+        [title]="allStructures().length > 0 ? 'Aucune structure trouvée' : 'Aucune structure enregistrée'"
+        [subtitle]="allStructures().length > 0 ? 'Essayez d\'autres filtres' : 'Commencez par ajouter une structure'"
+        [actionLabel]="allStructures().length > 0 ? 'Réinitialiser les filtres' : ''"
+        (action)="resetFilters()"
+      />
     } @else {
-      <!-- ════════════════════════════ VUE GRILLE ════════════════════════════ -->
-      @if (viewMode === 'grid') {
-        <app-structure-grid-view [structures]="filteredStructures" (changeStatus)="onStatusChanged($event)"/>
+      <!-- VUE GRILLE -->
+      @if (viewMode() === 'grid') {
+        <app-structure-grid-view
+          [structures]="filteredStructures()"
+          (changeStatus)="onStatusChanged($event)"
+          (changePlan)="onPlanChange($event)"
+          (contact)="openContact($event)"
+          (delete)="confirmDelete($event)"
+        />
       }
 
-      <!-- ════════════════════════════ VUE TABLEAU ════════════════════════════ -->
-      @if (viewMode === 'table') {
-        <app-structure-list-view 
-        [structures]="filteredStructures" 
-        [currentPage]="currentPage"
-        [itemsPerPage]="itemsPerPage"
-        [totalItems]="totalItems"
-        [hasNextPage]="hasNext"
-        [hasPrevPage]="hasPrev"
-        (changePage)="onPageChange($event)"
-        (changeStatus)="onStatusChanged($event)"
-        (changePlan)="onPlanChange($event)"
+      <!-- VUE TABLEAU -->
+      @if (viewMode() === 'table') {
+        <app-structure-list-view
+          [structures]="filteredStructures()"
+          [currentPage]="currentPage()"
+          [itemsPerPage]="itemsPerPage()"
+          [totalItems]="totalItems()"
+          [hasNextPage]="hasNext()"
+          [hasPrevPage]="hasPrev()"
+          (changePage)="onPageChange($event)"
+          (changeStatus)="onStatusChanged($event)"
+          (changePlan)="onPlanChange($event)"
+          (contact)="openContact($event)"
+          (delete)="confirmDelete($event)"
+        />
+      }
+
+      <!-- PAGINATION -->
+      @if (totalPages() > 1) {
+        <app-pagination
+          [currentPage]="currentPage()"
+          [totalItems]="totalItems()"
+          [perPage]="itemsPerPage()"
+          (pageChange)="onPageChange($event)"
         />
       }
     }
-    <!-- fin @else (loading/error/empty/data) -->
+    <!-- fin @else -->
   </div>
 </div>
 
 <!-- ══ MODAL CONTACT ══ -->
-@if (contactTarget) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4"
-    (click)="contactTarget = null"
-  >
+@if (contactTarget(); as target) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="closeContact()">
     <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
     <div
       class="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl p-6"
@@ -234,31 +232,31 @@
           <ng-icon name="lucideMail" size="16" class="text-secondary-500"></ng-icon>
           Contacter le propriétaire
         </h3>
-        <button
-          (click)="contactTarget = null"
-          class="p-1.5 hover:bg-gray-100 rounded-lg transition-all"
-        >
+        <button (click)="closeContact()" class="p-1.5 hover:bg-gray-100 rounded-lg transition-all">
           <ng-icon name="lucideX" size="16" class="text-primary-400"></ng-icon>
         </button>
       </div>
+
       <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-4">
         <div
-          class="w-9 h-9 rounded-full bg-secondary-200 flex items-center justify-center text-sm font-bold text-secondary-700"
+          class="w-9 h-9 rounded-full bg-secondary-200 flex items-center justify-center text-sm font-bold text-secondary-700 flex-shrink-0"
         >
-          {{ getInitials(getOwnerName(contactTarget.owner?.nom, contactTarget.owner?.prenom) || '?') }}
+          {{ getInitials(getOwnerFullName(target.owner?.nom, target.owner?.prenom)) }}
         </div>
         <div>
           <p class="text-sm font-semibold text-primary-800">
-            {{ getOwnerName(contactTarget.owner?.nom, contactTarget.owner?.prenom) || '—' }}
+            {{ getOwnerFullName(target.owner?.nom, target.owner?.prenom) }}
           </p>
-          <p class="text-xs text-primary-400">{{ contactTarget.owner?.email || '—' }}</p>
+          <p class="text-xs text-primary-400">{{ target.owner?.email || '—' }}</p>
         </div>
       </div>
+
       <div class="space-y-3 mb-4">
         <div>
           <label class="block text-xs font-semibold text-primary-600 mb-1.5">Sujet</label>
           <input
-            [(ngModel)]="contactSubject"
+            [ngModel]="contactSubject()"
+            (ngModelChange)="contactSubject.set($event)"
             type="text"
             placeholder="Objet du message..."
             class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
@@ -267,7 +265,8 @@
         <div>
           <label class="block text-xs font-semibold text-primary-600 mb-1.5">Message</label>
           <textarea
-            [(ngModel)]="contactMessage"
+            [ngModel]="contactMessage()"
+            (ngModelChange)="contactMessage.set($event)"
             rows="4"
             placeholder="Votre message..."
             class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 resize-none"
@@ -275,15 +274,17 @@
           </textarea>
         </div>
       </div>
+
       <div class="flex gap-2">
         <button
           (click)="sendContact()"
           class="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all"
         >
-          <ng-icon name="lucideSend" size="14"></ng-icon> Envoyer
+          <ng-icon name="lucideSend" size="14"></ng-icon>
+          Envoyer
         </button>
         <button
-          (click)="contactTarget = null"
+          (click)="closeContact()"
           class="px-4 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all"
         >
           Annuler
@@ -294,38 +295,12 @@
 }
 
 <!-- ══ MODAL SUPPRESSION ══ -->
-@if (deleteTarget) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4"
-    (click)="deleteTarget = null"
-  >
-    <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
-    <div
-      class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
-      (click)="$event.stopPropagation()"
-    >
-      <div class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
-        <ng-icon name="lucideTriangleAlert" size="24" class="text-red-500"></ng-icon>
-      </div>
-      <h3 class="font-bold text-primary-900 text-center mb-2">Supprimer la structure ?</h3>
-      <p class="text-sm text-primary-500 text-center mb-5">
-        <strong class="text-primary-700">{{ deleteTarget.name }}</strong> sera définitivement
-        supprimée. Cette action est irréversible.
-      </p>
-      <div class="flex gap-2">
-        <button
-          (click)="deleteStructure()"
-          class="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all"
-        >
-          Supprimer
-        </button>
-        <button
-          (click)="deleteTarget = null"
-          class="flex-1 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all"
-        >
-          Annuler
-        </button>
-      </div>
-    </div>
-  </div>
+@if (deleteTarget(); as target) {
+  <app-confirm-dialog
+    title="Supprimer la structure ?"
+    [message]="'« ' + target.name + ' » sera définitivement supprimée. Cette action est irréversible.'"
+    [loading]="deleteLoading()"
+    (confirmed)="deleteStructure()"
+    (cancelled)="cancelDelete()"
+  />
 }

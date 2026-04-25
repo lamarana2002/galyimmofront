@@ -4,28 +4,30 @@
   class="fixed top-0 left-0 z-50 w-64 h-screen transition-transform duration-300 bg-primary-800"
   [class.-translate-x-full]="!isOpen"
   [class.translate-x-0]="isOpen"
-  [class.sm:translate-x-0]="true">
-
+  [class.sm:translate-x-0]="true"
+>
   <div class="h-full flex flex-col">
-
     <!-- ── Brand / Logo ── -->
     <div class="w-full h-30 flex aligns-center px-5 py-5 border-b border-primary-700">
-        <img src="/img/logo.jpeg" alt="Logo" class="w-full h-full rounded-lg object-cover" />
+      <img src="/img/logo.jpeg" alt="Logo" class="w-full h-full rounded-lg object-cover" />
     </div>
 
     <!-- ── Navigation ── -->
     <div class="flex-1 overflow-y-auto py-4 sidebar-scroll">
-
       <!-- Section: Main -->
       <p class="section-label">Main</p>
 
       <ul class="space-y-0.5 px-3">
-
         <!-- Dashboard -->
         <li>
-          <a routerLink="/dashboard" routerLinkActive="nav-item-active"
-            class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer">
-            <div class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200">
+          <a
+            routerLink="/dashboard"
+            routerLinkActive="nav-item-active"
+            class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer"
+          >
+            <div
+              class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200"
+            >
               <ng-icon name="lucideHouse" />
             </div>
             <span class="nav-label text-sm transition-colors duration-200">Dashboard</span>
@@ -34,13 +36,22 @@
 
         <!-- Kanban -->
         <li>
-          <a routerLink="/kanban" routerLinkActive="nav-item-active"
-            class="nav-item flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl cursor-pointer">
+          <a
+            routerLink="/kanban"
+            routerLinkActive="nav-item-active"
+            class="nav-item flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl cursor-pointer"
+          >
             <div class="flex items-center gap-3">
-              <div class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200">
+              <div
+                class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200"
+              >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+                  />
                 </svg>
               </div>
               <span class="nav-label text-sm transition-colors duration-200">Kanban</span>
@@ -51,10 +62,15 @@
 
         <!-- Inbox -->
         <li>
-          <a routerLink="/inbox" routerLinkActive="nav-item-active"
-            class="nav-item flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl cursor-pointer">
+          <a
+            routerLink="/inbox"
+            routerLinkActive="nav-item-active"
+            class="nav-item flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl cursor-pointer"
+          >
             <div class="flex items-center gap-3">
-              <div class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200">
+              <div
+                class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200"
+              >
                 <ng-icon name="lucideInbox" />
               </div>
               <span class="nav-label text-sm transition-colors duration-200">Inbox</span>
@@ -62,113 +78,74 @@
             <span class="notif-badge">{{ unreadCount }}</span>
           </a>
         </li>
-
       </ul>
 
       <!-- Section: Management -->
       <p class="section-label">Management</p>
 
       <ul class="space-y-0.5 px-3">
-
         @for (nav of navs; track nav.link) {
-          <li>
-            <a [routerLink]="nav.link" routerLinkActive="nav-item-active"
-              [routerLinkActiveOptions]="{ exact: nav.link === '/dashboard' }"
-              class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer">
-              <div class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200">
-                <ng-icon [name]="nav.icon" />
-              </div>
-              <span class="nav-label text-sm transition-colors duration-200">{{nav.label}}</span>
-            </a>
-          </li>
+          @if (userRoles.includes(nav.role)) {
+            <li>
+              <a
+                [routerLink]="nav.link"
+                routerLinkActive="nav-item-active"
+                [routerLinkActiveOptions]="{ exact: nav.link === '/dashboard' }"
+                class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer"
+              >
+                <div
+                  class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200"
+                >
+                  <ng-icon [name]="nav.icon" />
+                </div>
+                <span class="nav-label text-sm transition-colors duration-200">{{
+                  nav.label
+                }}</span>
+              </a>
+            </li>
+          }
         }
-
-        <!-- Users -->
-        <li>
-          <a routerLink="/users" routerLinkActive="nav-item-active"
-            class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer">
-            <div class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-              </svg>
-            </div>
-            <span class="nav-label text-sm transition-colors duration-200">Users</span>
-          </a>
-        </li>
-
-        <!-- Structures -->
-         <li>
-          <a routerLink="/structures" routerLinkActive="nav-item-active"
-            class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer">
-            <div class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200">
-              <ng-icon name="lucideBuilding2"/>
-            </div>
-            <span class="nav-label text-sm transition-colors duration-200">Structures</span>
-          </a>
-        </li>
-
-        <!-- Products -->
-        <li>
-          <a routerLink="/products" routerLinkActive="nav-item-active"
-            class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer">
-            <div class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-              </svg>
-            </div>
-            <span class="nav-label text-sm transition-colors duration-200">Products</span>
-          </a>
-        </li>
-
-        <!-- Analytics -->
-        <li>
-          <a routerLink="/analytics" routerLinkActive="nav-item-active"
-            class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer">
-            <div class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-              </svg>
-            </div>
-            <span class="nav-label text-sm transition-colors duration-200">Analytics</span>
-          </a>
-        </li>
-
       </ul>
 
       <!-- Divider -->
-      <hr class="border-primary-700 mx-5 my-3">
+      <hr class="border-primary-700 mx-5 my-3" />
 
       <!-- Section: Account -->
       <ul class="space-y-0.5 px-3">
-
         <!-- Settings -->
         <li>
-          <a routerLink="/settings" routerLinkActive="nav-item-active"
-            class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer">
-            <div class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200">
+          <a
+            routerLink="/settings"
+            routerLinkActive="nav-item-active"
+            class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer"
+          >
+            <div
+              class="nav-icon-wrap flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200"
+            >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
             </div>
             <span class="nav-label text-sm transition-colors duration-200">Settings</span>
           </a>
         </li>
-
       </ul>
     </div>
-
   </div>
 </aside>
 
 <!-- Overlay mobile pour fermer en cliquant à l'extérieur -->
 @if (isOpen) {
-  <div
-    class="fixed inset-0 z-30 bg-primary-900/50 sm:hidden"
-    (click)="close()">
-  </div>
+  <div class="fixed inset-0 z-30 bg-primary-900/50 sm:hidden" (click)="close()"></div>
 }

@@ -1,0 +1,234 @@
+<div class="min-h-screen" style="background: #f4f1ee">
+  <div class="bg-white border-b border-gray-200 sticky top-16 z-30 shadow-sm">
+    <div class="px-6 py-4">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h1
+            class="text-xl font-bold text-primary-900 flex items-center gap-3"
+            style="letter-spacing: -0.02em"
+          >
+            <div class="w-9 h-9 rounded-lg bg-primary-800 flex items-center justify-center">
+              <ng-icon name="lucideFileText" size="16" class="text-white"></ng-icon>
+            </div>
+            Contrats
+          </h1>
+          <p class="text-xs text-primary-400 mt-1">
+            {{ filteredLocations().length }} / {{ totalItems() }} contrat(s)
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <div class="relative min-w-[240px]">
+            <ng-icon
+              name="lucideSearch"
+              size="14"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300 pointer-events-none"
+            ></ng-icon>
+            <input
+              [ngModel]="searchQuery()"
+              (ngModelChange)="onSearchChange($event)"
+              type="text"
+              placeholder="Rechercher contrat, locataire, unité..."
+              class="w-full pl-9 pr-4 py-2 text-sm text-primary-800 placeholder-primary-300 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 focus:bg-white transition-all"
+            />
+          </div>
+          <div class="flex flex-wrap items-center gap-1 bg-gray-100 rounded-xl p-1">
+            @for (filter of statusFilters; track filter.value) {
+              <button
+                (click)="onStatusFilterChange(filter.value)"
+                class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+                [class]="
+                  activeStatus() === filter.value
+                    ? 'bg-white text-primary-900 shadow-sm'
+                    : 'text-primary-400 hover:text-primary-700'
+                "
+              >
+                {{ filter.label }}
+                <span class="ml-1 text-[10px] opacity-60"
+                  >({{ getStatusCount(filter.value) }})</span
+                >
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 py-5 space-y-5">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      @for (kpi of kpis(); track kpi.label) {
+        <div
+          class="bg-white rounded-2xl border border-gray-200 px-5 py-4 flex items-center gap-4 shadow-sm"
+        >
+          <div
+            class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+            [class]="kpi.bgClass"
+          >
+            <ng-icon [name]="kpi.icon" size="18" [class]="kpi.iconClass"></ng-icon>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-primary-900 leading-none">
+              {{ kpi.value | number: '1.0-0' }}
+            </p>
+            <p class="text-[11px] text-primary-400 mt-1 font-medium">{{ kpi.label }}</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (loading()) {
+      <app-loading message="Chargement des contrats…" />
+    } @else if (error(); as errorMsg) {
+      <div
+        class="flex flex-col items-center py-24 text-center bg-red-50 rounded-2xl border border-red-200"
+      >
+        <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-4">
+          <ng-icon name="lucideTriangleAlert" size="28" class="text-red-500"></ng-icon>
+        </div>
+        <p class="font-semibold text-red-600">{{ errorMsg }}</p>
+        <button
+          (click)="loadContracts()"
+          class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-red-600 bg-red-100 hover:bg-red-200 rounded-xl transition-all"
+        >
+          <ng-icon name="lucideRefreshCw" size="13"></ng-icon>
+          Réessayer
+        </button>
+      </div>
+    } @else if (filteredLocations().length === 0) {
+      <app-empty-state
+        title="Aucun contrat trouvé"
+        [subtitle]="
+          allLocations().length > 0
+            ? 'Essayez d’autres filtres'
+            : 'Aucun contrat enregistré pour l’instant'
+        "
+        [actionLabel]="allLocations().length > 0 ? 'Réinitialiser' : ''"
+        (action)="resetFilters()"
+      />
+    } @else {
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr
+                class="border-b border-gray-100 bg-gray-50/80 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+              >
+                <th class="px-4 py-3.5">Contrat</th>
+                <th class="px-4 py-3.5">Locataire</th>
+                <th class="px-4 py-3.5">Bien / unité</th>
+                <th class="px-4 py-3.5">Statut</th>
+                <th class="px-4 py-3.5">Début</th>
+                <th class="px-4 py-3.5">Fin</th>
+                <th class="px-4 py-3.5 text-right">Loyer</th>
+                <th class="px-4 py-3.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              @for (location of filteredLocations(); track location.id) {
+                <tr class="hover:bg-gray-50/60 transition-colors group">
+                  <td class="px-4 py-4">
+                    <p class="font-semibold text-primary-900 truncate max-w-[220px]">
+                      Contrat #{{ location.id }}
+                    </p>
+                    <p class="text-[11px] text-primary-400 mt-1 truncate">
+                      {{ location.description || 'Aucune description' }}
+                    </p>
+                  </td>
+                  <td class="px-4 py-4">
+                    <p class="font-semibold text-primary-900">
+                      {{ location.locataire?.prenom }} {{ location.locataire?.nom }}
+                    </p>
+                    <p class="text-[11px] text-primary-500 mt-1">
+                      {{ location.locataire?.email || '—' }}
+                    </p>
+                  </td>
+                  <td class="px-4 py-4">
+                    <p class="font-semibold text-primary-900">
+                      {{ location.property?.name || '—' }}
+                    </p>
+                    <p class="text-[11px] text-primary-500 mt-1">
+                      {{ location.unite_location?.unit_number || '—' }}
+                    </p>
+                  </td>
+                  <td class="px-4 py-4">
+                    <span
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full border"
+                      [class]="LocationHelper.getStatusBadgeClass(location.status)"
+                    >
+                      {{ LocationHelper.getStatusLabel(location.status) }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-4 text-[13px] text-primary-500 whitespace-nowrap">
+                    {{ location.date_location | date: 'dd/MM/yyyy' }}
+                  </td>
+                  <td class="px-4 py-4 text-[13px] text-primary-500 whitespace-nowrap">
+                    {{ location.end_date ? (location.end_date | date: 'dd/MM/yyyy') : '—' }}
+                  </td>
+                  <td class="px-4 py-4 text-right font-semibold text-primary-900">
+                    {{ location.montant | number: '1.0-0' }} GNF
+                  </td>
+                  <td class="px-4 py-4 text-right">
+                    <div
+                      class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      @if (location.contrat_url) {
+                        <a
+                          [href]="location.contrat_url"
+                          target="_blank"
+                          rel="noreferrer"
+                          class="p-2 text-primary-400 hover:text-primary-700 rounded-lg hover:bg-primary-50 transition-all"
+                          title="Télécharger le contrat"
+                        >
+                          <ng-icon name="lucideDownload" size="15"></ng-icon>
+                        </a>
+                      }
+                      @if (location.property?.id) {
+                        <a
+                          [routerLink]="['/properties', location.property?.id]"
+                          class="p-2 text-primary-400 hover:text-primary-700 rounded-lg hover:bg-primary-50 transition-all"
+                          title="Voir bien"
+                        >
+                          <ng-icon name="lucideHome" size="15"></ng-icon>
+                        </a>
+                      }
+                      @if (location.status === LocationStatusEnum.ACTIVE) {
+                        <button
+                          (click)="renewContract(location)"
+                          [disabled]="renewingId() === location.id"
+                          class="p-2 text-amber-500 hover:text-amber-700 rounded-lg hover:bg-amber-50 transition-all disabled:opacity-50"
+                          title="Renouveler le contrat"
+                        >
+                          <ng-icon name="lucideRotateCcw" size="15"></ng-icon>
+                        </button>
+                        <button
+                          (click)="terminateContract(location)"
+                          [disabled]="terminatingId() === location.id"
+                          class="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50 transition-all disabled:opacity-50"
+                          title="Résilier le contrat"
+                        >
+                          <ng-icon name="lucideX" size="15"></ng-icon>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (totalPages() > 1) {
+          <div class="px-2 border-t border-gray-100">
+            <app-pagination
+              [currentPage]="currentPage()"
+              [totalItems]="totalItems()"
+              [perPage]="itemsPerPage()"
+              (pageChange)="onPageChange($event)"
+            />
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,122 @@
+<!-- ══ BACKDROP ══ -->
+<div class="fixed inset-0 z-[900] bg-primary-900/40 backdrop-blur-sm" (click)="close()"></div>
+
+<!-- ══ MODAL ══ -->
+<div class="fixed inset-0 z-[901] flex items-start justify-center overflow-y-auto p-4 py-10">
+  <div class="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl" (click)="$event.stopPropagation()">
+
+    <!-- En-tête -->
+    <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary-100">
+          <ng-icon name="lucideShield" size="18" class="text-secondary-600" />
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-primary-900">{{ title() }}</h2>
+          <p class="mt-0.5 text-xs text-primary-400">Définissez les permissions de ce rôle</p>
+        </div>
+      </div>
+      <button (click)="close()"
+        class="rounded-lg p-1.5 text-primary-400 transition-colors hover:bg-gray-100 hover:text-primary-700">
+        <ng-icon name="lucideX" size="18" />
+      </button>
+    </div>
+
+    <!-- Corps -->
+    <div class="space-y-5 px-6 py-5">
+
+      <!-- Nom du rôle -->
+      <div>
+        <label class="block text-xs font-semibold text-primary-600 mb-1.5">
+          Nom du rôle <span class="text-red-400">*</span>
+        </label>
+        <input [ngModel]="roleName()" (ngModelChange)="roleName.set($event)"
+          type="text" placeholder="ex: gestionnaire, agent..."
+          class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-primary-800
+                 placeholder-primary-300 transition-all focus:border-secondary-400 focus:bg-white focus:outline-none" />
+      </div>
+
+      <!-- Permissions -->
+      <div>
+        <div class="mb-3 flex items-center justify-between">
+          <p class="text-xs font-bold uppercase tracking-wider text-primary-400">Permissions</p>
+          @if (selectedPermissions().length > 0) {
+            <span class="rounded-full bg-secondary-100 px-2 py-0.5 text-xs font-semibold text-secondary-600">
+              {{ selectedPermissions().length }} sélectionnées
+            </span>
+          }
+        </div>
+
+        @if (loadingPermissions()) {
+          <div class="flex items-center justify-center gap-2 py-8 text-xs text-primary-400">
+            <ng-icon name="lucideLoader" size="14" class="animate-spin" />
+            Chargement des permissions...
+          </div>
+        } @else if (permissionGroups().length === 0) {
+          <p class="py-4 text-center text-xs text-primary-400">Aucune permission disponible.</p>
+        } @else {
+          <div class="max-h-72 space-y-3 overflow-y-auto pr-1">
+            @for (group of permissionGroups(); track group.resource) {
+              <div class="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                <!-- Groupe header -->
+                <label class="flex cursor-pointer items-center gap-2 mb-2">
+                  <input type="checkbox"
+                    [checked]="isGroupFullySelected(group)"
+                    (change)="toggleGroup(group)"
+                    class="h-4 w-4 rounded border-gray-300 text-secondary-500 focus:ring-secondary-400" />
+                  <span class="text-xs font-bold uppercase tracking-wide text-primary-700">
+                    {{ group.resource }}
+                  </span>
+                  <span class="text-[10px] text-primary-400">({{ group.permissions.length }})</span>
+                </label>
+                <!-- Permissions du groupe -->
+                <div class="flex flex-wrap gap-2 pl-6">
+                  @for (perm of group.permissions; track perm.id) {
+                    <label class="flex cursor-pointer items-center gap-1.5">
+                      <input type="checkbox"
+                        [checked]="isSelected(perm.id)"
+                        (change)="togglePermission(perm.id)"
+                        class="h-3.5 w-3.5 rounded border-gray-300 text-secondary-500 focus:ring-secondary-400" />
+                      <span class="text-xs text-primary-600">{{ perm.name.split('.')[1] }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Erreur -->
+      @if (error()) {
+        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {{ error() }}
+        </div>
+      }
+
+    </div>
+
+    <!-- Pied de page -->
+    <div class="flex gap-3 border-t border-gray-100 px-6 py-4">
+      <button (click)="close()"
+        class="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-primary-600
+               transition-all hover:bg-gray-50">
+        Annuler
+      </button>
+      <button (click)="save()" [disabled]="!isValid() || saving()"
+        class="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all"
+        [class]="isValid() && !saving()
+          ? 'bg-secondary-500 hover:bg-secondary-600'
+          : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
+        @if (saving()) {
+          <ng-icon name="lucideLoader" size="15" class="animate-spin" />
+          Enregistrement...
+        } @else {
+          <ng-icon name="lucideSave" size="15" />
+          {{ isEdit() ? 'Mettre à jour' : 'Créer le rôle' }}
+        }
+      </button>
+    </div>
+
+  </div>
+</div>

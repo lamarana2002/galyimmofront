@@ -1,81 +1,96 @@
-import { Component, inject, Input, output } from '@angular/core';
-import { StructureModel } from '../../../models/structure.model';
-import { StructureStatus } from '../../../enums/structure-status.enum';
-import { StructureService } from '../../../services/structure.service';
-import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideBuilding2, lucideXCircle } from '@ng-icons/lucide';
-import { DatePipe, TitleCasePipe } from '@angular/common';
+import { Component, Input, output, ChangeDetectionStrategy } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  lucideBuilding2, lucideBuilding, lucideUsers, lucideKey, lucideCrown,
+  lucideCheck, lucideX, lucidePause, lucidePlay, lucideEye, lucideMail,
+  lucideTrash2, lucideCheckCircle, lucideXCircle,
+} from '@ng-icons/lucide';
+
+import { StructureModel }    from '../../../models/structure.model';
+import { StructureStatus }   from '../../../enums/structure-status.enum';
+import { StructurePlanType } from '../../../enums/structure-plan-type.enum';
+import {
+  getHealthScore, getHealthScoreClass, getHealthTextClass,
+  getInitials, getStatutLabel, getStatusBadgeClass, getStatusDotClass,
+  getOwnerFullName, getPlanBadgeClass, getPlanLabel,
+} from '../../../utils/structure.utils';
 
 @Component({
   selector: 'app-structure-list-view',
-  imports: [NgIcon, DatePipe, TitleCasePipe, RouterLink],
+  standalone: true,
+  imports: [NgIconComponent, DatePipe, RouterLink],
   templateUrl: './structure-list-view.html',
-  styleUrl: './structure-list-view.css',
-  viewProviders: [provideIcons({ lucideBuilding2, lucideXCircle })],
+  viewProviders: [
+    provideIcons({
+      lucideBuilding2, lucideBuilding, lucideUsers, lucideKey, lucideCrown,
+      lucideCheck, lucideX, lucidePause, lucidePlay, lucideEye, lucideMail,
+      lucideTrash2, lucideCheckCircle, lucideXCircle,
+    }),
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StructureListView {
+
   @Input({ required: true }) structures!: StructureModel[];
-  StructureStatus = StructureStatus;
-  structureService = inject(StructureService);
 
-  // Pagination
-  @Input() currentPage = 1;
+  // Pagination — inputs du parent
+  @Input() currentPage  = 1;
   @Input() itemsPerPage = 12;
-  @Input() totalItems = 1;
-  @Input() hasNextPage = false;
-  @Input() hasPrevPage = false;
+  @Input() totalItems   = 0;
+  @Input() hasNextPage  = false;
+  @Input() hasPrevPage  = false;
 
-  changePage = output<number>();
-  changeStatus = output<{ id: number; status: StructureStatus }>();
-  changePlan = output<number>();
+  // Enums
+  readonly StructureStatus   = StructureStatus;
+  readonly StructurePlanType = StructurePlanType;
 
-  // ── Modals ────────────────────────────────────────────────────
-  contactTarget: StructureModel | null = null;
-  contactSubject = '';
-  contactMessage = '';
-  deleteTarget: StructureModel | null = null;
+  // Utils
+  readonly getStatutLabel      = getStatutLabel;
+  readonly getStatusBadgeClass = getStatusBadgeClass;
+  readonly getStatusDotClass   = getStatusDotClass;
+  readonly getInitials         = getInitials;
+  readonly getOwnerFullName    = getOwnerFullName;
+  readonly getPlanBadgeClass   = getPlanBadgeClass;
+  readonly getPlanLabel        = getPlanLabel;
+  readonly getHealthScore      = getHealthScore;
+  readonly getHealthScoreClass = getHealthScoreClass;
+  readonly getHealthTextClass  = getHealthTextClass;
 
-  onStatusChange(s: StructureModel, status: StructureStatus) {
-    this.changeStatus.emit({ id: s.id, status: status });
-  }
+  // Outputs — tout remonte au parent
+  readonly changePage   = output<number>();
+  readonly changeStatus = output<{ id: number; status: StructureStatus }>();
+  readonly changePlan   = output<number>();
+  readonly contact      = output<StructureModel>();
+  readonly delete       = output<StructureModel>();
 
-  getHealthScore(s: StructureModel): number {
-    return this.structureService.getHealthScore(s);
-  }
-
-  getOwnerName(nom?: string, prenom?: string){
-    return `${prenom} ${nom}`;
-  }
-
-  getInitials(name: string): string {
-    return this.structureService.getInitials(name);
-  }
-  getStatutLabel(status: string): string {
-    return this.structureService.getStatutLabel(status);
-  }
-  // ── Pagination ────────────────────────────────────────────────
   get totalPages(): number {
     return Math.ceil(this.totalItems / this.itemsPerPage);
   }
 
-  get totalPagesArray(): number[] {
+  get pagesArray(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i + 1);
   }
 
-  onPageChange(p: number) {
-    if (p < 1 || p > this.totalPages) return;
-    this.changePage.emit(p);
+  onStatusChange(s: StructureModel, status: StructureStatus): void {
+    this.changeStatus.emit({ id: s.id, status });
   }
+
   onPlanChange(id: number): void {
     this.changePlan.emit(id);
   }
-  openContact(s: StructureModel): void {
-    this.contactTarget = s;
-    this.contactSubject = `Concernant votre structure "${s.name}"`;
-    this.contactMessage = '';
+
+  onPageChange(p: number): void {
+    if (p < 1 || p > this.totalPages) return;
+    this.changePage.emit(p);
   }
-  confirmDelete(s: StructureModel): void {
-    this.deleteTarget = s;
+
+  onContact(s: StructureModel): void {
+    this.contact.emit(s);
+  }
+
+  onDelete(s: StructureModel): void {
+    this.delete.emit(s);
   }
 }

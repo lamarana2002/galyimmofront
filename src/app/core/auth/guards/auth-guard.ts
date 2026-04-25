@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService, UserRole } from '../services/auth.service';
+import { AuthService } from '../services/auth.service';
 
 // ── Guard 1 : utilisateur connecté ? ──────────────────────────────
 export const authGuard: CanActivateFn = (route, state) => {
@@ -29,13 +29,28 @@ export const emailVerifiedGuard: CanActivateFn = () => {
 };
 
 // ── Guard 3 : rôle autorisé ? ─────────────────────────────────────
-export const roleGuard = (...allowedRoles: UserRole[]): CanActivateFn => {
+export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
   return () => {
     const auth   = inject(AuthService);
     const router = inject(Router);
 
-    const role = auth.user()?.role;
-    if (!role || !allowedRoles.includes(role)) {
+    if (!auth.hasAnyRole(allowedRoles)) {
+      router.navigate(['/403']);
+      return false;
+    }
+    return true;
+  };
+};
+
+// ── Guard 3 bis : permission autorisée ? ──────────────────────────
+export const permissionGuard = (allowedPermissions: string[]): CanActivateFn => {
+  console.log(allowedPermissions);
+  
+  return () => {
+    const auth   = inject(AuthService);
+    const router = inject(Router);
+
+    if (!auth.hasAnyPermission(allowedPermissions)) {
       router.navigate(['/403']);
       return false;
     }

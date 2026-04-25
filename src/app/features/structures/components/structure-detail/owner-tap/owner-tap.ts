@@ -1,45 +1,50 @@
-import { Component, inject, Input } from '@angular/core';
-import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideAlignLeft, lucideCalendar, lucideMail, lucideMapPin, lucidePhone, lucideUser, lucideUserX } from '@ng-icons/lucide';
-import { StructureDetail } from '../../../pages/structure-details/structure-details';
-import { StructureService } from '../../../services/structure.service';
-import { PlanType } from '../../structures/structure-card/structure-card';
+import { Component, Input, output } from '@angular/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  lucideAlignLeft, lucideCalendar, lucideMail,
+  lucideMapPin, lucidePhone, lucideUser, lucideUserX,
+} from '@ng-icons/lucide';
 import { DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+
 import { StructureModel } from '../../../models/structure.model';
-import { ContactStructureModal } from "../contact-structure-modal/contact-structure-modal";
+import { getInitials, getOwnerFullName } from '../../../utils/structure.utils';
 
 @Component({
   selector: 'app-owner-tap',
-  imports: [NgIcon, DatePipe, FormsModule, ContactStructureModal],
+  standalone: true,
+  imports: [NgIconComponent, DatePipe],
   templateUrl: './owner-tap.html',
-  styleUrl: './owner-tap.css',
-  viewProviders: [provideIcons({lucideUser, lucideMail, lucidePhone, lucideMapPin, lucideCalendar,
-    lucideAlignLeft, lucideUserX
-  })]
+  viewProviders: [provideIcons({
+    lucideUser, lucideMail, lucidePhone, lucideMapPin,
+    lucideCalendar, lucideAlignLeft, lucideUserX,
+  })],
 })
 export class OwnerTap {
-  @Input() structure?: StructureModel;
-  structureService = inject(StructureService);
-  // ── UI states ─────────────────────────────────────────────────
-  showContactModal = false;
-  showDeleteConfirm = false;
-  showPlanModal = false;
-  contactMessage = '';
-  contactSubject = '';
-  selectedPlan: PlanType = 'premium';
 
-  getInitials(name?: string): string {
-    return name ? this.structureService.getInitials(name) : '';
+  @Input({ required: true }) structure!: StructureModel;
+
+  // Remonte au parent — la modale contact est gérée par structure-details
+  readonly contact = output<void>();
+
+  get owner() {
+    return this.structure.owner;
   }
-  getOwnerName(nom?: string, prenom?: string){
-    return `${prenom} ${nom}`;
+
+  get ownerName(): string {
+    return getOwnerFullName(this.owner?.nom, this.owner?.prenom);
   }
-  sendContactMessage(): void {
-    console.log('Message envoyé à', this.structure?.owner?.email);
-    // this.addAuditLog(`Message envoyé au propriétaire : "${this.contactSubject}".`);
-    this.showContactModal = false;
-    this.contactMessage = '';
-    this.contactSubject = '';
+
+  get ownerInitials(): string {
+    return getInitials(this.ownerName);
+  }
+
+  get ownerLocation(): string {
+    const { ville, pays } = this.owner ?? {};
+    if (ville && pays) return `${ville}, ${pays}`;
+    return ville ?? pays ?? 'Non renseigné';
+  }
+
+  onContact(): void {
+    this.contact.emit();
   }
 }

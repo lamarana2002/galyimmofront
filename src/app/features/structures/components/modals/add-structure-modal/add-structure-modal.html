@@ -1,0 +1,160 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 min-h-screen" (click)="closeModal()">
+  <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
+  <div class="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+    (click)="$event.stopPropagation()">
+    <!-- Header Modal -->
+    <div
+      class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-2xl flex-shrink-0">
+      <h3 class="font-bold text-primary-900 flex items-center gap-2">
+        <ng-icon [name]="editingStructure() ? 'lucidePencil' : 'lucidePlus'" size="18"
+          class="text-secondary-500"></ng-icon>
+        {{ modalTitle() }}
+      </h3>
+      <button (click)="closeModal()" class="p-1.5 hover:bg-gray-200 rounded-lg transition-all text-primary-400">
+        <ng-icon name="lucideX" size="18"></ng-icon>
+      </button>
+    </div>
+
+    <!-- Body scrollable -->
+    <div class="overflow-y-auto flex-1 p-6 bg-white">
+      <div class="space-y-6">
+
+        <!-- SECTION: Informations Générales -->
+        <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5">
+          <h4 class="text-sm font-bold text-primary-800 mb-4 flex items-center gap-2">
+            <ng-icon name="lucideInfo" size="16" class="text-secondary-500"></ng-icon>
+            Informations Générales
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">
+                Nom de la structure <span class="text-red-500">*</span>
+              </label>
+              <input [(ngModel)]="form().name" type="text" placeholder="Ex: Agence ImmoPro"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white"
+                [class.border-red-300]="errors['name']" />
+              @if (errors['name']) { <p class="text-red-500 text-[10px] mt-1">{{ errors['name'] }}</p> }
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">
+                Type de Plan <span class="text-red-500">*</span>
+              </label>
+              <select [(ngModel)]="form().plan"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white">
+                <option [value]="StructurePlanType.FREEMIUM">Freemium (Gratuit)</option>
+                <option [value]="StructurePlanType.PREMIUM">Premium (Payant)</option>
+              </select>
+              @if (errors['plan']) { <p class="text-red-500 text-[10px] mt-1">{{ errors['plan'] }}</p> }
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: Liens & Contact -->
+        <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5">
+          <h4 class="text-sm font-bold text-primary-800 mb-4 flex items-center gap-2">
+            <ng-icon name="lucideGlobe" size="16" class="text-secondary-500"></ng-icon>
+            Présence en ligne
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">
+                <ng-icon name="lucideGlobe" size="12" class="mr-1"></ng-icon> Site Web
+              </label>
+              <input [(ngModel)]="form().web_site" type="url" placeholder="https://mon-agence.com"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5 flex items-center gap-1">
+                Facebook
+              </label>
+              <input [(ngModel)]="form().facebook" type="url" placeholder="Lien de la page Facebook"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5">Description (Optionnel)</label>
+              <textarea [(ngModel)]="form().description" rows="3" placeholder="Décrivez votre structure..."
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white resize-none"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: Médias (Logo & Cover) -->
+        <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5">
+          <h4 class="text-sm font-bold text-primary-800 mb-4 flex items-center gap-2">
+            <ng-icon name="lucideImage" size="16" class="text-secondary-500"></ng-icon>
+            Visuels de la structure
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+            <!-- LOGO -->
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5 flex justify-between">
+                <span>Logo de la structure</span>
+              </label>
+              <div class="flex items-center gap-4 mt-2">
+                <div
+                  class="w-16 h-16 rounded-xl border border-gray-200 overflow-hidden flex-shrink-0 bg-white shadow-sm flex items-center justify-center">
+                  @if (form().logo_preview) {
+                  <img [src]="form().logo_preview" class="w-full h-full object-cover" />
+                  } @else {
+                  <ng-icon name="lucideUser" size="24" class="text-primary-200"></ng-icon>
+                  }
+                </div>
+                <div>
+                  <input type="file" (change)="onFileSelected($event, 'logo')" accept="image/*" class="hidden"
+                    #logoInput />
+                  <button type="button" (click)="logoInput.click()"
+                    class="px-3 py-1.5 text-[11px] font-semibold text-primary-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg transition-all shadow-sm">
+                    Choisir un logo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- COVER -->
+            <div>
+              <label class="block text-xs font-semibold text-primary-600 mb-1.5 flex justify-between">
+                <span>Image de couverture</span>
+              </label>
+              <div class="flex items-center gap-4 mt-2">
+                <div
+                  class="w-24 h-16 rounded-xl border border-gray-200 overflow-hidden flex-shrink-0 bg-white shadow-sm flex items-center justify-center">
+                  @if (form().cover_preview) {
+                  <img [src]="form().cover_preview" class="w-full h-full object-cover" />
+                  } @else {
+                  <ng-icon name="lucideImage" size="24" class="text-primary-200"></ng-icon>
+                  }
+                </div>
+                <div>
+                  <input type="file" (change)="onFileSelected($event, 'cover')" accept="image/*" class="hidden"
+                    #coverInput />
+                  <button type="button" (click)="coverInput.click()"
+                    class="px-3 py-1.5 text-[11px] font-semibold text-primary-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg transition-all shadow-sm">
+                    Choisir une couverture
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer Modal -->
+    <div
+      class="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3 flex-shrink-0 bg-white rounded-b-2xl">
+      <button (click)="closeModal()"
+        class="px-5 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all">
+        Annuler
+      </button>
+      <button (click)="save()" [disabled]="isSaving()"
+        class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+        <ng-icon name="lucideSave" size="16"></ng-icon>
+        {{ isSaving() ? 'Enregistrement...' : editingStructure() ? 'Enregistrer modifs' : 'Créer la structure' }}
+      </button>
+    </div>
+  </div>
+</div>

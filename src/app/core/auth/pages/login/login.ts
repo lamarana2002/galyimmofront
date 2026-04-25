@@ -39,8 +39,6 @@ export class LoginComponent implements OnInit {
     this.loading = true;
     this.authService.login(this.form).subscribe({
       error: (err) => {
-        console.log(err);
-        
         this.loading = false;
         this.errorMessage = err?.error?.message ?? 'Login ou mot de passe incorrect.';
       }

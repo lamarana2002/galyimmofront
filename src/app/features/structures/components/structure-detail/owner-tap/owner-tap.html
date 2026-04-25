@@ -1,13 +1,14 @@
-@if (structure?.owner) {
+@if (owner) {
   <div class="flex flex-col md:flex-row gap-6 items-start">
+    <!-- Avatar / Initiales -->
     <div class="flex flex-col items-center text-center w-full md:w-40 flex-shrink-0">
       <div
         class="w-24 h-24 rounded-full bg-secondary-200 flex items-center justify-center text-2xl font-bold text-secondary-700 shadow-lg border-[3px] border-white mb-3"
       >
-        {{ getInitials(getOwnerName(structure?.owner?.nom, structure?.owner?.prenom)) }}
+        {{ ownerInitials }}
       </div>
       <p class="font-bold text-primary-900 leading-tight">
-        {{ getOwnerName(structure?.owner?.nom, structure?.owner?.prenom) }}
+        {{ ownerName }}
       </p>
       <span
         class="mt-1.5 px-2.5 py-0.5 text-[10px] font-bold bg-secondary-100 text-secondary-600 rounded-full"
@@ -15,13 +16,15 @@
         Propriétaire
       </span>
       <button
-        (click)="showContactModal = true; contactSubject = 'Message personnel'"
+        (click)="onContact()"
         class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary-600 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded-xl transition-all"
       >
         <ng-icon name="lucideMail" size="12"></ng-icon>
         Contacter
       </button>
     </div>
+
+    <!-- Informations détaillées -->
     <div class="flex-1 bg-gray-50 rounded-xl p-5 border border-gray-100">
       <p
         class="text-xs font-bold text-primary-400 uppercase tracking-wider flex items-center gap-2 mb-4"
@@ -29,7 +32,9 @@
         <ng-icon name="lucideUser" size="13"></ng-icon>
         Informations personnelles
       </p>
+      
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Email -->
         <div class="flex items-center gap-3">
           <div
             class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -38,9 +43,11 @@
           </div>
           <div>
             <p class="text-[10px] text-primary-400">Email</p>
-            <p class="text-sm font-medium text-primary-800">{{ structure?.owner?.email }}</p>
+            <p class="text-sm font-medium text-primary-800">{{ owner.email }}</p>
           </div>
         </div>
+
+        <!-- Téléphone -->
         <div class="flex items-center gap-3">
           <div
             class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -50,10 +57,12 @@
           <div>
             <p class="text-[10px] text-primary-400">Téléphone</p>
             <p class="text-sm font-medium text-primary-800">
-              {{ structure?.owner?.telephone || '—' }}
+              {{ owner.telephone || 'Non renseigné' }}
             </p>
           </div>
         </div>
+
+        <!-- Localisation -->
         <div class="flex items-center gap-3">
           <div
             class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -62,11 +71,11 @@
           </div>
           <div>
             <p class="text-[10px] text-primary-400">Localisation</p>
-            <p class="text-sm font-medium text-primary-800">
-              {{ structure?.owner?.ville }}, {{ structure?.owner?.pays }}
-            </p>
+            <p class="text-sm font-medium text-primary-800">{{ ownerLocation }}</p>
           </div>
         </div>
+
+        <!-- Date de création -->
         <div class="flex items-center gap-3">
           <div
             class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -76,11 +85,13 @@
           <div>
             <p class="text-[10px] text-primary-400">Membre depuis</p>
             <p class="text-sm font-medium text-primary-800">
-              {{ structure?.owner?.created_at | date: 'dd MMM yyyy' }}
+              {{ owner.created_at | date: 'dd MMM yyyy' }}
             </p>
           </div>
         </div>
-        @if (structure?.owner?.description) {
+
+        <!-- Bio / Description -->
+        @if (owner.description) {
           <div class="flex items-start gap-3 sm:col-span-2">
             <div
               class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
@@ -90,7 +101,7 @@
             <div>
               <p class="text-[10px] text-primary-400">Bio</p>
               <p class="text-sm text-primary-600 italic leading-relaxed">
-                {{ structure?.owner?.description }}
+                {{ owner.description }}
               </p>
             </div>
           </div>
@@ -99,14 +110,12 @@
     </div>
   </div>
 } @else {
+  <!-- État vide : pas de propriétaire -->
   <div class="flex flex-col items-center py-20 text-center">
     <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">
       <ng-icon name="lucideUserX" size="28" class="text-gray-300"></ng-icon>
     </div>
     <p class="font-semibold text-primary-500">Aucun propriétaire assigné</p>
+    <p class="text-sm text-primary-400 mt-1">Cette structure n'a pas encore de propriétaire</p>
   </div>
-}
-<!-- ══ MODAL CONTACT ══ -->
-@if (showContactModal && structure) {
-  <app-contact-structure-modal [structure]="structure" [showContactModal]="showContactModal" (sendMessage)="sendContactMessage()" (cancel)="showContactModal = false" />
 }

@@ -1,0 +1,227 @@
+<!-- ══ BACKDROP ══ -->
+<div class="fixed inset-0 z-[9997] bg-primary-900/40" (click)="close()"></div>
+
+<!-- ══ DRAWER ══ -->
+<div class="fixed inset-y-0 right-0 z-[9998] flex w-full max-w-md flex-col bg-white shadow-2xl">
+
+  <!-- En-tête -->
+  <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 flex-shrink-0">
+    <div>
+      <h2 class="text-base font-bold text-primary-900">Nouvelle location</h2>
+      <p class="mt-0.5 text-xs text-primary-400">
+        Unité {{ unit().unit_code }}
+        @if (unit().property?.name) { — {{ unit().property!.name }} }
+      </p>
+    </div>
+    <button (click)="close()"
+      class="rounded-lg p-1.5 text-primary-400 transition-colors hover:bg-gray-100 hover:text-primary-700">
+      <ng-icon name="lucideX" size="18" />
+    </button>
+  </div>
+
+  <!-- Corps scrollable -->
+  <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+
+    <!-- ── SECTION 1 : Locataire ── -->
+    <div>
+      <p class="mb-3 text-xs font-bold uppercase tracking-wider text-primary-400">Locataire</p>
+
+      @if (form().locataire; as t) {
+        <!-- Locataire sélectionné -->
+        <div class="flex items-center gap-3 rounded-xl border border-secondary-200 bg-secondary-50 px-4 py-3">
+          <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-secondary-200 text-sm font-bold text-secondary-700">
+            {{ getInitials(t) }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="truncate text-sm font-semibold text-primary-900">{{ t.prenom }} {{ t.nom }}</p>
+            <p class="truncate text-xs text-primary-400">{{ t.telephone }}</p>
+          </div>
+          <button (click)="clearTenant()"
+            class="rounded-lg p-1 text-primary-300 transition-colors hover:bg-white hover:text-red-500">
+            <ng-icon name="lucideX" size="14" />
+          </button>
+        </div>
+
+      } @else {
+        <!-- Sélecteur + dropdown -->
+        <div class="relative">
+          <!-- Champ de recherche -->
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <ng-icon name="lucideSearch" size="14"
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300 pointer-events-none" />
+              <input
+                [ngModel]="searchQuery()"
+                (ngModelChange)="onSearchChange($event)"
+                (focus)="showDropdown.set(true)"
+                type="text"
+                placeholder="Rechercher un locataire..."
+                class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-9 pr-4 text-sm
+                       text-primary-800 placeholder-primary-300 transition-all
+                       focus:border-secondary-400 focus:bg-white focus:outline-none"
+              />
+            </div>
+            <!-- Bouton nouveau locataire -->
+            <button (click)="openNewTenant()"
+              title="Créer un nouveau locataire"
+              class="flex items-center gap-1.5 rounded-xl border border-dashed border-secondary-300
+                     bg-secondary-50 px-3 py-2 text-xs font-semibold text-secondary-600
+                     transition-all hover:bg-secondary-100">
+              <ng-icon name="lucidePlus" size="14" />
+              Nouveau
+            </button>
+          </div>
+
+          <!-- Dropdown résultats -->
+          @if (showDropdown()) {
+            <div class="absolute left-0 right-0 top-full z-10 mt-1 max-h-52 overflow-y-auto
+                        rounded-xl border border-gray-200 bg-white shadow-lg">
+              @if (loadingTenants()) {
+                <div class="flex items-center justify-center gap-2 py-6 text-xs text-primary-400">
+                  <ng-icon name="lucideLoader" size="14" class="animate-spin" />
+                  Chargement...
+                </div>
+              } @else if (tenants().length === 0) {
+                <div class="py-6 text-center text-xs text-primary-400">
+                  Aucun locataire trouvé.
+                  <button (click)="openNewTenant()" class="mt-1 block mx-auto font-semibold text-secondary-500 hover:underline">
+                    Créer un nouveau
+                  </button>
+                </div>
+              } @else {
+                @for (t of tenants(); track t.id) {
+                  <button (click)="selectTenant(t)"
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left
+                           transition-colors hover:bg-gray-50">
+                    <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full
+                                bg-secondary-100 text-xs font-bold text-secondary-700">
+                      {{ getInitials(t) }}
+                    </div>
+                    <div class="min-w-0">
+                      <p class="truncate text-sm font-medium text-primary-900">{{ t.prenom }} {{ t.nom }}</p>
+                      <p class="truncate text-xs text-primary-400">{{ t.telephone }}</p>
+                    </div>
+                  </button>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- ── SECTION 2 : Détails ── -->
+    <div>
+      <p class="mb-3 text-xs font-bold uppercase tracking-wider text-primary-400">Détails de la location</p>
+
+      <div class="space-y-4">
+
+        <!-- Date de début -->
+        <div>
+          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Date de début <span class="text-red-400">*</span></label>
+          <input
+            [ngModel]="form().date"
+            (ngModelChange)="setDate($event)"
+            type="date"
+            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm
+                   text-primary-800 transition-all focus:border-secondary-400 focus:bg-white focus:outline-none"
+          />
+        </div>
+
+        <!-- Intervalle + Montant côte à côte -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Intervalle <span class="text-red-400">*</span></label>
+            <select
+              [ngModel]="form().interval"
+              (ngModelChange)="setInterval($event)"
+              class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm
+                     text-primary-800 transition-all focus:border-secondary-400 focus:bg-white focus:outline-none"
+            >
+              @for (opt of intervalOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Montant loyer (Info)</label>
+            <input
+              [ngModel]="form().montant"
+              [disabled]="true"
+              type="number"
+              class="w-full rounded-xl border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm
+                     text-primary-800 focus:outline-none cursor-not-allowed"
+            />
+          </div>
+        </div>
+
+        <!-- Méthode de paiement -->
+        <div>
+          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Méthode de paiement <span class="text-red-400">*</span></label>
+          <select
+            [ngModel]="form().methodePayement"
+            (ngModelChange)="setMethode($event)"
+            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm
+                   text-primary-800 transition-all focus:border-secondary-400 focus:bg-white focus:outline-none"
+          >
+            <option value="">Sélectionner...</option>
+            @for (opt of paymentOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-xs font-semibold text-primary-600 mb-1.5">Description / Notes</label>
+          <textarea
+            [ngModel]="form().description"
+            (ngModelChange)="setDescription($event)"
+            rows="3"
+            placeholder="Détails supplémentaires ou notes sur la location..."
+            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm
+                   text-primary-800 transition-all focus:border-secondary-400 focus:bg-white focus:outline-none"
+          ></textarea>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Pied de page -->
+  <div class="flex gap-3 border-t border-gray-100 px-6 py-4 flex-shrink-0">
+    <button (click)="close()"
+      class="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold
+             text-primary-600 transition-all hover:bg-gray-50">
+      Annuler
+    </button>
+    <button (click)="submit()" [disabled]="!isValid() || saving()"
+      class="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold
+             text-white transition-all"
+      [class]="isValid() && !saving()
+        ? 'bg-secondary-500 hover:bg-secondary-600'
+        : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
+      @if (saving()) {
+        <ng-icon name="lucideLoader" size="15" class="animate-spin" />
+        Enregistrement...
+      } @else {
+        <ng-icon name="lucideSave" size="15" />
+        Créer la location
+      }
+    </button>
+  </div>
+</div>
+
+<!-- ══ MODAL NOUVEAU LOCATAIRE (par-dessus le drawer) ══ -->
+@if (showNewTenant()) {
+  <div class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-primary-900/50" (click)="showNewTenant.set(false)"></div>
+    <div class="relative z-10 w-full max-w-lg" (click)="$event.stopPropagation()">
+      <app-locataire-modal
+        (saved)="onTenantCreated($event)"
+        (cancel)="showNewTenant.set(false)"
+      />
+    </div>
+  </div>
+}

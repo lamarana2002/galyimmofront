@@ -1,432 +1,349 @@
-import { ChangeDetectorRef, Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
+import { Component, inject, OnInit, OnDestroy, computed, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
-  lucideBuilding2,
-  lucideBuilding,
-  lucideUsers,
-  lucideKey,
-  lucideCrown,
-  lucideSearch,
-  lucideSearchX,
-  lucideDownload,
-  lucidePlus,
-  lucideLayoutGrid,
-  lucideList,
-  lucideClock,
-  lucideCheckCircle,
-  lucideCheck,
-  lucidePause,
-  lucidePlay,
-  lucideMail,
-  lucideEye,
-  lucideTrash2,
-  lucideX,
-  lucideSend,
+  lucideBuilding2, lucideBuilding, lucideUsers, lucideKey, lucideCrown,
+  lucideSearch, lucideSearchX, lucideDownload, lucidePlus, lucideLayoutGrid,
+  lucideList, lucideClock, lucideCheckCircle, lucideCheck, lucidePause,
+  lucidePlay, lucideMail, lucideEye, lucideTrash2, lucideX, lucideSend,
   lucideTriangleAlert,
 } from '@ng-icons/lucide';
-import { Subscription } from 'rxjs';
+import { Subject, forkJoin, takeUntil } from 'rxjs';
 
 import { StructureModel } from '../../models/structure.model';
 import { StructurePlanType } from '../../enums/structure-plan-type.enum';
-import { StructureStatus } from '../../enums/structure-status.enum';
-import { StructureService } from '../../services/structure.service';
-import { FilterStructure } from '../../interfaces/filter-structure.interface';
+import { StructureStatus }   from '../../enums/structure-status.enum';
+import { StructureService }  from '../../services/structure.service';
+import { FilterStructure }   from '../../interfaces/filter-structure.interface';
+import { IQueryParam }       from '../../../../shared/interfaces/query-parms.interface';
+
 import { StructureGridView } from '../../components/structures/structure-grid-view/structure-grid-view';
 import { StructureListView } from '../../components/structures/structure-list-view/structure-list-view';
-import { IQueryParam } from '../../../../shared/interfaces/query-parms.interface';
-import { StructureStats } from '../../models/structure-stats.model';
+
+import {
+  getStatutLabel,
+  getInitials,
+  getHealthScore,
+  getOwnerFullName,
+} from '../../utils/structure.utils';
+import { StructureKpis } from '../../models/structure-kpis.model';
+
+import { Pagination }           from '../../../../shared/components/pagination/pagination';
+import { LoadingComponent }     from '../../../../shared/components/loading/loading';
+import { EmptyStateComponent }  from '../../../../shared/components/empty-state/empty-state';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { ToastService }         from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-structures',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgIconComponent, StructureGridView, StructureListView],
+  imports: [
+    CommonModule, FormsModule, NgIconComponent,
+    StructureGridView, StructureListView,
+    Pagination, LoadingComponent, EmptyStateComponent, ConfirmDialogComponent,
+  ],
   templateUrl: './structures.html',
   viewProviders: [
     provideIcons({
-      lucideBuilding2,
-      lucideBuilding,
-      lucideUsers,
-      lucideKey,
-      lucideCrown,
-      lucideSearch,
-      lucideSearchX,
-      lucideDownload,
-      lucidePlus,
-      lucideLayoutGrid,
-      lucideList,
-      lucideClock,
-      lucideCheckCircle,
-      lucideCheck,
-      lucidePause,
-      lucidePlay,
-      lucideMail,
-      lucideEye,
-      lucideTrash2,
-      lucideX,
-      lucideSend,
+      lucideBuilding2, lucideBuilding, lucideUsers, lucideKey, lucideCrown,
+      lucideSearch, lucideSearchX, lucideDownload, lucidePlus, lucideLayoutGrid,
+      lucideList, lucideClock, lucideCheckCircle, lucideCheck, lucidePause,
+      lucidePlay, lucideMail, lucideEye, lucideTrash2, lucideX, lucideSend,
       lucideTriangleAlert,
     }),
   ],
 })
 export class Structures implements OnInit, OnDestroy {
-  private sub?: Subscription;
-  service = inject(StructureService);
+
+  private readonly service  = inject(StructureService);
+  private readonly toast    = inject(ToastService);
+  private readonly destroy$ = new Subject<void>();
 
   // Enums exposés au template
-  StructureStatus = StructureStatus;
-  StructurePlanType = StructurePlanType;
+  readonly StructureStatus   = StructureStatus;
+  readonly StructurePlanType = StructurePlanType;
+
+  // Utils exposés au template (fonctions pures)
+  readonly getStatutLabel  = getStatutLabel;
+  readonly getInitials     = getInitials;
+  readonly getHealthScore  = getHealthScore;
+  readonly getOwnerFullName = getOwnerFullName;
+
+  // ── État ──────────────────────────────────────────────────────
+  loading = signal(true);
+  error   = signal<string | null>(null);
 
   // ── Données ───────────────────────────────────────────────────
-  allStructures: StructureModel[] = [];
-  filteredStructures: StructureModel[] = [];
-  stats: StructureStats = {
-    total: 0,
-    suspended: 0,
-    rejected: 0,
-    premium: 0,
-    freemium: 0,
-    active: 0,
-    pending: 0,
-  };
+  allStructures      = signal<StructureModel[]>([]);
+  filteredStructures = signal<StructureModel[]>([]);
+
+  kpisData = signal<StructureKpis>({
+    total: 0, active: 0, pending: 0,
+    suspended: 0, rejected: 0, premium: 0, freemium: 0,
+  });
+
+  // ── Pagination (serveur) ──────────────────────────────────────
+  currentPage  = signal(1);
+  itemsPerPage = signal(8);
+  totalItems   = signal(0);
+  hasNext      = signal(false);
+  hasPrev      = signal(false);
 
   // ── UI ────────────────────────────────────────────────────────
-  viewMode: 'grid' | 'table' = 'grid';
-  searchQuery = '';
-  activePlan = 'all';
-  activeStatut = 'all';
-  // Pagination
-  currentPage = 1;
-  itemsPerPage = 8;
-  totalItems = 0;
-  hasNext = false;
-  hasPrev = false;
-  // State
-  loading = true;
-  error: string | null = null;
+  viewMode     = signal<'grid' | 'table'>('grid');
+  searchQuery  = signal('');
+  activePlan   = signal('all');
+  activeStatut = signal('all');
 
-  // ── Modals ────────────────────────────────────────────────────
-  contactTarget: StructureModel | null = null;
-  contactSubject = '';
-  contactMessage = '';
-  deleteTarget: StructureModel | null = null;
+  // ── Modales ───────────────────────────────────────────────────
+  contactTarget  = signal<StructureModel | null>(null);
+  contactSubject = signal('');
+  contactMessage = signal('');
+  deleteTarget   = signal<StructureModel | null>(null);
+  deleteLoading  = signal(false);
 
   // ── Filtres ───────────────────────────────────────────────────
-  planFilters = [
-    { label: 'Tous', value: 'all' },
-    { label: 'Freemium', value: 'freemium' },
-    { label: 'Premium', value: 'premium' },
-  ];
-  statutFilters = [
-    { label: 'Tous', value: 'all' },
-    { label: 'En attente', value: StructureStatus.PENDING },
-    { label: 'Approuvés', value: StructureStatus.APPROUVED },
-    { label: 'Suspendus', value: StructureStatus.SUSPENDED },
-    { label: 'Rejetés', value: StructureStatus.REJECTED },
+  readonly planFilters = [
+    { label: 'Tous',     value: 'all'                   },
+    { label: 'Freemium', value: StructurePlanType.FREEMIUM },
+    { label: 'Premium',  value: StructurePlanType.PREMIUM  },
   ];
 
-  private cdr = inject(ChangeDetectorRef);
-
-  // ── KPIs ──────────────────────────────────────────────────────
-  kpis = [
-    {
-      label: 'Total structures',
-      value: 0,
-      icon: 'lucideBuilding2',
-      bgClass: 'bg-primary-100',
-      iconClass: 'text-primary-700',
-      trend: 0,
-    },
-    {
-      label: 'En attente',
-      value: 0,
-      icon: 'lucideClock',
-      bgClass: 'bg-amber-100',
-      iconClass: 'text-amber-600',
-      trend: 0,
-    },
-    {
-      label: 'Premium',
-      value: 0,
-      icon: 'lucideCrown',
-      bgClass: 'bg-secondary-100',
-      iconClass: 'text-secondary-500',
-      trend: 0,
-    },
-    {
-      label: 'Suspendues',
-      value: 0,
-      icon: 'lucidePause',
-      bgClass: 'bg-orange-100',
-      iconClass: 'text-orange-600',
-      trend: 0,
-    },
+  readonly statutFilters = [
+    { label: 'Tous',       value: 'all'                    },
+    { label: 'En attente', value: StructureStatus.PENDING   },
+    { label: 'Approuvés',  value: StructureStatus.APPROUVED },
+    { label: 'Suspendus',  value: StructureStatus.SUSPENDED },
+    { label: 'Rejetés',    value: StructureStatus.REJECTED  },
   ];
 
-  // ─────────────────────────────────────────────────────────────
+  // ── Computed ──────────────────────────────────────────────────
+  kpis = computed(() => [
+    { label: 'Total structures', value: this.kpisData().total,     icon: 'lucideBuilding2', bgClass: 'bg-primary-100',   iconClass: 'text-primary-700'  , trend: 0 },
+    { label: 'En attente',       value: this.kpisData().pending,   icon: 'lucideClock',     bgClass: 'bg-amber-100',     iconClass: 'text-amber-600'    , trend: 0 },
+    { label: 'Premium',          value: this.kpisData().premium,   icon: 'lucideCrown',     bgClass: 'bg-secondary-100', iconClass: 'text-secondary-500', trend: 0 },
+    { label: 'Suspendues',       value: this.kpisData().suspended, icon: 'lucidePause',     bgClass: 'bg-orange-100',    iconClass: 'text-orange-600'   , trend: 0 },
+  ]);
+
+  totalPages = computed(() =>
+    Math.ceil(this.totalItems() / this.itemsPerPage())
+  );
+
+  pagesArray = computed(() =>
+    Array.from({ length: this.totalPages() }, (_, i) => i + 1)
+  );
+
+  getPlanCount(plan: string): number {
+    const structures = this.allStructures();
+    if (plan === 'all') return structures.length;
+    return structures.filter(s => s.plan === plan).length;
+  }
+
+  // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
-    this.loadStructures(this.buildQueryParams(this.currentPage));
-    this.loadStats();
+    this.loadAll(this.currentPage());
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  // ── Chargement API ────────────────────────────────────────────
-  loadStructures(queryParams?: IQueryParam): void {
-    this.loading = true;
-    this.error = null;
+  // ── Chargement ────────────────────────────────────────────────
 
-    this.sub = this.service.findAll(queryParams).subscribe({
-      next: (response) => {
-        console.log(response);
+  /**
+   * Charge structures + KPIs en parallèle avec forkJoin
+   * Une seule requête groupée — un seul loading — une seule subscription
+   */
+  loadAll(page = 1): void {
+    this.loading.set(true);
+    this.error.set(null);
 
-        // Normaliser : ajouter stats par défaut si absent (backend pas encore implémenté)
-        this.allStructures = (response.data);
+    forkJoin({
+      structures: this.service.findAll(this.buildQueryParams(page)),
+      kpis:       this.service.getKpis(),
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: ({ structures, kpis }) => {
+        this.allStructures.set(structures.data);
         this.applyFilters(this.buildFilterData());
-        this.loading = false;
 
-        this.currentPage = response.current_page;
-        this.itemsPerPage = response.per_page;
-        this.totalItems = response.total;
-        this.hasNext = !!response.next_page_url;
-        this.hasPrev = !!response.prev_page_url;
+        this.currentPage.set(structures.current_page);
+        this.itemsPerPage.set(structures.per_page);
+        this.totalItems.set(structures.total);
+        this.hasNext.set(!!structures.next_page_url);
+        this.hasPrev.set(!!structures.prev_page_url);
 
-        this.cdr.detectChanges();
+        this.kpisData.set(kpis);
+        this.loading.set(false);
       },
       error: (err) => {
-        this.error = err?.error?.message ?? 'Erreur lors du chargement des structures.';
-        this.loading = false;
-      },
-    });
-  }
-  loadStats() {
-    this.loading = true;
-    this.error = null;
-
-    this.sub = this.service.getStats().subscribe({
-      next: (response) => {
-        console.log(response);
-
-        // Normaliser : ajouter stats par défaut si absent (backend pas encore implémenté)
-        this.stats = response;
-        this.updateKpis(this.stats);
-        this.loading = false;
-
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.error = err?.error?.message ?? 'Erreur lors du chargement des stats des structures.';
-        this.loading = false;
+        this.error.set(err?.error?.message ?? 'Erreur lors du chargement.');
+        this.loading.set(false);
       },
     });
   }
 
-  // ── Normalisation — adapte la réponse API au modèle Angular ───
-  // private normalize(raw: any): StructureModel {
-  //   return {
-  //     ...raw,
+  // ── Filtrage local ────────────────────────────────────────────
+  // Le filtrage local complète le filtrage serveur
+  // Utilisé pour la recherche instantanée sans requête supplémentaire
+  applyFilters(filter?: FilterStructure & IQueryParam): void {
+    const all = this.allStructures();
 
-  //     // ── Propriétaire ────────────────────────────────────────────
-  //     // Backend retourne users[] avec pivot.role
-  //     // On extrait le user ayant le rôle 'owner' ou 'admin'
-  //     proprietaire: this.extractOwner(raw.users),
-
-  //     // ── Stats ───────────────────────────────────────────────────
-  //     // Sera enrichi par le backend (withCount) — fallback 0 en attendant
-  //     stats: raw.stats ?? {
-  //       employes: raw.users_count ?? raw.users?.length ?? 0,
-  //       biens: raw.biens_count ?? 0,
-  //       locations: raw.locations_count ?? 0,
-  //     },
-
-  //     // ── Activité ─────────────────────────────────────────────────
-  //     lastActivity: raw.lastActivity ?? this.timeAgo(raw.updated_at),
-  //     lastActivityType: raw.lastActivityType ?? 'Mise à jour',
-  //   };
-  // }
-
-  // Extrait le propriétaire depuis users[]
-  // La migration users a structure_id direct (pas de pivot)
-  // Le rôle peut venir :
-  //   1. d'une table roles/user_roles (eager loaded)
-  //   2. d'un champ role directement sur le user
-  //   3. fallback → premier user du tableau
-  // private extractOwner(users: any[]): StructureModel['owner'] {
-  //   if (!users?.length) return undefined;
-
-  //   const owner =
-  //     users.find(
-  //       (u) =>
-  //         u.role === 'owner' ||
-  //         u.role === 'admin' ||
-  //         u.roles?.some((r: any) => r.name === 'owner' || r.name === 'admin'),
-  //     ) ?? users[0];
-
-  //   return {
-  //     id: owner.id,
-  //     nom: owner.nom ?? '',
-  //     prenom: owner.prenom ?? '',
-  //     email: owner.email ?? '',
-  //     telephone: owner.telephone ?? null,
-  //     avatar: owner.avatar ?? 'avatar.png',
-  //   };
-  // }
-
-  // ── Filtrage ──────────────────────────────────────────────────
-  applyFilters(filter?: FilterStructure): void {
-    if (!this.allStructures.length) {
-      this.filteredStructures = [];
+    if (!all.length) {
+      this.filteredStructures.set([]);
       return;
     }
 
-    let result = [...this.allStructures];
+    let result = [...all];
 
     if (filter?.search?.trim()) {
       const q = filter.search.toLowerCase();
-      result = result.filter(
-        (s) =>
-          s.name.toLowerCase().includes(q) ||
-          s.owner?.nom?.toLowerCase().includes(q) ||
-          s.owner?.prenom?.toLowerCase().includes(q) ||
-          s.owner?.email?.toLowerCase().includes(q),
+      result = result.filter(s =>
+        s.name.toLowerCase().includes(q)             ||
+        s.owner?.nom?.toLowerCase().includes(q)      ||
+        s.owner?.prenom?.toLowerCase().includes(q)   ||
+        s.owner?.email?.toLowerCase().includes(q)
       );
     }
+
     if (filter?.plan && filter.plan !== 'all') {
-      result = result.filter((s) => s.plan === filter.plan);
-    }
-    if (filter?.status && filter.status !== 'all') {
-      result = result.filter((s) => s.status === filter.status);
+      result = result.filter(s => s.plan === filter.plan);
     }
 
-    this.filteredStructures = result;
-    this.currentPage = 1;
+    if (filter?.status && filter.status !== 'all') {
+      result = result.filter(s => s.status === filter.status);
+    }
+
+    this.filteredStructures.set(result);
   }
 
-  buildFilterData(): FilterStructure {
+  buildFilterData(): FilterStructure & IQueryParam {
     return {
-      search: this.searchQuery,
-      plan: this.activePlan,
-      status: this.activeStatut,
+      search: this.searchQuery(),
+      plan:   this.activePlan(),
+      status: this.activeStatut(),
     };
   }
 
   resetFilters(): void {
-    this.searchQuery = '';
-    this.activePlan = 'all';
-    this.activeStatut = 'all';
+    this.searchQuery.set('');
+    this.activePlan.set('all');
+    this.activeStatut.set('all');
+    this.applyFilters();
+  }
+
+  // ── Handlers filtres ──────────────────────────────────────────
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
     this.applyFilters(this.buildFilterData());
   }
 
-  // ── KPIs ──────────────────────────────────────────────────────
-  updateKpis(stats: StructureStats): void {
-    const all = this.allStructures;
-    this.kpis[0].value = stats.total;
-    this.kpis[1].value = stats.pending;
-    this.kpis[2].value = stats.premium;
-    this.kpis[3].value = stats.suspended;
+  onPlanFilterChange(plan: string): void {
+    this.activePlan.set(plan);
+    this.applyFilters(this.buildFilterData());
   }
 
-  // ── Helpers ───────────────────────────────────────────────────
-  getStatutLabel(status: string): string {
-    return this.service.getStatutLabel(status);
+  onStatusFilterChange(status: string): void {
+    this.activeStatut.set(status);
+    this.applyFilters(this.buildFilterData());
   }
 
-  getOwnerName(nom?: string, prenom?: string){
-    return `${prenom} ${nom}`;
+  onViewModeChange(mode: 'grid' | 'table'): void {
+    this.viewMode.set(mode);
   }
 
-  getInitials(name: string): string {
-    return this.service.getInitials(name);
+  onPageChange(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.loadAll(page);
   }
 
-  getHealthScore(s: StructureModel): number {
-    return this.service.getHealthScore(s);
-  }
-
-  getPlanCount(plan: string): number {
-    if (plan === 'all') return this.allStructures.length;
-    return this.allStructures.filter((s) => s.plan === plan).length;
-  }
-
-  // Formate updated_at en "il y a X"
-  private timeAgo(iso: string): string {
-    if (!iso) return '—';
-    const diff = Date.now() - new Date(iso).getTime();
-    const min = Math.floor(diff / 60000);
-    const h = Math.floor(min / 60);
-    const d = Math.floor(h / 24);
-    if (d > 0) return `il y a ${d}j`;
-    if (h > 0) return `il y a ${h}h`;
-    if (min > 0) return `il y a ${min}min`;
-    return "à l'instant";
-  }
-
-  // ── Actions admin ─────────────────────────────────────────────
-  onStatusChanged(data: { id: number; status: StructureStatus }) {
-    this.sub = this.service.changeStatus(data.id, data.status).subscribe({
-      next: (response) => {
-        console.log(response);
-        this.loadStructures();
-        this.loadStats();
-      },
-      error: (error) => {
-        console.log(error);
-      },
-    });
+  // ── Actions ───────────────────────────────────────────────────
+  onStatusChanged(data: { id: number; status: StructureStatus }): void {
+    this.service.changeStatus(data.id, data.status)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.toast.success('Statut mis à jour avec succès.');
+          this.loadAll(this.currentPage());
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors du changement de statut.');
+        },
+      });
   }
 
   onPlanChange(id: number): void {
-    this.sub = this.service.changePlan(id).subscribe({
-      next: (response) => {
-        console.log(response);
-
-        this.loadStructures();
-        this.loadStats();
-      },
-      error: (error) => {
-        console.log(error);
-      },
-    });
-    this.loadStats();
+    this.service.togglePlan(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.toast.success('Plan mis à jour avec succès.');
+          this.loadAll(this.currentPage());
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors du changement de plan.');
+        },
+      });
   }
 
-  openContact(s: StructureModel): void {
-    this.contactTarget = s;
-    this.contactSubject = `Concernant votre structure "${s.name}"`;
-    this.contactMessage = '';
+  // ── Modale Contact ────────────────────────────────────────────
+  openContact(structure: StructureModel): void {
+    this.contactTarget.set(structure);
+    this.contactSubject.set(`Concernant votre structure "${structure.name}"`);
+    this.contactMessage.set('');
+  }
+
+  closeContact(): void {
+    this.contactTarget.set(null);
   }
 
   sendContact(): void {
     // TODO: this.service.sendContact(...).subscribe(...)
-    console.log('Contact →', this.contactTarget?.owner?.email);
-    this.contactTarget = null;
+    this.contactTarget.set(null);
   }
 
-  confirmDelete(s: StructureModel): void {
-    this.deleteTarget = s;
+  // ── Modale Suppression ────────────────────────────────────────
+  confirmDelete(structure: StructureModel): void {
+    this.deleteTarget.set(structure);
+  }
+
+  cancelDelete(): void {
+    this.deleteTarget.set(null);
   }
 
   deleteStructure(): void {
-    if (!this.deleteTarget) return;
-    // TODO: this.service.delete(this.deleteTarget.id).subscribe(...)
-    this.allStructures = this.allStructures.filter((s) => s.id !== this.deleteTarget!.id);
-    this.deleteTarget = null;
-    this.applyFilters(this.buildFilterData());
-    this.loadStats();
+    const target = this.deleteTarget();
+    if (!target) return;
+
+    this.deleteLoading.set(true);
+
+    this.service.delete(target.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.toast.success(`Structure « ${target.name} » supprimée.`);
+          this.deleteTarget.set(null);
+          this.deleteLoading.set(false);
+          const newPage = this.allStructures().length === 1 && this.currentPage() > 1
+            ? this.currentPage() - 1
+            : this.currentPage();
+          this.loadAll(newPage);
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
+          this.deleteLoading.set(false);
+        },
+      });
   }
 
-  buildQueryParams(p: number): IQueryParam {
+  // ── Helpers ───────────────────────────────────────────────────
+  private buildQueryParams(page: number): IQueryParam {
     return {
-      page: p,
-      perPage: this.itemsPerPage,
+      page,
+      perPage: this.itemsPerPage(),
     };
-  }
-
-  onPageChange(p: number) {
-    this.loadStructures(this.buildQueryParams(p));
   }
 }

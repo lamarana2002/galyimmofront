@@ -1,1127 +1,410 @@
-<div class="min-h-screen" style="background:#f4f1ee;">
-
-  <!-- ══════════════════════════════════════════════════
-       COVER + HEADER
-  ═════════════════════════════════════════════════════ -->
-  <div class="bg-white border-b border-gray-200 shadow-sm mb-5">
-
-    <!-- Cover -->
-    <div class="relative h-44 overflow-hidden">
-      @if (bien.cover) {
-        <img [src]="bien.cover" [alt]="bien.nom" class="w-full h-full object-cover">
-      } @else {
-        <div class="w-full h-full"
-          style="background: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-900));">
-        </div>
-      }
-      <div class="absolute inset-0" style="background:rgba(0,0,0,0.3);"></div>
-
-      <a routerLink="/biens"
-        class="absolute top-4 left-5 inline-flex items-center gap-1.5 px-3 py-1.5
-               text-xs font-semibold text-white rounded-lg transition-all"
-        style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);backdrop-filter:blur(6px);">
-        <ng-icon name="lucideArrowLeft" size="14"></ng-icon>
-        Mes biens
-      </a>
-
-      <!-- Badge statut -->
-      <span class="absolute top-4 right-5 inline-flex items-center gap-1.5 px-3 py-1
-                   text-xs font-bold rounded-full"
-        [class]="getStatutClass(bien.statut)">
-        <span class="w-1.5 h-1.5 rounded-full" [class]="getStatutDotClass(bien.statut)"></span>
-        {{ getStatutLabel(bien.statut) }}
-      </span>
+<div class="min-h-screen" style="background: #f4f1ee">
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center min-h-[60vh]">
+      <div
+        class="animate-spin rounded-full h-16 w-16 border-4 border-primary-200 border-t-primary-600"
+      ></div>
+      <p class="mt-6 text-primary-600 font-medium">Chargement du bien...</p>
     </div>
-
-    <!-- Infos -->
-    <div class="px-7 pb-5 relative">
-      <!-- Avatar flottant -->
-      <div class="absolute -top-9 left-7 w-[72px] h-[72px] bg-white rounded-2xl
-                  border-[3px] border-white shadow-lg flex items-center justify-center">
-        <ng-icon name="lucideBuilding2" size="34" class="text-primary-700"></ng-icon>
+  } @else if (error(); as errorMsg) {
+    <div class="flex flex-col items-center justify-center min-h-[60vh]">
+      <div class="w-20 h-20 rounded-2xl bg-red-100 flex items-center justify-center mb-4">
+        <ng-icon name="lucideAlertTriangle" size="32" class="text-red-500"></ng-icon>
       </div>
-
-      <div class="pt-4 pl-24 flex items-end justify-between gap-4 flex-wrap">
-        <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-3 flex-wrap mb-1">
-            <h1 class="text-2xl font-bold text-primary-900" style="letter-spacing:-0.02em;">
-              {{ bien.nom }}
-            </h1>
-            @if (bien.code) {
-              <span class="px-2.5 py-0.5 text-xs font-bold bg-gray-100 text-primary-600 rounded-full font-mono">
-                {{ bien.code }}
-              </span>
-            }
-            @if (bien.type) {
-              <span class="px-2.5 py-0.5 text-xs font-semibold bg-primary-100 text-primary-700 rounded-full">
-                {{ bien.type | titlecase }}
-              </span>
-            }
-          </div>
-          @if (bien.adresse || bien.ville) {
-            <p class="text-sm text-primary-400 flex items-center gap-1 mb-1">
-              <ng-icon name="lucideMapPin" size="13"></ng-icon>
-              {{ adresseComplete }}
-            </p>
-          }
-          @if (bien.description) {
-            <p class="text-sm text-primary-500 max-w-2xl leading-relaxed">{{ bien.description }}</p>
-          }
-        </div>
-        <div class="flex gap-2 flex-shrink-0">
-          <button class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold
-                         text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-all">
-            <ng-icon name="lucidePencil" size="14"></ng-icon>
-            Modifier
-          </button>
-          <button class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold
-                         text-red-500 bg-white hover:bg-red-50 border border-gray-200 rounded-xl transition-all">
-            <ng-icon name="lucideTrash2" size="14"></ng-icon>
-            Supprimer
-          </button>
-        </div>
-      </div>
+      <p class="text-primary-500 mb-6">{{ errorMsg }}</p>
+      <button
+        (click)="loadProperty()"
+        class="px-6 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors"
+      >
+        Réessayer
+      </button>
     </div>
-  </div>
-
-  <div class="px-6 pb-8">
-
-    <!-- ══ STAT CARDS ══ -->
-    <!-- Bien avec unités -->
-    @if (bien.hasUnits) {
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
-            <ng-icon name="lucideLayoutGrid" size="24" class="text-primary-700"></ng-icon>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-primary-900 leading-none">{{ unitsCount }}</p>
-            <p class="text-xs text-primary-400 mt-1 font-medium">Unités totales</p>
-          </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
-            <ng-icon name="lucideCheckCircle" size="24" class="text-green-600"></ng-icon>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-primary-900 leading-none">{{ availableUnits }}</p>
-            <p class="text-xs text-primary-400 mt-1 font-medium">Disponibles</p>
-          </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-            <ng-icon name="lucideKey" size="24" class="text-amber-600"></ng-icon>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-primary-900 leading-none">{{ rentedUnits }}</p>
-            <p class="text-xs text-primary-400 mt-1 font-medium">Louées</p>
-          </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-secondary-100 flex items-center justify-center flex-shrink-0">
-            <ng-icon name="lucideBanknote" size="24" class="text-secondary-500"></ng-icon>
-          </div>
-          <div>
-            <p class="text-lg font-bold text-primary-900 leading-none">{{ totalLoyer | number:'1.0-0' }}</p>
-            <p class="text-[10px] text-primary-400 mt-0.5 font-medium">GNF / revenus actifs</p>
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- Bien simple : 3 cards financières + statut locataire -->
-    @if (!bien.hasUnits) {
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-secondary-100 flex items-center justify-center flex-shrink-0">
-            <ng-icon name="lucideBanknote" size="24" class="text-secondary-500"></ng-icon>
-          </div>
-          <div>
-            <p class="text-lg font-bold text-primary-900 leading-none">{{ bien.loyer | number:'1.0-0' }}</p>
-            <p class="text-[10px] text-primary-400 mt-0.5 font-medium">GNF / loyer</p>
-          </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
-            <ng-icon name="lucideKey" size="24" class="text-primary-700"></ng-icon>
-          </div>
-          <div>
-            <p class="text-lg font-bold text-primary-900 leading-none">{{ bien.caution | number:'1.0-0' }}</p>
-            <p class="text-[10px] text-primary-400 mt-0.5 font-medium">GNF / caution</p>
-          </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
-            <ng-icon name="lucideWrench" size="24" class="text-orange-500"></ng-icon>
-          </div>
-          <div>
-            <p class="text-lg font-bold text-primary-900 leading-none">{{ bien.charges | number:'1.0-0' }}</p>
-            <p class="text-[10px] text-primary-400 mt-0.5 font-medium">GNF / charges</p>
-          </div>
-        </div>
-        <!-- Card locataire -->
-        <div class="bg-white rounded-2xl border shadow-sm p-5 flex items-center gap-3"
-          [class]="bien.locataireActuel ? 'border-amber-200 bg-amber-50/40' : 'border-green-200 bg-green-50/40'">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-            [class]="bien.locataireActuel ? 'bg-amber-100' : 'bg-green-100'">
-            <ng-icon name="lucideUser" size="24"
-              [class]="bien.locataireActuel ? 'text-amber-600' : 'text-green-600'">
-            </ng-icon>
-          </div>
-          <div class="min-w-0">
-            @if (bien.locataireActuel) {
-              <p class="text-sm font-bold text-primary-900 leading-tight truncate">
-                {{ bien.locataireActuel.prenom }} {{ bien.locataireActuel.nom }}
-              </p>
-              <p class="text-[10px] text-amber-600 mt-0.5 font-semibold">Occupé</p>
-            } @else {
-              <p class="text-sm font-bold text-green-700">Disponible</p>
-              <p class="text-[10px] text-green-600 mt-0.5">Aucun locataire</p>
-            }
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- ══ ONGLETS ══ -->
-    <div class="bg-white border border-b-0 border-gray-200 rounded-t-2xl px-2 pt-2 overflow-x-auto">
-      <div class="flex gap-1 min-w-max">
-        @for (tab of tabs; track tab.key) {
-          <button (click)="activeTab = tab.key"
-            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap"
-            [class]="activeTab === tab.key
-              ? 'border-secondary-500 text-secondary-600 font-semibold'
-              : 'border-transparent text-primary-400 hover:text-primary-700 hover:bg-gray-50'">
-            <ng-icon [name]="tab.icon" size="15"
-              [class]="activeTab === tab.key ? 'text-secondary-500' : ''">
-            </ng-icon>
-            {{ tab.label }}
-            @if (tab.key === 'unites') {
-              <span class="px-1.5 py-0.5 text-[10px] font-bold bg-primary-800 text-white rounded-full">
-                {{ unitsCount }}
-              </span>
-            }
-            @if (tab.key === 'contrats') {
-              <span class="px-1.5 py-0.5 text-[10px] font-bold bg-primary-800 text-white rounded-full">
-                {{ allContrats.length }}
-              </span>
-            }
-          </button>
+  } @else if (bien(); as b) {
+    <!-- ══ COVER + HEADER ══ -->
+    <div class="bg-white border-b border-gray-200 shadow-sm mb-5">
+      <div class="relative h-44 overflow-hidden">
+        @if (b.cover_image) {
+          <img [src]="b.cover_image" [alt]="b.name" class="w-full h-full object-cover" />
+        } @else {
+          <div
+            class="w-full h-full"
+            style="
+              background: linear-gradient(
+                135deg,
+                var(--color-primary-700),
+                var(--color-primary-900)
+              );
+            "
+          ></div>
         }
+        <div class="absolute inset-0" style="background: rgba(0, 0, 0, 0.3)"></div>
+
+        <a
+          routerLink="/properties"
+          class="absolute top-4 left-5 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-lg transition-all"
+          style="
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(6px);
+          "
+        >
+          <ng-icon name="lucideArrowLeft" size="14"></ng-icon>
+          Mes biens
+        </a>
+
+        <span
+          class="absolute top-4 right-5 inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full border"
+          [class]="getStatutClass(b.status)"
+        >
+          <span class="w-1.5 h-1.5 rounded-full" [class]="getStatutDotClass(b.status)"></span>
+          {{ getStatutLabel(b.status) }}
+        </span>
       </div>
-    </div>
 
-    <div class="bg-white border border-gray-200 rounded-b-2xl shadow-sm p-6 min-h-96">
-
-      <!-- ════════════════════════
-           ONGLET INFOS
-      ════════════════════════ -->
-      @if (activeTab === 'infos') {
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-          <!-- Caractéristiques -->
-          <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
-            <p class="text-xs font-bold text-primary-400 uppercase tracking-wider flex items-center gap-2 mb-4">
-              <ng-icon name="lucideHome" size="13"></ng-icon>
-              Caractéristiques
-            </p>
-            <div class="space-y-3.5">
-              @if (bien.surface) {
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <ng-icon name="lucideRuler" size="14" class="text-primary-600"></ng-icon>
-                  </div>
-                  <div>
-                    <p class="text-[10px] text-primary-400">Surface totale</p>
-                    <p class="text-sm font-semibold text-primary-900">{{ bien.surface | number }} m²</p>
-                  </div>
-                </div>
-              }
-              @if (bien.etages !== null && bien.etages !== undefined) {
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <ng-icon name="lucideLayers" size="14" class="text-primary-600"></ng-icon>
-                  </div>
-                  <div>
-                    <p class="text-[10px] text-primary-400">Nombre d'étages</p>
-                    <p class="text-sm font-semibold text-primary-900">{{ bien.etages }}</p>
-                  </div>
-                </div>
-              }
-              @if (bien.totalUnits) {
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <ng-icon name="lucideLayoutGrid" size="14" class="text-primary-600"></ng-icon>
-                  </div>
-                  <div>
-                    <p class="text-[10px] text-primary-400">Unités locatives</p>
-                    <p class="text-sm font-semibold text-primary-900">{{ bien.totalUnits }}</p>
-                  </div>
-                </div>
-              }
-              <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <ng-icon name="lucideCalendar" size="14" class="text-primary-600"></ng-icon>
-                </div>
-                <div>
-                  <p class="text-[10px] text-primary-400">Créé le</p>
-                  <p class="text-sm font-semibold text-primary-900">{{ bien.createdAt | date:'dd MMM yyyy' }}</p>
-                </div>
-              </div>
-
-              <!-- Taux d'occupation -->
-              <div class="pt-2 border-t border-gray-100">
-                <div class="flex items-center justify-between mb-1.5">
-                  <p class="text-xs font-semibold text-primary-500">Taux d'occupation</p>
-                  <span class="text-sm font-bold"
-                    [class]="tauxOccupation >= 70 ? 'text-green-600' : tauxOccupation >= 40 ? 'text-amber-600' : 'text-red-500'">
-                    {{ tauxOccupation }}%
-                  </span>
-                </div>
-                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div class="h-full rounded-full transition-all duration-700"
-                    [style.width]="tauxOccupation + '%'"
-                    [class]="tauxOccupation >= 70 ? 'bg-green-500' : tauxOccupation >= 40 ? 'bg-amber-400' : 'bg-red-400'">
-                  </div>
-                </div>
-                <p class="text-[10px] text-primary-400 mt-1">{{ rentedUnits }} / {{ unitsCount }} unités occupées</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Localisation -->
-          <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
-            <p class="text-xs font-bold text-primary-400 uppercase tracking-wider flex items-center gap-2 mb-4">
-              <ng-icon name="lucideMapPin" size="13"></ng-icon>
-              Localisation
-            </p>
-            <div class="space-y-3.5">
-              @if (bien.adresse) {
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <ng-icon name="lucideMapPin" size="14" class="text-primary-600"></ng-icon>
-                  </div>
-                  <div>
-                    <p class="text-[10px] text-primary-400">Adresse</p>
-                    <p class="text-sm font-semibold text-primary-900">{{ bien.adresse }}</p>
-                  </div>
-                </div>
-              }
-              @if (bien.ville) {
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <ng-icon name="lucideMapPin" size="14" class="text-primary-600"></ng-icon>
-                  </div>
-                  <div>
-                    <p class="text-[10px] text-primary-400">Ville</p>
-                    <p class="text-sm font-semibold text-primary-900">{{ bien.ville }}</p>
-                  </div>
-                </div>
-              }
-              @if (bien.latitude && bien.longitude) {
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <ng-icon name="lucideMapPin" size="14" class="text-secondary-500"></ng-icon>
-                  </div>
-                  <div>
-                    <p class="text-[10px] text-primary-400">Coordonnées GPS</p>
-                    <p class="text-sm font-mono text-primary-800">{{ bien.latitude }}, {{ bien.longitude }}</p>
-                  </div>
-                </div>
-
-                <!-- Mini carte placeholder -->
-                <div class="rounded-xl overflow-hidden border border-gray-200 mt-2"
-                  style="height:140px; background:linear-gradient(135deg,#e8f0f7,#d4e3ef);
-                         display:flex;align-items:center;justify-content:center;">
-                  <div class="text-center">
-                    <ng-icon name="lucideMapPin" size="28" class="text-primary-400 block mx-auto mb-1"></ng-icon>
-                    <p class="text-xs text-primary-400">Carte disponible après intégration Maps</p>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
+      <div class="px-7 pb-5 relative">
+        <div
+          class="absolute -top-9 left-7 w-[72px] h-[72px] bg-white rounded-2xl border-[3px] border-white shadow-lg flex items-center justify-center"
+        >
+          <ng-icon name="lucideBuilding2" size="34" class="text-primary-700"></ng-icon>
         </div>
-      }
 
-      <!-- ════════════════════════
-           ONGLET LOCATAIRE (bien simple uniquement)
-      ════════════════════════ -->
-      @if (activeTab === 'locataire') {
-        @if (bien.locataireActuel) {
-          <div class="flex flex-col md:flex-row gap-6 items-start">
-            <!-- Avatar + nom -->
-            <div class="flex flex-col items-center text-center w-full md:w-48 flex-shrink-0">
-              <div class="w-24 h-24 rounded-full bg-secondary-200 flex items-center justify-center
-                          text-2xl font-bold text-secondary-700 shadow-md border-4 border-white mb-3">
-                {{ getInitials(bien.locataireActuel.nom, bien.locataireActuel.prenom) }}
-              </div>
-              <p class="font-bold text-primary-900 leading-tight">
-                {{ bien.locataireActuel.prenom }} {{ bien.locataireActuel.nom }}
-              </p>
-              @if (bien.locataireActuel.profession) {
-                <p class="text-xs text-primary-400 mt-0.5">{{ bien.locataireActuel.profession }}</p>
-              }
-              <!-- Statut contrat -->
-              @if (bien.contratActuel) {
-                <span class="mt-2 inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold
-                             bg-green-100 text-green-700 rounded-full">
-                  <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                  Contrat actif
+        <div class="pt-4 pl-24 flex items-end justify-between gap-4 flex-wrap">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-3 flex-wrap mb-1">
+              <h1 class="text-2xl font-bold text-primary-900" style="letter-spacing: -0.02em">
+                {{ b.name }}
+              </h1>
+              @if (b.code) {
+                <span
+                  class="px-2.5 py-0.5 text-xs font-bold bg-gray-100 text-primary-600 rounded-full font-mono"
+                >
+                  {{ b.code }}
                 </span>
               }
-              <button class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold
-                             text-primary-600 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded-xl transition-all">
-                <ng-icon name="lucideMail" size="12"></ng-icon>
-                Contacter
-              </button>
-            </div>
-            <!-- Infos -->
-            <div class="flex-1 bg-gray-50 rounded-xl p-5 border border-gray-100">
-              <p class="text-xs font-bold text-primary-400 uppercase tracking-wider mb-4">Coordonnées</p>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                @for (row of [
-                  { icon: 'lucideMail',   label: 'Email',      value: bien.locataireActuel.email          },
-                  { icon: 'lucidePhone',  label: 'Téléphone',  value: bien.locataireActuel.telephone      },
-                  { icon: 'lucideMapPin', label: 'Ville',      value: bien.locataireActuel.ville ?? '—'   },
-                  { icon: 'lucideUser',   label: 'Profession', value: bien.locataireActuel.profession ?? '—' }
-                ]; track row.label) {
-                  <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <ng-icon [name]="row.icon" size="14" class="text-primary-500"></ng-icon>
-                    </div>
-                    <div>
-                      <p class="text-[10px] text-primary-400">{{ row.label }}</p>
-                      <p class="text-sm font-medium text-primary-800">{{ row.value }}</p>
-                    </div>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-        } @else {
-          <div class="flex flex-col items-center py-20 text-center">
-            <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
-              <ng-icon name="lucideUser" size="28" class="text-gray-300"></ng-icon>
-            </div>
-            <p class="font-semibold text-primary-600 mb-1">Aucun locataire assigné</p>
-            <p class="text-sm text-primary-400 mb-4">Ce bien est actuellement disponible</p>
-            <button class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold
-                           text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all">
-              <ng-icon name="lucideUserPlus" size="15"></ng-icon>
-              Affecter un locataire
-            </button>
-          </div>
-        }
-      }
-
-      <!-- ════════════════════════
-           ONGLET CONTRATS (bien simple uniquement)
-      ════════════════════════ -->
-      @if (activeTab === 'contrats') {
-        <div>
-          <div class="flex items-center justify-between mb-4">
-            <h6 class="font-bold text-primary-900 flex items-center gap-2">
-              <ng-icon name="lucideShieldCheck" size="16" class="text-secondary-500"></ng-icon>
-              Historique des contrats
-            </h6>
-            <button class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold
-                           text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all">
-              <ng-icon name="lucidePlus" size="13"></ng-icon>
-              Nouveau contrat
-            </button>
-          </div>
-
-          @if (allContrats.length === 0) {
-            <div class="flex flex-col items-center py-16 text-center">
-              <ng-icon name="lucideShieldCheck" size="40" class="text-gray-200 mb-3"></ng-icon>
-              <p class="text-primary-400">Aucun contrat enregistré</p>
-            </div>
-          } @else {
-            <div class="space-y-3">
-              @for (c of allContrats; track c.id) {
-                <div class="border rounded-xl p-4 transition-all"
-                  [class]="c.statut === 'actif'
-                    ? 'border-green-200 bg-green-50/50'
-                    : 'border-gray-100 bg-gray-50/50 opacity-75'">
-                  <div class="flex items-start justify-between gap-3 flex-wrap">
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 rounded-full bg-secondary-200 flex items-center justify-center
-                                  text-xs font-bold text-secondary-700 flex-shrink-0">
-                        {{ getInitials(c.locataire.nom, c.locataire.prenom) }}
-                      </div>
-                      <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                          <p class="font-semibold text-primary-900 text-sm">
-                            {{ c.locataire.prenom }} {{ c.locataire.nom }}
-                          </p>
-                          <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full"
-                            [class]="c.statut === 'actif'   ? 'bg-green-100 text-green-700' :
-                                     c.statut === 'expiré'  ? 'bg-gray-100 text-gray-500'   :
-                                     c.statut === 'résilié' ? 'bg-red-100 text-red-600'     :
-                                                              'bg-amber-100 text-amber-700'">
-                            {{ c.statut | titlecase }}
-                          </span>
-                        </div>
-                        <p class="text-[11px] text-primary-400 font-mono mt-0.5">{{ c.reference }}</p>
-                      </div>
-                    </div>
-                    <div class="text-right">
-                      <p class="text-sm font-bold text-primary-900">{{ c.loyer | number:'1.0-0' }} GNF</p>
-                      <p class="text-[10px] text-primary-400">/ mois</p>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-4 mt-3 pt-3 border-t flex-wrap"
-                    [class]="c.statut === 'actif' ? 'border-green-100' : 'border-gray-100'">
-                    <span class="flex items-center gap-1 text-xs text-primary-500">
-                      <ng-icon name="lucideCalendar" size="11"></ng-icon>
-                      {{ c.dateDebut | date:'dd/MM/yyyy' }}
-                    </span>
-                    <span class="text-primary-300 text-xs">→</span>
-                    <span class="flex items-center gap-1 text-xs text-primary-500">
-                      <ng-icon name="lucideCalendar" size="11"></ng-icon>
-                      {{ c.dateFin | date:'dd/MM/yyyy' }}
-                    </span>
-                    @if (c.statut === 'actif') {
-                      <span class="ml-auto text-xs font-bold"
-                        [class]="contratExpireBientot ? 'text-orange-600' : 'text-green-600'">
-                        {{ contratExpireBientot ? '⚠️ ' : '' }}{{ joursRestants }}j restants
-                      </span>
-                    }
-                  </div>
-                </div>
+              @if (b.property_type) {
+                <span
+                  class="px-2.5 py-0.5 text-xs font-semibold bg-primary-100 text-primary-700 rounded-full"
+                >
+                  {{ b.property_type.name }}
+                </span>
               }
             </div>
-          }
-        </div>
-      }
-
-      <!-- ════════════════════════
-           ONGLET UNITÉS
-      ════════════════════════ -->
-      @if (activeTab === 'unites') {
-        <div>
-          <div class="flex items-center justify-between mb-4">
-            <h6 class="font-bold text-primary-900 flex items-center gap-2">
-              <ng-icon name="lucideLayoutGrid" size="16" class="text-secondary-500"></ng-icon>
-              Unités de location
-            </h6>
-            <button (click)="openAddUnit()"
-              class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold
-                     text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all">
-              <ng-icon name="lucidePlus" size="13"></ng-icon>
-              Ajouter une unité
-            </button>
-          </div>
-
-          @if (!bien.unites || bien.unites.length === 0) {
-            <div class="flex flex-col items-center py-20 text-center">
-              <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">
-                <ng-icon name="lucideLayoutGrid" size="28" class="text-gray-300"></ng-icon>
-              </div>
-              <p class="font-semibold text-primary-500">Aucune unité enregistrée</p>
-              <button (click)="openAddUnit()"
-                class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold
-                       text-white bg-primary-800 rounded-xl transition-all">
-                <ng-icon name="lucidePlus" size="13"></ng-icon>
-                Ajouter la première unité
-              </button>
-            </div>
-          } @else {
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-gray-100 bg-gray-50/80">
-                    <th class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Unité</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Type</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Étage</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Surface</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Loyer</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Statut</th>
-                    <th class="px-4 py-3 text-center text-[11px] font-bold text-primary-400 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
-                  @for (u of bien.unites; track u.id) {
-                    <tr class="hover:bg-gray-50/60 transition-colors group cursor-pointer"
-                      [class.opacity-50]="!u.actif"
-                      [routerLink]="['/biens', bien.id, 'unites', u.id]">
-                      <td class="px-4 py-4">
-                        <div class="flex items-center gap-2">
-                          <p class="font-semibold text-primary-900 group-hover:text-secondary-600 transition-colors">
-                            {{ u.numero }}
-                          </p>
-                          <ng-icon name="lucideArrowRight" size="12"
-                            class="text-primary-300 opacity-0 group-hover:opacity-100 transition-opacity">
-                          </ng-icon>
-                        </div>
-                        @if (u.code) {
-                          <p class="text-[10px] text-primary-400 font-mono">{{ u.code }}</p>
-                        }
-                      </td>
-                      <td class="px-4 py-4 text-sm text-primary-600">{{ u.type || '—' }}</td>
-                      <td class="px-4 py-4 text-sm text-primary-600">
-                        {{ u.etage !== null && u.etage !== undefined ? 'Étage ' + u.etage : '—' }}
-                      </td>
-                      <td class="px-4 py-4 text-sm text-primary-600">
-                        {{ u.surface ? (u.surface | number) + ' m²' : '—' }}
-                      </td>
-                      <td class="px-4 py-4">
-                        @if (u.loyer) {
-                          <p class="font-semibold text-primary-900 text-sm">{{ u.loyer | number:'1.0-0' }}</p>
-                          <p class="text-[10px] text-primary-400">GNF/mois</p>
-                        } @else {
-                          <span class="text-primary-300">—</span>
-                        }
-                      </td>
-                      <td class="px-4 py-4">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full"
-                          [class]="getStatutClass(u.statut)">
-                          <span class="w-1.5 h-1.5 rounded-full" [class]="getStatutDotClass(u.statut)"></span>
-                          {{ getStatutLabel(u.statut) }}
-                        </span>
-                      </td>
-                      <td class="px-4 py-4">
-                        <div class="flex items-center gap-1 justify-center">
-                          <button (click)="openEditUnit(u)"
-                            class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title="Modifier">
-                            <ng-icon name="lucidePencil" size="14"></ng-icon>
-                          </button>
-                          <button (click)="confirmDeleteUnit(u)"
-                            class="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-all" title="Supprimer">
-                            <ng-icon name="lucideTrash2" size="14"></ng-icon>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        </div>
-      }
-
-      <!-- ════════════════════════
-           ONGLET GALERIE
-      ════════════════════════ -->
-      @if (activeTab === 'galerie') {
-        <div>
-
-          <!-- Zone upload -->
-          <div class="mb-6 border-2 border-dashed border-gray-200 rounded-2xl p-6 bg-gray-50 text-center">
-            @if (!previewUrl) {
-              <ng-icon name="lucideUpload" size="36" class="text-primary-300 mx-auto block mb-2"></ng-icon>
-              <p class="text-sm text-primary-500 mb-1">
-                Cliquez pour sélectionner une photo
+            @if (b.adresse) {
+              <p class="text-sm text-primary-400 flex items-center gap-1 mb-1">
+                <ng-icon name="lucideMapPin" size="13"></ng-icon>
+                {{ getFullAddress(b) }}
               </p>
-              <p class="text-xs text-primary-300">JPG, PNG, WEBP — max 5 Mo</p>
-              <label for="galleryInput"
-                class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold
-                       text-primary-600 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl transition-all cursor-pointer">
-                <ng-icon name="lucideImage" size="13"></ng-icon>
-                Parcourir
-              </label>
-              <input type="file" id="galleryInput" accept="image/*"
-                (change)="onFileSelected($event)" class="hidden">
-            } @else {
-              <div class="flex justify-center mb-4">
-                <div class="relative">
-                  <img [src]="previewUrl"
-                    class="w-28 h-28 object-cover rounded-xl border-2 border-secondary-400 shadow-md">
-                  <span class="absolute -top-2 -right-2 w-6 h-6 bg-secondary-500 text-white rounded-full
-                               flex items-center justify-center text-xs font-bold">✓</span>
-                </div>
-              </div>
-              <div class="flex gap-2 justify-center">
-                <button (click)="cancelUpload()"
-                  class="px-4 py-2 text-xs font-semibold text-primary-600 bg-white border border-gray-200
-                         hover:bg-gray-50 rounded-xl transition-all">
-                  Annuler
-                </button>
-                <button (click)="uploadImage()"
-                  class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold
-                         text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all">
-                  <ng-icon name="lucideUpload" size="13"></ng-icon>
-                  Envoyer
-                </button>
-              </div>
+            }
+            @if (b.description) {
+              <p class="text-sm text-primary-500 max-w-2xl leading-relaxed">{{ b.description }}</p>
             }
           </div>
+          <div class="flex gap-2 flex-shrink-0">
+            <button
+              (click)="openEditProperty()"
+              class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-all"
+            >
+              <ng-icon name="lucidePencil" size="14"></ng-icon>
+              Modifier
+            </button>
+            <button
+              (click)="confirmDeleteProperty()"
+              class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-red-500 bg-white hover:bg-red-50 border border-gray-200 rounded-xl transition-all"
+            >
+              <ng-icon name="lucideTrash2" size="14"></ng-icon>
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-          <!-- Grille galerie -->
-          @if (!bien.images || bien.images.length === 0) {
-            <div class="flex flex-col items-center py-12 text-center">
-              <ng-icon name="lucideImage" size="48" class="text-gray-200 mb-3"></ng-icon>
-              <p class="text-primary-400">Aucune photo pour ce bien</p>
+    <div class="px-6 pb-8">
+      <!-- ══ STAT CARDS — Bien subdivisé ══ -->
+      @if (b.has_units) {
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div
+            class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4"
+          >
+            <div
+              class="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0"
+            >
+              <ng-icon name="lucideLayoutGrid" size="24" class="text-primary-700"></ng-icon>
             </div>
-          } @else {
-            <div class="flex items-center justify-between mb-3">
-              <p class="text-xs text-primary-400">
-                <span class="font-semibold text-primary-700">{{ bien.images.length }}</span> photo(s)
+            <div>
+              <p class="text-2xl font-bold text-primary-900 leading-none">{{ unitsCount() }}</p>
+              <p class="text-xs text-primary-400 mt-1 font-medium">Unités totales</p>
+            </div>
+          </div>
+          <div
+            class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4"
+          >
+            <div
+              class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0"
+            >
+              <ng-icon name="lucideCheckCircle" size="24" class="text-green-600"></ng-icon>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-primary-900 leading-none">{{ availableUnits() }}</p>
+              <p class="text-xs text-primary-400 mt-1 font-medium">Disponibles</p>
+            </div>
+          </div>
+          <div
+            class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4"
+          >
+            <div
+              class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0"
+            >
+              <ng-icon name="lucideKey" size="24" class="text-amber-600"></ng-icon>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-primary-900 leading-none">{{ rentedUnits() }}</p>
+              <p class="text-xs text-primary-400 mt-1 font-medium">Louées</p>
+            </div>
+          </div>
+          <div
+            class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4"
+          >
+            <div
+              class="w-12 h-12 rounded-xl bg-secondary-100 flex items-center justify-center flex-shrink-0"
+            >
+              <ng-icon name="lucideBanknote" size="24" class="text-secondary-500"></ng-icon>
+            </div>
+            <div>
+              <p class="text-lg font-bold text-primary-900 leading-none">
+                {{ totalLoyer() | number: '1.0-0' }}
               </p>
+              <p class="text-[10px] text-primary-400 mt-0.5 font-medium">GNF / revenus actifs</p>
             </div>
-
-            <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(180px,1fr));">
-              @for (img of bien.images; track img.id; let i = $index) {
-                <div class="relative rounded-xl overflow-hidden group cursor-pointer"
-                  style="aspect-ratio:4/3;">
-                  <img [src]="img.path" [alt]="img.caption || 'Photo ' + (i+1)"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-
-                  <!-- Overlay -->
-                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200
-                              flex items-center justify-center gap-2">
-                    <button (click)="openLightbox(i)"
-                      class="opacity-0 group-hover:opacity-100 transition-opacity
-                             w-10 h-10 bg-white/90 rounded-full flex items-center justify-center
-                             hover:bg-white shadow-md">
-                      <ng-icon name="lucideZoomIn" size="18" class="text-primary-700"></ng-icon>
-                    </button>
-                    <button (click)="confirmDeleteImage(img.id)"
-                      class="opacity-0 group-hover:opacity-100 transition-opacity
-                             w-10 h-10 bg-white/90 rounded-full flex items-center justify-center
-                             hover:bg-white shadow-md">
-                      <ng-icon name="lucideTrash2" size="18" class="text-red-500"></ng-icon>
-                    </button>
-                  </div>
-
-                  <!-- Numéro -->
-                  <span class="absolute bottom-2 left-2 bg-black/50 text-white text-[10px]
-                               font-bold px-1.5 py-0.5 rounded-md">
-                    {{ i + 1 }}
-                  </span>
-                </div>
-              }
-            </div>
-          }
+          </div>
         </div>
       }
 
-      <!-- ════════════════════════
-           ONGLET DOCUMENTS
-      ════════════════════════ -->
-      @if (activeTab === 'documents') {
-        @if (!bien.documents || bien.documents.length === 0) {
+      <!-- ══ STAT CARDS — Bien simple ══ -->
+      @if (!b.has_units) {
+        @let unit = b.units?.[0];
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div
+            class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4"
+          >
+            <div
+              class="w-12 h-12 rounded-xl bg-secondary-100 flex items-center justify-center flex-shrink-0"
+            >
+              <ng-icon name="lucideBanknote" size="24" class="text-secondary-500"></ng-icon>
+            </div>
+            <div>
+              <p class="text-lg font-bold text-primary-900 leading-none">
+                {{ unit?.rent_amount | number: '1.0-0' }}
+              </p>
+              <p class="text-[10px] text-primary-400 mt-0.5 font-medium">GNF / loyer</p>
+            </div>
+          </div>
+          <div
+            class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4"
+          >
+            <div
+              class="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0"
+            >
+              <ng-icon name="lucideKey" size="24" class="text-primary-700"></ng-icon>
+            </div>
+            <div>
+              <p class="text-lg font-bold text-primary-900 leading-none">
+                {{ unit?.security_deposit | number: '1.0-0' }}
+              </p>
+              <p class="text-[10px] text-primary-400 mt-0.5 font-medium">GNF / caution</p>
+            </div>
+          </div>
+          <div
+            class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4"
+          >
+            <div
+              class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0"
+            >
+              <ng-icon name="lucideWrench" size="24" class="text-orange-500"></ng-icon>
+            </div>
+            <div>
+              <p class="text-lg font-bold text-primary-900 leading-none">
+                {{ unit?.monthly_charges | number: '1.0-0' }}
+              </p>
+              <p class="text-[10px] text-primary-400 mt-0.5 font-medium">GNF / charges</p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ══ ONGLETS ══ -->
+      <div
+        class="bg-white border border-b-0 border-gray-200 rounded-t-2xl px-2 pt-2 overflow-x-auto"
+      >
+        <div class="flex gap-1 min-w-max">
+          @for (tab of tabs(); track tab.key) {
+            <button
+              (click)="setActiveTab(tab.key)"
+              class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap"
+              [class]="
+                activeTab() === tab.key
+                  ? 'border-secondary-500 text-secondary-600 font-semibold'
+                  : 'border-transparent text-primary-400 hover:text-primary-700 hover:bg-gray-50'
+              "
+            >
+              <ng-icon
+                [name]="tab.icon"
+                size="15"
+                [class]="activeTab() === tab.key ? 'text-secondary-500' : ''"
+              >
+              </ng-icon>
+              {{ tab.label }}
+              @if (tab.key === 'unites') {
+                <span
+                  class="px-1.5 py-0.5 text-[10px] font-bold bg-primary-800 text-white rounded-full"
+                >
+                  {{ unitsCount() }}
+                </span>
+              }
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="bg-white border border-gray-200 rounded-b-2xl shadow-sm p-6 min-h-96">
+        <!-- ══ INFOS ══ -->
+        @if (activeTab() === 'infos') {
+          <app-info-tab
+            [bien]="b"
+            [tauxOccupation]="tauxOccupation()"
+            [rentedUnits]="rentedUnits()"
+            [unitsCount]="unitsCount()"
+          />
+        }
+
+        <!-- ══ UNITÉS (bien subdivisé uniquement) ══ -->
+        @if (activeTab() === 'unites') {
+          <app-units-tab
+            [bien]="b"
+            (addUnit)="openAddUnit()"
+            (editUnit)="openEditUnit($event)"
+            (deleteUnit)="confirmDeleteUnit($event)"
+          />
+        }
+
+        <!-- ══ LOCATAIRE ══ -->
+        @if (activeTab() === 'locataire') {
+          <app-tenant-tab
+            [unit]="b.units?.[0]"
+            (onContact)="contacterLocataire($event)"
+            (onAffect)="affecterLocataire()"
+          />
+        }
+
+        <!-- ══ CONTRATS ══ -->
+        @if (activeTab() === 'contrats') {
+          <app-leases-tab [unit]="b.units?.[0]" (onNewLease)="affecterLocataire()" />
+        }
+
+        <!-- ══ GALERIE — TODO: brancher quand endpoint prêt ══ -->
+        @if (activeTab() === 'galerie') {
+          <app-gallery-tab
+            [gallery]="bien()?.gallery"
+            [previewUrl]="previewUrl()"
+            (onConfirmDelete)="confirmDeleteImage($event)"
+            (onUploadImage)="uploadImage()"
+            (onCancelUpload)="cancelUpload()"
+            (onFileSelected)="onFileSelected($event)"
+          />
+        }
+
+        <!-- ══ DOCUMENTS ══ -->
+        @if (activeTab() === 'documents') {
+          <app-documents-tab
+            [documents]="bien()?.documents"
+            [ownerId]="bien()?.id || 0"
+            ownerType="properties"
+            (onUpload)="uploadDocument($event)"
+            (onDelete)="deleteDocument($event)"
+            (onDownload)="downloadDocument($event)"
+          />
+        }
+
+        <!-- ══ FINANCES — TODO: brancher quand endpoint prêt ══ -->
+        @if (activeTab() === 'finances') {
+          <app-financial-tab [bien]="b" />
+        }
+
+        <!-- ══ ACTIVITÉ — TODO: brancher quand spatie configuré ══ -->
+        @if (activeTab() === 'activite') {
           <div class="flex flex-col items-center py-20 text-center">
             <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">
-              <ng-icon name="lucideFile" size="28" class="text-gray-300"></ng-icon>
+              <ng-icon name="lucideHistory" size="28" class="text-gray-300"></ng-icon>
             </div>
-            <p class="font-semibold text-primary-500">Aucun document</p>
-          </div>
-        } @else {
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            @for (doc of bien.documents; track doc.id) {
-              <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-3.5 border border-gray-100
-                          hover:shadow-sm transition-all">
-                <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                  [class]="getDocIconColor(doc.ext)">
-                  <ng-icon name="lucideFile" size="20"></ng-icon>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-semibold text-primary-900 truncate">{{ doc.nom }}</p>
-                  <p class="text-[10px] text-primary-400 mt-0.5">{{ doc.ext | uppercase }} · {{ doc.date | date:'dd/MM/yyyy' }}</p>
-                </div>
-                <button class="p-1.5 text-primary-400 hover:text-secondary-500 hover:bg-secondary-50 rounded-lg transition-all">
-                  <ng-icon name="lucideDownload" size="14"></ng-icon>
-                </button>
-              </div>
-            }
+            <p class="font-semibold text-primary-400">Disponible prochainement</p>
+            <p class="text-sm text-primary-300 mt-1">En attente de spatie/laravel-activitylog</p>
           </div>
         }
-      }
-
-      <!-- ════════════════════════
-           ONGLET FINANCES
-      ════════════════════════ -->
-      @if (activeTab === 'finances') {
-        <div class="space-y-5">
-
-          <!-- Résumé financier -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-gray-50 rounded-xl p-5 border border-gray-100 text-center">
-              <ng-icon name="lucideTrendingUp" size="28" class="text-green-500 mx-auto block mb-2"></ng-icon>
-              <p class="text-2xl font-bold text-primary-900">{{ totalLoyer | number:'1.0-0' }}</p>
-              <p class="text-xs text-primary-400 mt-0.5">GNF</p>
-              <p class="text-xs font-semibold text-primary-500 mt-1">Revenus locatifs actifs</p>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-5 border border-gray-100 text-center">
-              <ng-icon name="lucideBanknote" size="28" class="text-secondary-500 mx-auto block mb-2"></ng-icon>
-              <p class="text-2xl font-bold text-primary-900">{{ totalLoyerPotentiel | number:'1.0-0' }}</p>
-              <p class="text-xs text-primary-400 mt-0.5">GNF</p>
-              <p class="text-xs font-semibold text-primary-500 mt-1">Revenus potentiels totaux</p>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-5 border border-gray-100 text-center">
-              <ng-icon name="lucideWrench" size="28" class="text-orange-500 mx-auto block mb-2"></ng-icon>
-              <p class="text-2xl font-bold text-primary-900">{{ totalCharges | number:'1.0-0' }}</p>
-              <p class="text-xs text-primary-400 mt-0.5">GNF</p>
-              <p class="text-xs font-semibold text-primary-500 mt-1">Charges mensuelles totales</p>
-            </div>
-          </div>
-
-          @if (bien.prixVente) {
-            <div class="bg-amber-50 rounded-xl p-4 border border-amber-100 flex items-center gap-3">
-              <ng-icon name="lucideBanknote" size="20" class="text-amber-600 flex-shrink-0"></ng-icon>
-              <div>
-                <p class="text-xs font-semibold text-amber-700">Prix de vente</p>
-                <p class="text-lg font-bold text-amber-900">{{ bien.prixVente | number:'1.0-0' }} GNF</p>
-              </div>
-            </div>
-          }
-
-          @if (bien.charges) {
-            <div class="bg-red-50 rounded-xl p-4 border border-red-100 flex items-center gap-3">
-              <ng-icon name="lucideAlertTriangle" size="20" class="text-red-500 flex-shrink-0"></ng-icon>
-              <div>
-                <p class="text-xs font-semibold text-red-600">Charges de copropriété</p>
-                <p class="text-lg font-bold text-red-700">{{ bien.charges | number:'1.0-0' }} GNF</p>
-              </div>
-            </div>
-          }
-
-          <!-- Détail par unité -->
-          <div>
-            <h4 class="text-xs font-bold text-primary-400 uppercase tracking-wider mb-3">Détail par unité</h4>
-            <div class="overflow-x-auto rounded-xl border border-gray-100">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="bg-gray-50 border-b border-gray-100">
-                    <th class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Unité</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Loyer</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Caution</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Charges</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider">Statut</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
-                  @for (u of bien.unites; track u.id) {
-                    <tr class="hover:bg-gray-50 transition-colors" [class.opacity-50]="!u.actif">
-                      <td class="px-4 py-3.5 font-semibold text-primary-900">{{ u.numero }}</td>
-                      <td class="px-4 py-3.5 text-sm text-primary-800">
-                        {{ u.loyer ? (u.loyer | number:'1.0-0') + ' GNF' : '—' }}
-                      </td>
-                      <td class="px-4 py-3.5 text-sm text-primary-600">
-                        {{ u.caution ? (u.caution | number:'1.0-0') + ' GNF' : '—' }}
-                      </td>
-                      <td class="px-4 py-3.5 text-sm text-primary-600">
-                        {{ u.charges ? (u.charges | number:'1.0-0') + ' GNF' : '—' }}
-                      </td>
-                      <td class="px-4 py-3.5">
-                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-full"
-                          [class]="getStatutClass(u.statut)">
-                          <span class="w-1.5 h-1.5 rounded-full" [class]="getStatutDotClass(u.statut)"></span>
-                          {{ getStatutLabel(u.statut) }}
-                        </span>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- ════════════════════════
-           ONGLET ACTIVITÉ
-      ════════════════════════ -->
-      @if (activeTab === 'activite') {
-        <div class="flex flex-col items-center py-20 text-center">
-          <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">
-            <ng-icon name="lucideHistory" size="28" class="text-gray-300"></ng-icon>
-          </div>
-          <p class="font-semibold text-primary-500">Aucune activité enregistrée</p>
-          <p class="text-sm text-primary-400 mt-1">Les modifications apparaîtront ici</p>
-        </div>
-      }
-
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════
-     MODAL AJOUTER / MODIFIER UNITÉ
-═══════════════════════════════════════════════════════════ -->
-@if (showUnitModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
-    (click)="showUnitModal = false">
-    <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
-    <div class="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
-      (click)="$event.stopPropagation()">
-
-      <!-- Header modal -->
-      <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-2xl flex-shrink-0">
-        <h3 class="font-bold text-primary-900 flex items-center gap-2">
-          <ng-icon [name]="editingUnitId ? 'lucidePencil' : 'lucidePlus'" size="16" class="text-secondary-500"></ng-icon>
-          {{ editingUnitId ? 'Modifier l\'unité' : 'Ajouter une unité' }}
-        </h3>
-        <button (click)="showUnitModal = false" class="p-1.5 hover:bg-gray-200 rounded-lg transition-all">
-          <ng-icon name="lucideX" size="16" class="text-primary-400"></ng-icon>
-        </button>
-      </div>
-
-      <!-- Body scrollable -->
-      <div class="overflow-y-auto flex-1 p-6">
-        <div class="grid grid-cols-3 gap-4">
-
-          <!-- Numéro -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">
-              Numéro <span class="text-red-500">*</span>
-            </label>
-            <input [(ngModel)]="unitForm.numero" type="text" placeholder="Ex: A01"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Code -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Code / Réf.</label>
-            <input [(ngModel)]="unitForm.code" type="text" placeholder="Ex: UNIT-001"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Type -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Type</label>
-            <input [(ngModel)]="unitForm.type" type="text" placeholder="Ex: Bureau"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Étage -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Étage</label>
-            <input [(ngModel)]="unitForm.etage" type="number" min="0" placeholder="0"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Lot -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">N° de lot</label>
-            <input [(ngModel)]="unitForm.lot" type="text" placeholder="Ex: LOT-12"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Surface -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Surface (m²)</label>
-            <input [(ngModel)]="unitForm.surface" type="number" step="0.01" min="0" placeholder="0"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Statut -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Statut</label>
-            <select [(ngModel)]="unitForm.statut"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white">
-              <option value="disponible">Disponible</option>
-              <option value="loué">Loué</option>
-              <option value="maintenance">En travaux</option>
-              <option value="vendu">Vendu</option>
-              <option value="inactif">Inactif</option>
-            </select>
-          </div>
-
-          <!-- Pièces -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Pièces totales</label>
-            <input [(ngModel)]="unitForm.pieces" type="number" min="0" placeholder="0"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Chambres -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Chambres</label>
-            <input [(ngModel)]="unitForm.chambres" type="number" min="0" placeholder="0"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Salles de bain -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Salles de bain</label>
-            <input [(ngModel)]="unitForm.sallesDeBain" type="number" min="0" placeholder="0"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Loyer -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Loyer mensuel (GNF)</label>
-            <input [(ngModel)]="unitForm.loyer" type="number" min="0" placeholder="0"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Caution -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Caution (GNF)</label>
-            <input [(ngModel)]="unitForm.caution" type="number" min="0" placeholder="0"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Charges -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Charges/mois (GNF)</label>
-            <input [(ngModel)]="unitForm.charges" type="number" min="0" placeholder="0"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Prix vente -->
-          <div>
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Prix de vente (GNF)</label>
-            <input [(ngModel)]="unitForm.prixVente" type="number" min="0" placeholder="0"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400">
-          </div>
-
-          <!-- Actif checkbox -->
-          <div class="flex items-end pb-2">
-            <label class="flex items-center gap-2.5 cursor-pointer">
-              <input type="checkbox" [(ngModel)]="unitForm.actif"
-                class="w-4 h-4 rounded text-secondary-500 border-gray-300 cursor-pointer">
-              <span class="text-sm font-medium text-primary-700">Unité active</span>
-            </label>
-          </div>
-
-          <!-- Description (full width) -->
-          <div class="col-span-3">
-            <label class="block text-xs font-semibold text-primary-600 mb-1.5">Description</label>
-            <textarea [(ngModel)]="unitForm.description" rows="2" placeholder="Description de l'unité..."
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 resize-none">
-            </textarea>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-2 flex-shrink-0">
-        <button (click)="showUnitModal = false"
-          class="px-4 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all">
-          Annuler
-        </button>
-        <button (click)="saveUnit()"
-          class="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold
-                 text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all">
-          <ng-icon name="lucideSave" size="14"></ng-icon>
-          {{ editingUnitId ? 'Modifier' : 'Enregistrer' }}
-        </button>
       </div>
     </div>
-  </div>
-}
 
-<!-- ══ MODAL SUPPRESSION UNITÉ ══ -->
-@if (showDeleteUnit && deletingUnit) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
-    (click)="showDeleteUnit = false">
-    <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
-    <div class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
-      (click)="$event.stopPropagation()">
-      <div class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
-        <ng-icon name="lucideTrash2" size="24" class="text-red-500"></ng-icon>
-      </div>
-      <h3 class="font-bold text-primary-900 text-center mb-2">Supprimer l'unité ?</h3>
-      <p class="text-sm text-primary-500 text-center mb-5">
-        L'unité <strong class="text-primary-700">{{ deletingUnit.numero }}</strong> sera définitivement
-        supprimée. Cette action est irréversible.
-      </p>
-      <div class="flex gap-2">
-        <button (click)="deleteUnit()"
-          class="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all">
-          Supprimer
-        </button>
-        <button (click)="showDeleteUnit = false"
-          class="flex-1 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all">
-          Annuler
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- ══ MODAL SUPPRESSION IMAGE ══ -->
-@if (showDeleteImage) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
-    (click)="showDeleteImage = false">
-    <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
-    <div class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
-      (click)="$event.stopPropagation()">
-      <div class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
-        <ng-icon name="lucideImage" size="24" class="text-red-500"></ng-icon>
-      </div>
-      <h3 class="font-bold text-primary-900 text-center mb-2">Supprimer cette photo ?</h3>
-      <p class="text-sm text-primary-500 text-center mb-5">Cette action est irréversible.</p>
-      <div class="flex gap-2">
-        <button (click)="deleteImage()"
-          class="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all">
-          Supprimer
-        </button>
-        <button (click)="showDeleteImage = false"
-          class="flex-1 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all">
-          Annuler
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- ══════════════════════════════════════════════════════════
-     LIGHTBOX
-═══════════════════════════════════════════════════════════ -->
-@if (showLightbox && bien.images && bien.images.length > 0) {
-  <div class="fixed inset-0 z-[9999] flex items-center justify-center"
-    style="background:rgba(0,0,0,0.92);">
-
-    <!-- Fermer -->
-    <button (click)="closeLightbox()"
-      class="absolute top-5 right-6 w-11 h-11 flex items-center justify-center
-             text-white rounded-full transition-all"
-      style="background:rgba(255,255,255,0.15);">
-      <ng-icon name="lucideX" size="20"></ng-icon>
-    </button>
-
-    <!-- Compteur -->
-    <div class="absolute top-6 left-1/2 -translate-x-1/2
-                text-white text-xs font-bold bg-black/40 px-4 py-1.5 rounded-full">
-      {{ lightboxIndex + 1 }} / {{ bien.images.length }}
-    </div>
-
-    <!-- Prev -->
-    <button (click)="prevImage()"
-      class="absolute left-5 w-13 h-13 flex items-center justify-center
-             text-white rounded-full transition-all"
-      style="background:rgba(255,255,255,0.15);width:52px;height:52px;">
-      <ng-icon name="lucideChevronLeft" size="28"></ng-icon>
-    </button>
-
-    <!-- Image centrale -->
-    <div class="max-w-[85vw] max-h-[80vh] text-center">
-      @if (currentLightboxImage) {
-        <img [src]="currentLightboxImage.path"
-          class="max-w-full max-h-[78vh] rounded-xl object-contain shadow-2xl">
-        @if (currentLightboxImage.caption) {
-          <p class="text-white/70 text-sm mt-3">{{ currentLightboxImage.caption }}</p>
-        }
-      }
-    </div>
-
-    <!-- Next -->
-    <button (click)="nextImage()"
-      class="absolute right-5 text-white rounded-full transition-all"
-      style="background:rgba(255,255,255,0.15);width:52px;height:52px;display:flex;align-items:center;justify-content:center;">
-      <ng-icon name="lucideChevronRight" size="28"></ng-icon>
-    </button>
-
-    <!-- Thumbnails strip -->
-    @if (bien.images.length > 1) {
-      <div class="absolute bottom-5 left-1/2 -translate-x-1/2
-                  flex gap-1.5 px-4 py-2.5 rounded-full overflow-x-auto max-w-[90vw]"
-        style="background:rgba(0,0,0,0.5);">
-        @for (thumb of bien.images; track thumb.id; let i = $index) {
-          <img [src]="thumb.path" (click)="openLightbox(i)"
-            class="w-11 h-11 object-cover rounded-lg flex-shrink-0 cursor-pointer transition-all"
-            [class]="i === lightboxIndex
-              ? 'border-2 border-secondary-400 opacity-100'
-              : 'border-2 border-transparent opacity-50 hover:opacity-80'">
-        }
-      </div>
+    <!-- ══ MODAL AJOUTER / MODIFIER UNITÉ ══ -->
+    @if (showUnitModal()) {
+      <app-unit-form-modal
+        [editingUnit]="editingUnit()"
+        [propertyId]="bien()?.id ?? 0"
+        (close)="closeUnitModal()"
+        (saveUnit)="saveUnit($event)"
+      />
     }
-  </div>
-}
+
+    <!-- ══ MODAL SUPPRESSION BIEN ══ -->
+    @if (showDeletePropertyConfirm()) {
+      <app-confirm-dialog
+        title="Supprimer le bien ?"
+        [message]="'Le bien « ' + bien()?.name + ' » sera définitivement supprimé.'"
+        [loading]="deletePropertyLoading()"
+        (confirmed)="deleteProperty()"
+        (cancelled)="showDeletePropertyConfirm.set(false)"
+      />
+    }
+
+    <!-- ══ MODAL SUPPRESSION UNITÉ ══ -->
+    @if (showDeleteUnit()) {
+      @let delUnit = deletingUnit();
+      <app-confirm-dialog
+        title="Supprimer l'unité ?"
+        [message]="'L\'unité ' + (delUnit?.unit_number ?? delUnit?.unit_code) + ' sera définitivement supprimée.'"
+        (confirmed)="deleteUnit()"
+        (cancelled)="showDeleteUnit.set(false)"
+      />
+    }
+
+    <!-- ══ MODAL SUPPRESSION IMAGE ══ -->
+    @if (showDeleteImage()) {
+      <app-confirm-dialog
+        title="Supprimer cette photo ?"
+        message="Cette action est irréversible."
+        (confirmed)="deleteImage()"
+        (cancelled)="showDeleteImage.set(false)"
+      />
+    }
+
+    <!-- ══ MODAL MODIFICATION DU BIEN ══ -->
+    @if (showPropertyModal()) {
+      <app-add-property-modal
+        [editingProperty]="bien() ?? null"
+        [structureId]="bien()?.structure_id ?? 0"
+        (closed)="showPropertyModal.set(false)"
+        (saved)="loadProperty()"
+      />
+    }
+    <!-- ══ DRAWER NOUVELLE LOCATION ══ -->
+    @if (showLocationModal()) {
+      @if (unitToAffect(); as currentUnit) {
+        <app-create-location-modal
+          [unit]="currentUnit"
+          (closed)="showLocationModal.set(false)"
+          (saved)="onLocationSaved()"
+          (locationError)="onLocationError($event)"
+        />
+      }
+    }
+  }
+  <!-- fin @else if (bien()) -->
+</div>

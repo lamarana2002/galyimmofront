@@ -121,3 +121,40 @@
     --font-body: 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
     --font-mono: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
 }
+
+/* ─── Toast animations ──────────────────────────────────────────── */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-bar {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+
+@layer utilities {
+  .animate-toast-in {
+    animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .animate-toast-bar {
+    animation: toast-bar linear both;
+  }
+}
+
+/* ─── Pagination ────────────────────────────────────────────────── */
+@layer utilities {
+  .pagination-btn {
+    @apply flex items-center justify-center w-8 h-8 rounded-lg text-sm font-medium
+           text-primary-600 bg-white border border-gray-200
+           hover:bg-primary-50 hover:border-primary-300
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-200
+           transition-colors duration-150;
+  }
+
+  .pagination-btn-active {
+    @apply flex items-center justify-center w-8 h-8 rounded-lg text-sm font-medium
+           text-white bg-secondary-500 border border-secondary-500
+           cursor-default;
+  }
+}

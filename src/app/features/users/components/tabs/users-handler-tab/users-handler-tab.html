@@ -1,0 +1,213 @@
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+  <!-- KPI Cards -->
+  <div class="mb-6 grid grid-cols-3 gap-4">
+    @for (kpi of kpis(); track kpi.label) {
+      <div class="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+        <div
+          class="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0"
+          [class]="kpi.color"
+        >
+          <ng-icon [name]="kpi.icon" size="18"></ng-icon>
+        </div>
+        <div>
+          <p class="text-xl font-bold text-primary-900 leading-none">{{ kpi.value }}</p>
+          <p class="text-xs text-primary-400 mt-0.5">{{ kpi.label }}</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Toolbar -->
+  <div class="mb-4 flex items-center gap-3">
+    <div class="relative flex-1 max-w-sm">
+      <ng-icon
+        name="lucideSearch"
+        size="14"
+        class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300 pointer-events-none"
+      >
+      </ng-icon>
+      <input
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearch($event)"
+        type="text"
+        placeholder="Rechercher par nom, login, email..."
+        class="w-full pl-9 pr-4 py-2 text-sm text-primary-800 placeholder-primary-300 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 focus:bg-white transition-all"
+      />
+    </div>
+    <button
+      (click)="loadUsers()"
+      [disabled]="loading()"
+      class="p-2 rounded-xl border border-gray-200 bg-white text-primary-400 hover:bg-gray-50 hover:text-primary-600 transition-all disabled:opacity-50"
+    >
+      <ng-icon name="lucideRefreshCw" size="15" [class]="loading() ? 'animate-spin' : ''"></ng-icon>
+    </button>
+    <button
+      (click)="openAdd()"
+      class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-primary-800 hover:bg-primary-900 rounded-xl shadow-sm transition-all"
+    >
+      <ng-icon name="lucidePlus" size="13"></ng-icon>
+      Ajouter
+    </button>
+  </div>
+
+  <!-- Table -->
+  @if (loading()) {
+    <app-loading message="Chargement des utilisateurs…" />
+  } @else if (users().length === 0) {
+    <app-empty-state
+      title="Aucun utilisateur trouvé"
+      [subtitle]="searchQuery() ? 'Essayez avec d\'autres termes de recherche' : 'Ajoutez votre premier utilisateur'"
+      [actionLabel]="searchQuery() ? '' : 'Ajouter un utilisateur'"
+      (action)="openAdd()"
+    />
+  } @else {
+    <div class="overflow-hidden rounded-xl border border-gray-100">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 bg-gray-50/80">
+            <th
+              class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+            >
+              Utilisateur
+            </th>
+            <th
+              class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+            >
+              Contact
+            </th>
+            <th
+              class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+            >
+              Rôle
+            </th>
+            <th
+              class="px-4 py-3 text-left text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+            >
+              Statut
+            </th>
+            <th
+              class="px-4 py-3 text-right text-[11px] font-bold text-primary-400 uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          @for (user of users(); track user.id) {
+            <tr class="hover:bg-gray-50/60 transition-colors group">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                  @if (user.avatar) {
+                    <img
+                      [src]="user.avatar"
+                      [alt]="user.prenom"
+                      class="w-9 h-9 rounded-full object-cover ring-1 ring-gray-200 flex-shrink-0"
+                    />
+                  } @else {
+                    <div
+                      class="w-9 h-9 rounded-full bg-secondary-100 flex items-center justify-center text-xs font-bold text-secondary-700 flex-shrink-0"
+                    >
+                      {{ getInitials(user) }}
+                    </div>
+                  }
+                  <div class="min-w-0">
+                    <p class="font-semibold text-primary-900 truncate">
+                      {{ user.prenom }} {{ user.nom }}
+                    </p>
+                    <p class="text-xs text-primary-400 truncate">{{ user.login }}</p>
+                  </div>
+                </div>
+              </td>
+
+              <td class="px-4 py-3">
+                <p class="text-xs text-primary-700 truncate">{{ user.email }}</p>
+                <p class="text-xs text-primary-400 mt-0.5">{{ user.telephone }}</p>
+              </td>
+
+              <td class="px-4 py-3">
+                @if ($any(user).roles?.length > 0) {
+                  <div class="flex flex-wrap gap-1">
+                    @for (r of $any(user).roles; track r.id) {
+                      <span
+                        class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-secondary-50 text-secondary-700"
+                      >
+                        <ng-icon name="lucideShield" size="10"></ng-icon>
+                        {{ r.name }}
+                      </span>
+                    }
+                  </div>
+                } @else if (user.roles) {
+                  <span
+                    class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-secondary-50 text-secondary-700"
+                  >
+                    <ng-icon name="lucideShield" size="10"></ng-icon>
+                    {{ user.roles.map(r => r.name).join(', ') || 'Aucun rôle' }}
+                  </span>
+                } @else {
+                  <span class="text-xs text-primary-300">—</span>
+                }
+              </td>
+
+              <td class="px-4 py-3">
+                <span
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full"
+                  [class]="getStatusClass(user.status)"
+                >
+                  {{ getStatusLabel(user.status) }}
+                </span>
+              </td>
+
+              <td class="px-4 py-3">
+                <div
+                  class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <button
+                    (click)="openEdit(user)"
+                    title="Modifier"
+                    class="p-1.5 text-primary-400 hover:bg-amber-50 hover:text-amber-600 rounded-lg transition-all"
+                  >
+                    <ng-icon name="lucidePencil" size="14"></ng-icon>
+                  </button>
+                  @if (!isCurrentUser(user)) {
+                    <button
+                      (click)="confirmDelete(user)"
+                      title="Supprimer"
+                      class="p-1.5 text-primary-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all"
+                    >
+                      <ng-icon name="lucideTrash2" size="14"></ng-icon>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalItems]="totalItems()"
+        [perPage]="perPage"
+        (pageChange)="goToPage($event)"
+      />
+    }
+  }
+</div>
+<!-- ══ MODALES UTILISATEURS ══ -->
+
+@if (showModal()) {
+  <app-user-modal [user]="editingUser()" (saved)="onSaved($event)" (cancel)="closeModal()" />
+}
+
+@if (showDeleteConfirm()) {
+  <app-confirm-dialog
+    title="Supprimer l'utilisateur ?"
+    [message]="deleteMessage()"
+    confirmLabel="Supprimer"
+    [loading]="deleteLoading()"
+    (confirmed)="deleteUser()"
+    (cancelled)="cancelDelete()"
+  />
+}
