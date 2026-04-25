@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 
@@ -34,6 +34,7 @@ export interface StructurePayment {
     lucideCrown, lucideTrendingUp, lucideAlertTriangle,
     lucideCalendar, lucideShield,
   })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FinancialTab implements OnInit {
 

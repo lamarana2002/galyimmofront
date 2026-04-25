@@ -1,3 +1,4 @@
+import { UserRole } from "../../../core/auth/interfaces/auth-user.interface";
 import { GenreEnum } from "../../../shared/enums/genre.enum";
 import { UserStatus } from "../enums/user-status.enum";
 
@@ -29,7 +30,7 @@ export interface UserModel {
   email_verified_at:  string | null;
   remember_token:     string | null;
 
-  role: string;
+  roles: UserRole[];
 
   // ── Timestamps ──────────────────────────────────────────────────
   created_at: string;

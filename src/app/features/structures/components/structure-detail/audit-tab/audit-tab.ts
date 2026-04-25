@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucideActivity, lucideShield, lucideUser } from '@ng-icons/lucide';
 
@@ -26,6 +26,7 @@ export interface AuditLog {
   imports: [NgIconComponent, LoadingComponent, EmptyStateComponent],
   templateUrl: './audit-tab.html',
   viewProviders: [provideIcons({ lucideActivity, lucideShield, lucideUser })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuditTab implements OnInit {
 

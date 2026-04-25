@@ -62,16 +62,14 @@ import {
   getUnitStatusDotClass,
   getUnitStatusLabel,
   getPropertyFullAddress,
-  getPropertyOccupationRate,
 } from '../../utils/property.utils';
 
 import { InfoTab } from '../../components/property-detail/info-tab/info-tab';
 import { UnitsTab } from '../../components/property-detail/units-tab/units-tab';
 import { GalleryTab } from '../../components/shared-tabs/gallery-tab/gallery-tab';
-import { DocumentTab } from '../../components/property-detail/document-tab/document-tab';
+import { DocumentsTab } from '../../components/shared-tabs/documents-tab/documents-tab';
 import { FinancialTab } from '../../components/property-detail/financial-tab/financial-tab';
 import { LocationUnitService } from '../../services/location-unit.service';
-import { PropertyGallery } from '../../models/property-gallery.model';
 import { PropertyGalleryService } from '../../services/property-gallery.service';
 import { UnitFormModal } from '../../components/modals/units/unit-form-modal/unit-form-modal';
 import { ILocationUnit } from '../../models/location-unit.model';
@@ -81,6 +79,9 @@ import { TenantTab } from '../../components/shared-tabs/tenant-tab/tenant-tab';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
 import { CreateLocationModal } from '../../components/modals/create-location-modal/create-location-modal';
+import { PropertyDocumentService } from '../../services/property-document.service';
+import { UploadPropertyDocumentPayload } from '../../interfaces/upload-property-document-payload.interface';
+import { ContactService } from '../../../../shared/services/contact.service';
 
 @Component({
   selector: 'app-property-detail',
@@ -90,21 +91,19 @@ import { CreateLocationModal } from '../../components/modals/create-location-mod
     FormsModule,
     RouterLink,
     NgIconComponent,
-    DatePipe,
     DecimalPipe,
-    TitleCasePipe,
-    InfoTab,
-    UnitsTab,
-    GalleryTab,
-    DocumentTab,
-    FinancialTab,
     UnitFormModal,
     AddPropertyModal,
-    TenantTab,
-    LeasesTab,
     CreateLocationModal,
     ConfirmDialogComponent,
-  ],
+    DocumentsTab,
+    GalleryTab,
+    LeasesTab,
+    TenantTab,
+    InfoTab,
+    UnitsTab,
+    FinancialTab
+],
   templateUrl: './property-detail.html',
   viewProviders: [
     provideIcons({
@@ -154,6 +153,8 @@ export class PropertyDetail implements OnInit, OnDestroy {
   private readonly unitService = inject(LocationUnitService);
   private readonly galleryService = inject(PropertyGalleryService);
   protected readonly toast = inject(ToastService);
+  private readonly documentService = inject(PropertyDocumentService);
+  private readonly contactService  = inject(ContactService);
   private readonly destroy$ = new Subject<void>();
 
   // ── Enums & utils exposés au template ─────────────────────────
@@ -529,11 +530,26 @@ export class PropertyDetail implements OnInit, OnDestroy {
     this.unitToAffect.set(unit);
     this.showLocationModal.set(true);
   }
-  contacterLocataire(): void {
+
+  contacterLocataire(data: { subject: string; message: string }): void {
     const locataire = this.bien()?.units?.[0]?.current_locataire;
-    if (locataire?.email) {
-      window.location.href = `mailto:${locataire.email}`;
+    if (!locataire?.email) {
+      this.toast.error('Ce locataire n\'a pas d\'adresse email.');
+      return;
     }
+
+    this.contactService.sendEmail({
+      email: locataire.email,
+      subject: data.subject,
+      body: data.message
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.toast.success('Message envoyé avec succès.');
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? 'Erreur lors de l\'envoi de l\'email.');
+      }
+    });
   }
   onLocationSaved(): void {
     this.showLocationModal.set(false);
@@ -543,5 +559,32 @@ export class PropertyDetail implements OnInit, OnDestroy {
 
   onLocationError(message: string): void {
     this.toast.error(message);
+  }
+
+  // ── Documents ───────────────────────────────────────────────────
+  uploadDocument(payload: UploadPropertyDocumentPayload): void {
+    this.documentService.upload(payload).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.bien.update(b => b ? { ...b, documents: [...(b.documents || []), res.data!] } : b);
+          this.toast.success('Document ajouté avec succès.');
+        }
+      },
+      error: (err) => this.toast.error(err?.error?.message ?? "Erreur lors de l'envoi du document.")
+    });
+  }
+
+  deleteDocument(id: number): void {
+    this.documentService.delete(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.bien.update(b => b ? { ...b, documents: b.documents?.filter(d => d.id !== id) } : b);
+        this.toast.success('Document supprimé avec succès.');
+      },
+      error: (err) => this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.')
+    });
+  }
+
+  downloadDocument(id: number): void {
+    this.documentService.openDocument(id);
   }
 }

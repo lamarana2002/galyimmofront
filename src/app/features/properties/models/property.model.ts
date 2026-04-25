@@ -4,6 +4,7 @@ import { PropertyDocument }    from './property-document.model';
 import { PropertyStats }       from './property-stats.model';
 import { PropertyTypeModel }   from './propety-type.model';
 import { ILocationUnit } from './location-unit.model';
+import { IAdresse } from '../../../shared/models/adresse.model';
 
 export interface PropertyModel {
   id: number;
@@ -16,6 +17,10 @@ export interface PropertyModel {
   documents?:     PropertyDocument[];   // documents du bien
   stats:          PropertyStats;
 
+  // ── Relation Adresse ────────────────────────────────────
+  adresse_id: number | null;
+  adresse?:   IAdresse | null;
+
   // ── Identification ──────────────────────────────────────
   code:  string | null;
   name:  string;
@@ -24,14 +29,6 @@ export interface PropertyModel {
   // false → bien simple, 1 unité primaire auto-créée côté backend
   // true  → bien subdivisé, unités créées manuellement
   has_units: boolean;
-
-  // ── Adresse ─────────────────────────────────────────────
-  address:     string | null;
-  city:        string | null;
-  postal_code: string | null;
-  country:     string | null;
-  latitude:    number | null;
-  longitude:   number | null;
 
   // ── Caractéristiques ────────────────────────────────────
   total_surface: number | null;

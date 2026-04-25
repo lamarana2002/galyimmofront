@@ -136,12 +136,12 @@
                       </span>
                     }
                   </div>
-                } @else if (user.role) {
+                } @else if (user.roles) {
                   <span
                     class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-secondary-50 text-secondary-700"
                   >
                     <ng-icon name="lucideShield" size="10"></ng-icon>
-                    {{ user.role }}
+                    {{ user.roles.map(r => r.name).join(', ') || 'Aucun rôle' }}
                   </span>
                 } @else {
                   <span class="text-xs text-primary-300">—</span>
@@ -168,13 +168,15 @@
                   >
                     <ng-icon name="lucidePencil" size="14"></ng-icon>
                   </button>
-                  <button
-                    (click)="confirmDelete(user)"
-                    title="Supprimer"
-                    class="p-1.5 text-primary-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all"
-                  >
-                    <ng-icon name="lucideTrash2" size="14"></ng-icon>
-                  </button>
+                  @if (!isCurrentUser(user)) {
+                    <button
+                      (click)="confirmDelete(user)"
+                      title="Supprimer"
+                      class="p-1.5 text-primary-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all"
+                    >
+                      <ng-icon name="lucideTrash2" size="14"></ng-icon>
+                    </button>
+                  }
                 </div>
               </td>
             </tr>

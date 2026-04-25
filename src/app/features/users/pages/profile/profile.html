@@ -1,0 +1,260 @@
+<div class="min-h-screen" style="background: #f4f1ee">
+
+  <!-- ══ HEADER STICKY ══ -->
+  <div class="bg-white border-b border-gray-200 sticky top-16 z-30 shadow-sm">
+    <div class="px-6 py-4">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h1 class="text-xl font-bold text-primary-900 flex items-center gap-2.5"
+              style="letter-spacing: -0.02em">
+            <div class="w-8 h-8 rounded-lg bg-primary-800 flex items-center justify-center">
+              <ng-icon name="lucideUser" size="16" class="text-white"></ng-icon>
+            </div>
+            Mon Profil
+          </h1>
+          <p class="text-xs text-primary-400 mt-0.5 ml-10">
+            Gérez vos informations personnelles et la sécurité de votre compte
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ONGLETS ══ -->
+    <div class="px-6 pb-0">
+      <div class="flex gap-1">
+        <button (click)="activeTab.set('infos')"
+          class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap"
+          [class]="activeTab() === 'infos'
+            ? 'border-secondary-500 text-secondary-600 font-semibold'
+            : 'border-transparent text-primary-400 hover:text-primary-700 hover:bg-primary-50'">
+          <ng-icon name="lucideUser" size="15" [class]="activeTab() === 'infos' ? 'text-secondary-500' : ''"></ng-icon>
+          Informations personnelles
+        </button>
+        <button (click)="activeTab.set('security')"
+          class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap"
+          [class]="activeTab() === 'security'
+            ? 'border-secondary-500 text-secondary-600 font-semibold'
+            : 'border-transparent text-primary-400 hover:text-primary-700 hover:bg-primary-50'">
+          <ng-icon name="lucideShieldCheck" size="15" [class]="activeTab() === 'security' ? 'text-secondary-500' : ''"></ng-icon>
+          Sécurité
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CONTENU ══ -->
+  <div class="px-6 py-8 max-w-6xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <!-- ── Colonne Gauche : Card Profil ── -->
+      <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
+          <!-- Couverture simplifiée -->
+          <div class="h-24 bg-gradient-to-r from-primary-800 to-primary-600 relative"></div>
+          
+          <div class="px-6 pb-6 text-center">
+            <!-- Avatar avec bouton upload -->
+            <div class="relative -mt-12 mb-4 inline-block">
+              <div class="w-24 h-24 rounded-2xl border-4 border-white shadow-xl overflow-hidden bg-gray-100">
+                <img [src]="getAvatarUrl()" [alt]="currentUser()?.nom" class="w-full h-full object-cover" />
+              </div>
+              <label for="avatar-upload" class="absolute -bottom-2 -right-2 w-8 h-8 bg-secondary-500 text-white rounded-lg flex items-center justify-center cursor-pointer hover:bg-secondary-600 transition-all shadow-lg hover:scale-110 active:scale-95">
+                <ng-icon name="lucideCamera" size="14"></ng-icon>
+                <input id="avatar-upload" type="file" class="hidden" (change)="onAvatarSelected($event)" accept="image/*">
+              </label>
+            </div>
+
+            <h2 class="text-lg font-bold text-primary-900">{{ currentUser()?.prenom }} {{ currentUser()?.nom }}</h2>
+            <p class="text-xs font-semibold text-primary-400 truncate mb-4">{{ currentUser()?.email }}</p>
+
+            <div class="flex flex-wrap justify-center gap-2 pt-4 border-t border-gray-50">
+              @for (role of currentUser()?.roles; track role.id) {
+                <span class="px-2.5 py-1 text-[10px] font-bold bg-secondary-100 text-secondary-600 rounded-full uppercase tracking-wider">
+                  {{ role.name }}
+                </span>
+              }
+              <span class="px-2.5 py-1 text-[10px] font-bold bg-green-100 text-green-600 rounded-full uppercase tracking-wider">
+                Compte Actif
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Structure (si l'utilisateur en a une) -->
+        @if (currentUser()?.hasStructure) {
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 animate-in fade-in slide-in-from-left-4 duration-700 delay-100">
+            <h3 class="text-xs font-bold text-primary-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <ng-icon name="lucideBuilding" size="14" class="text-secondary-500"></ng-icon>
+              Ma Structure
+            </h3>
+            <p class="text-sm font-semibold text-primary-900">Agence Immobilère</p>
+            <p class="text-xs text-primary-400 mt-1">ID Structure: #{{ currentUser()?.structure_id }}</p>
+          </div>
+        }
+      </div>
+
+      <!-- ── Colonne Droite : Formulaires ── -->
+      <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Tab 1: Informations Personnelles -->
+        @if (activeTab() === 'infos') {
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div class="p-6 border-b border-gray-50">
+              <h3 class="text-base font-bold text-primary-900">Informations Personnelles</h3>
+              <p class="text-xs text-primary-400 mt-0.5">Mettez à jour vos coordonnées et détails de profil</p>
+            </div>
+
+            <form (ngSubmit)="updateProfile()" class="p-6 space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Prénom -->
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider">Prénom</label>
+                  <div class="relative">
+                    <ng-icon name="lucideUser" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300" size="14"></ng-icon>
+                    <input type="text" [(ngModel)]="profileForm().prenom" name="prenom" class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 focus:ring-1 focus:ring-secondary-400" placeholder="Votre prénom">
+                  </div>
+                </div>
+
+                <!-- Nom -->
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider">Nom</label>
+                  <div class="relative">
+                    <ng-icon name="lucideUser" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300" size="14"></ng-icon>
+                    <input type="text" [(ngModel)]="profileForm().nom" name="nom" class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 focus:ring-1 focus:ring-secondary-400" placeholder="Votre nom">
+                  </div>
+                </div>
+
+                <!-- Email (Ready Only if desired, or editable) -->
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider text-opacity-50">Email (Identifiant)</label>
+                  <div class="relative opacity-60">
+                    <ng-icon name="lucideMail" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300" size="14"></ng-icon>
+                    <input type="email" [(ngModel)]="profileForm().email" name="email" readonly class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed">
+                  </div>
+                </div>
+
+                <!-- Téléphone -->
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider">Téléphone</label>
+                  <div class="relative">
+                    <ng-icon name="lucidePhone" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300" size="14"></ng-icon>
+                    <input type="tel" [(ngModel)]="profileForm().telephone" name="telephone" class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400" placeholder="+224 000 00 00 00">
+                  </div>
+                </div>
+
+                <!-- Genre -->
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider">Genre</label>
+                  <select [(ngModel)]="profileForm().genre" name="genre" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white">
+                    <option value="Masculin">Masculin</option>
+                    <option value="Feminin">Féminin</option>
+                  </select>
+                </div>
+
+                <!-- Pays -->
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider">Pays</label>
+                  <div class="relative">
+                    <ng-icon name="lucideGlobe" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300" size="14"></ng-icon>
+                    <input type="text" [(ngModel)]="profileForm().pays" name="pays" class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400" placeholder="Ex: Guinée">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Adresse -->
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider">Adresse complète</label>
+                <div class="relative">
+                  <ng-icon name="lucideMapPin" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300" size="14"></ng-icon>
+                  <input type="text" [(ngModel)]="profileForm().adresse" name="adresse" class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400" placeholder="Numéro, rue, quartier...">
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider">Bio / Description</label>
+                <textarea [(ngModel)]="profileForm().description" name="description" rows="3" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 resize-none" placeholder="Décrivez votre rôle ou votre expérience..."></textarea>
+              </div>
+
+              <div class="flex justify-end pt-4">
+                <button type="submit" [disabled]="isLoading()" class="inline-flex items-center gap-2 px-8 py-3 text-sm font-bold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all shadow-md disabled:opacity-50">
+                  @if (isLoading()) {
+                    <div class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    Enregistrement...
+                  } @else {
+                    <ng-icon name="lucideSave" size="16"></ng-icon>
+                    Enregistrer les modifications
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+
+        <!-- Tab 2: Sécurité -->
+        @if (activeTab() === 'security') {
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div class="p-6 border-b border-gray-50">
+              <h3 class="text-base font-bold text-primary-900">Sécurité & Mot de passe</h3>
+              <p class="text-xs text-primary-400 mt-0.5">Gérez la sécurité de votre accès à la plateforme</p>
+            </div>
+
+            <form (ngSubmit)="updatePassword()" class="p-6 space-y-6 max-w-lg">
+              <!-- Mot de passe actuel -->
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider">Mot de passe actuel</label>
+                <div class="relative">
+                  <ng-icon name="lucideLock" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300" size="14"></ng-icon>
+                  <input [type]="showPasswords().current ? 'text' : 'password'" [(ngModel)]="passwordForm().current_password" name="current_password" class="w-full pl-10 pr-12 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 shadow-sm" placeholder="••••••••">
+                  <button type="button" (click)="togglePasswordVisibility('current')" class="absolute right-3 top-1/2 -translate-y-1/2 text-primary-300 hover:text-primary-600">
+                    <ng-icon [name]="showPasswords().current ? 'lucideEyeOff' : 'lucideEye'" size="16"></ng-icon>
+                  </button>
+                </div>
+              </div>
+
+              <div class="h-px bg-gray-50 my-6"></div>
+
+              <!-- Nouveau mot de passe -->
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider">Nouveau mot de passe</label>
+                <div class="relative">
+                  <ng-icon name="lucideLock" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300" size="14"></ng-icon>
+                  <input [type]="showPasswords().new ? 'text' : 'password'" [(ngModel)]="passwordForm().password" name="password" class="w-full pl-10 pr-12 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 shadow-sm" placeholder="Minimum 8 caractères">
+                  <button type="button" (click)="togglePasswordVisibility('new')" class="absolute right-3 top-1/2 -translate-y-1/2 text-primary-300 hover:text-primary-600">
+                    <ng-icon [name]="showPasswords().new ? 'lucideEyeOff' : 'lucideEye'" size="16"></ng-icon>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Confirmation -->
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-primary-800 uppercase tracking-wider">Confirmer le nouveau mot de passe</label>
+                <div class="relative">
+                  <ng-icon name="lucideLock" class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300" size="14"></ng-icon>
+                  <input [type]="showPasswords().confirm ? 'text' : 'password'" [(ngModel)]="passwordForm().password_confirmation" name="confirm_password" class="w-full pl-10 pr-12 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 shadow-sm" placeholder="Répéter le mot de passe">
+                  <button type="button" (click)="togglePasswordVisibility('confirm')" class="absolute right-3 top-1/2 -translate-y-1/2 text-primary-300 hover:text-primary-600">
+                    <ng-icon [name]="showPasswords().confirm ? 'lucideEyeOff' : 'lucideEye'" size="16"></ng-icon>
+                  </button>
+                </div>
+              </div>
+
+              <div class="pt-4">
+                <button type="submit" [disabled]="isPasswordLoading() || !passwordForm().current_password || !passwordForm().password" class="inline-flex items-center gap-2 px-8 py-3 text-sm font-bold text-white bg-secondary-500 hover:bg-secondary-600 rounded-xl transition-all shadow-md disabled:opacity-50">
+                  @if (isPasswordLoading()) {
+                    <div class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    Mise à jour...
+                  } @else {
+                    <ng-icon name="lucideShieldCheck" size="16"></ng-icon>
+                    Changer le mot de passe
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+
+</div>

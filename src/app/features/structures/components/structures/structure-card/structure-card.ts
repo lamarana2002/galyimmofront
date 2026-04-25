@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -45,7 +45,8 @@ export interface StructureItem {
       lucidePlay, lucideMail, lucideEye, lucideTrash2, lucideX, lucideSend,
       lucideTriangleAlert,
     })
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StructureCard implements OnInit {
 

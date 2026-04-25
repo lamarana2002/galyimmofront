@@ -2,7 +2,8 @@
 // Correspond à la table property_documents en base
 export interface PropertyDocument {
   id:          number;
-  property_id: number;
+  property_id?: number;
+  structure_id?: number;
   uploaded_by: number;
 
   type:        string;   // PropertyDocumentTypeEnum côté Laravel
@@ -12,7 +13,9 @@ export interface PropertyDocument {
   file_path:      string;
   original_name:  string;
   file_size:      number;
-  mime_type:      string;
+  mime_type?:     string;
+  url?:           string;
+  type_label?:    string;
 
   reference_number:   string | null;
   issue_date:         string | null;  // YYYY-MM-DD

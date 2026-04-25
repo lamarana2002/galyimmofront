@@ -1,0 +1,226 @@
+<div class="flex h-[calc(100vh-64px)] overflow-hidden bg-white">
+  
+  <!-- BARRE LATERALE: LISTE -->
+  <div class="w-full md:w-[400px] flex-shrink-0 border-r border-gray-200 flex flex-col bg-slate-50/30">
+    
+    <!-- Header Sidebar -->
+    <div class="p-4 bg-white border-b border-gray-200">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-xl font-extrabold text-primary-900 tracking-tight">Notifications</h1>
+        <button 
+          (click)="markAllRead()"
+          class="p-2 text-primary-400 hover:text-primary-800 hover:bg-gray-100 rounded-full transition-all"
+          title="Tout marquer comme lu"
+        >
+          <ng-icon name="lucideCheck" size="20"></ng-icon>
+        </button>
+      </div>
+
+      <!-- Recherche -->
+      <div class="relative mb-3">
+        <ng-icon
+          name="lucideSearch"
+          size="16"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300"
+        ></ng-icon>
+        <input
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearchChange($event)"
+          type="text"
+          placeholder="Rechercher..."
+          class="w-full rounded-xl border border-gray-100 bg-gray-50 px-10 py-2.5 text-sm text-primary-900 focus:border-secondary-400 focus:bg-white focus:outline-none transition-all"
+        />
+      </div>
+
+      <!-- Filtres -->
+        <div class="flex gap-2 p-1 bg-gray-100 rounded-xl">
+        <button
+          (click)="setFilter('all')"
+          class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all"
+          [class]="filter() === 'all' ? 'bg-white text-primary-900 shadow-sm' : 'text-primary-400 hover:text-primary-600'"
+        >
+          Toutes
+        </button>
+        <button
+          (click)="setFilter('unread')"
+          class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+          [class]="filter() === 'unread' ? 'bg-white text-primary-900 shadow-sm' : 'text-primary-400 hover:text-primary-600'"
+        >
+          Non lues
+          @if (unreadCount() > 0) {
+            <span class="w-2 h-2 rounded-full bg-secondary-500 animate-pulse"></span>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Liste Scrollable -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar">
+      @if (isLoading()) {
+        <div class="p-8 flex flex-col items-center justify-center gap-3">
+          <div class="w-6 h-6 border-2 border-primary-200 border-t-primary-800 rounded-full animate-spin"></div>
+          <p class="text-xs text-primary-400 font-medium italic">Chargement...</p>
+        </div>
+      } @else if (filteredNotifications().length === 0) {
+        <div class="p-8 text-center">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
+            <ng-icon name="lucideInbox" size="32"></ng-icon>
+          </div>
+          <p class="text-sm font-semibold text-primary-800">Aucune notification</p>
+          <p class="text-xs text-primary-400 mt-1">Plateforme à jour.</p>
+        </div>
+      } @else {
+        <div class="divide-y divide-gray-100/50">
+          @for (n of filteredNotifications(); track n.id) {
+            <div 
+              (click)="selectNotification(n)"
+              class="group relative p-4 cursor-pointer transition-all hover:bg-white flex gap-4"
+              [class.bg-white]="selectedNotification()?.id === n.id"
+              [class.border-l-4]="selectedNotification()?.id === n.id"
+              [class.border-secondary-500]="selectedNotification()?.id === n.id"
+            >
+              <!-- Icon/Avatar -->
+              <div class="relative flex-shrink-0">
+                <div 
+                  class="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105"
+                  [class]="getCategoryClass(n.type)"
+                >
+                  <ng-icon [name]="getCategoryIcon(n.type)" size="20"></ng-icon>
+                </div>
+                @if (!n.lu) {
+                  <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-secondary-500 border-2 border-slate-50 rounded-full"></span>
+                }
+              </div>
+
+              <!-- Content Row -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2 mb-1">
+                  <p class="text-sm font-bold text-primary-900 truncate" [class.font-black]="!n.lu">
+                    {{ n.sujet }}
+                  </p>
+                  <span class="text-[10px] text-primary-400 font-medium whitespace-nowrap">
+                    {{ n.created_at | date:'HH:mm' }}
+                  </span>
+                </div>
+                <p class="text-xs text-primary-500 line-clamp-2 leading-relaxed" [class.text-primary-800]="!n.lu">
+                  {{ n.message }}
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ZONE DE DETAIL -->
+  <div class="flex-1 flex flex-col bg-white overflow-hidden">
+    @if (selectedNotification()) {
+      <!-- Header Detail -->
+      <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-slate-50/20">
+        <div class="flex items-center gap-4">
+          <div 
+            class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm"
+            [class]="getCategoryClass(selectedNotification()?.type || 'system')"
+          >
+            <ng-icon [name]="getCategoryIcon(selectedNotification()?.type || 'system')" size="24"></ng-icon>
+          </div>
+          <div>
+            <h2 class="text-xl font-black text-primary-900 leading-none mb-1.5">
+              {{ selectedNotification()?.sujet }}
+            </h2>
+            <div class="flex items-center gap-3 text-xs text-primary-400 font-medium">
+              <span class="flex items-center gap-1 capitalize">
+                 {{ selectedNotification()?.type }}
+              </span>
+              <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+              <span class="flex items-center gap-1">
+                <ng-icon name="lucideClock" size="12"></ng-icon>
+                {{ selectedNotification()?.created_at | date:'dd MMM yyyy à HH:mm' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <button class="p-2 text-primary-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
+            <ng-icon name="lucideTrash2" size="18"></ng-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Contenu Detail -->
+      <div class="flex-1 overflow-y-auto p-12 custom-scrollbar">
+        <div class="max-w-2xl mx-auto">
+          <!-- Carte Message -->
+          <div class="bg-slate-50 border border-slate-100 rounded-3xl p-8 shadow-sm mb-8 relative">
+            <ng-icon 
+              name="lucideClock" 
+              size="120" 
+              class="absolute -right-4 -bottom-4 text-slate-200/50 -rotate-12 pointer-events-none"
+            ></ng-icon>
+            
+            <p class="text-lg text-primary-800 leading-relaxed font-medium relative z-10 whitespace-pre-wrap">
+              {{ selectedNotification()?.message }}
+            </p>
+          </div>
+
+          <!-- Metadata Grid -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3">
+              <div class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-primary-400">
+                <ng-icon name="lucideUser" size="18"></ng-icon>
+              </div>
+              <div>
+                <p class="text-[10px] text-primary-400 uppercase font-bold tracking-wider">Type</p>
+                <p class="text-sm font-bold text-primary-800">{{ selectedNotification()?.type || 'Automatique' }}</p>
+              </div>
+            </div>
+
+            <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3">
+              <div class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-primary-400">
+                <ng-icon name="lucideCheckCircle2" size="18"></ng-icon>
+              </div>
+              <div>
+                <p class="text-[10px] text-primary-400 uppercase font-bold tracking-wider">Statut</p>
+                <div class="flex items-center gap-1.5">
+                  <span 
+                    class="w-2 h-2 rounded-full"
+                    [class]="selectedNotification()?.lu ? 'bg-green-500' : 'bg-secondary-500 animate-pulse'"
+                  ></span>
+                  <p class="text-sm font-bold text-primary-800">
+                    {{ selectedNotification()?.lu ? 'Déjà lue' : 'Nouveau' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <!-- Actions Footer (Optionnel) -->
+          <div class="mt-12 flex justify-center">
+             <button class="px-8 py-3 bg-primary-900 text-white font-bold rounded-2xl hover:bg-black transition-all shadow-lg shadow-primary-900/10 flex items-center gap-2">
+                Répondre ou Agir
+                <ng-icon name="lucideChevronRight" size="16"></ng-icon>
+             </button>
+          </div>
+        </div>
+    } @else {
+      <!-- Empty Detail View -->
+      <div class="flex-1 flex flex-col items-center justify-center bg-slate-50/50 p-12 text-center">
+        <div class="relative mb-8">
+          <div class="w-32 h-32 bg-white rounded-[40px] shadow-2xl flex items-center justify-center text-primary-100 animate-bounce-slow">
+            <ng-icon name="lucideBell" size="64"></ng-icon>
+          </div>
+          <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-secondary-500 rounded-3xl flex items-center justify-center text-white shadow-lg border-4 border-slate-50 rotate-12">
+            <ng-icon name="lucideInbox" size="24"></ng-icon>
+          </div>
+        </div>
+        <h3 class="text-2xl font-black text-primary-900 mb-2">Centre de Notifications</h3>
+        <p class="text-primary-400 max-w-sm font-medium">
+          Sélectionnez une notification dans la liste de gauche pour afficher son contenu détaillé.
+        </p>
+      </div>
+    }
+  </div>
+</div>

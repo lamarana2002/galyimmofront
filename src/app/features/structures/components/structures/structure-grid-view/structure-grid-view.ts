@@ -1,4 +1,4 @@
-import { Component, Input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -29,6 +29,7 @@ import {
       lucideMail, lucideTrash2, lucideEllipsisVertical,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StructureGridView {
 

@@ -6,6 +6,7 @@ export interface CreateUnitPayload {
 
   // Optionnels
   unit_type_id?:     number | null;
+  is_primary?:       boolean;
   unit_number?:      string | null;
   floor?:            number | null;
   lot_number?:       string | null;
@@ -24,6 +25,7 @@ export interface CreateUnitPayload {
   amenities?:        Record<string, string> | null;
   is_furnished?:     boolean;
   is_active?:        boolean;
+  model_3d?:         File | null;
 }
 
 // ── Mise à jour d'une unité ────────────────────────────────────
@@ -37,6 +39,7 @@ export function emptyUnitForm(propertyId: number): CreateUnitPayload {
   return {
     property_id:       propertyId,
     unit_type_id:      null,
+    is_primary:        false,
     unit_number:       null,
     floor:             null,
     lot_number:        null,
@@ -55,6 +58,7 @@ export function emptyUnitForm(propertyId: number): CreateUnitPayload {
     amenities:         null,
     is_furnished:      false,
     is_active:         true,
+    model_3d:          null,
   };
 }
 
@@ -66,6 +70,7 @@ export function unitToUpdatePayload(unit: ILocationUnit): UpdateUnitPayload {
   return {
     id:                unit.id,
     unit_type_id:      unit.unit_type_id,
+    is_primary:        unit.is_primary,
     unit_number:       unit.unit_number,
     floor:             unit.floor,
     lot_number:        unit.lot_number,

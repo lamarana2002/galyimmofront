@@ -16,6 +16,7 @@ import { CommonModule } from '@angular/common';
       }
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoadingComponent {
   message        = input<string>('Chargement…');

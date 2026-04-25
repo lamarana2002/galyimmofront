@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   lucideX, lucideSave, lucideUser, lucideSearch, lucidePlus,
-  lucideUpload, lucideFileText, lucideChevronDown, lucideLoader,
+  lucideLoader,
 } from '@ng-icons/lucide';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
@@ -23,7 +23,7 @@ interface LocationForm {
   montant:         number | null;
   methodePayement: string;
   date:            string;
-  image:           File | null;
+  description:     string;
 }
 
 @Component({
@@ -34,7 +34,7 @@ interface LocationForm {
   viewProviders: [
     provideIcons({
       lucideX, lucideSave, lucideUser, lucideSearch, lucidePlus,
-      lucideUpload, lucideFileText, lucideChevronDown, lucideLoader,
+      lucideLoader,
     }),
   ],
 })
@@ -59,7 +59,6 @@ export class CreateLocationModal implements OnInit, OnDestroy {
   searchQuery    = signal('');
   showDropdown   = signal(false);
   showNewTenant  = signal(false);
-  contractFileName = signal<string | null>(null);
 
   // ── Formulaire ────────────────────────────────────────────────
   form = signal<LocationForm>({
@@ -68,7 +67,7 @@ export class CreateLocationModal implements OnInit, OnDestroy {
     montant:         null,
     methodePayement: '',
     date:            new Date().toISOString().split('T')[0],
-    image:           null,
+    description:     '',
   });
 
   // ── Options ───────────────────────────────────────────────────
@@ -93,10 +92,8 @@ export class CreateLocationModal implements OnInit, OnDestroy {
     return !!(
       f.locataire &&
       f.interval &&
-      f.montant && f.montant > 0 &&
       f.methodePayement &&
-      f.date &&
-      f.image
+      f.date
     );
   });
 
@@ -166,19 +163,13 @@ export class CreateLocationModal implements OnInit, OnDestroy {
     this.fetchTenants('');
   }
 
-  // ── Fichier contrat ───────────────────────────────────────────
-  onFileSelected(e: Event): void {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    this.form.update(f => ({ ...f, image: file }));
-    this.contractFileName.set(file.name);
-  }
 
   // ── Patcheurs ngModel ─────────────────────────────────────────
   setInterval(v: string):        void { this.form.update(f => ({ ...f, interval: +v })); }
   setMontant(v: number):         void { this.form.update(f => ({ ...f, montant: v })); }
   setMethode(v: string):         void { this.form.update(f => ({ ...f, methodePayement: v })); }
   setDate(v: string):            void { this.form.update(f => ({ ...f, date: v })); }
+  setDescription(v: string):     void { this.form.update(f => ({ ...f, description: v })); }
 
   // ── Soumission ────────────────────────────────────────────────
   submit(): void {
@@ -188,14 +179,12 @@ export class CreateLocationModal implements OnInit, OnDestroy {
     const u = this.unit();
 
     const payload: CreateLocationPayload = {
-      client:          f.locataire!.id,
-      immeuble:        u.property_id,
-      uniteLocation:   u.id,
-      interval:        f.interval,
-      montant:         f.montant!,
-      methodePayement: f.methodePayement,
-      date:            f.date,
-      image:           f.image!,
+      locataire_id:       f.locataire!.id,
+      unite_locations_id: u.id,
+      interval:           f.interval,
+      methode_payement:   f.methodePayement,
+      date_location:      f.date,
+      description:        f.description || undefined,
     };
 
     this.saving.set(true);

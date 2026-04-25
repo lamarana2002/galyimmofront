@@ -89,10 +89,10 @@
                 </span>
               }
             </div>
-            @if (b.address || b.city) {
+            @if (b.adresse) {
               <p class="text-sm text-primary-400 flex items-center gap-1 mb-1">
                 <ng-icon name="lucideMapPin" size="13"></ng-icon>
-                {{ adresseComplete() }}
+                {{ getFullAddress(b) }}
               </p>
             }
             @if (b.description) {
@@ -291,7 +291,7 @@
         @if (activeTab() === 'locataire') {
           <app-tenant-tab
             [unit]="b.units?.[0]"
-            (onContact)="contacterLocataire()"
+            (onContact)="contacterLocataire($event)"
             (onAffect)="affecterLocataire()"
           />
         }
@@ -313,9 +313,16 @@
           />
         }
 
-        <!-- ══ DOCUMENTS — TODO: brancher quand endpoint prêt ══ -->
+        <!-- ══ DOCUMENTS ══ -->
         @if (activeTab() === 'documents') {
-          <app-document-tab [bien]="b" />
+          <app-documents-tab
+            [documents]="bien()?.documents"
+            [ownerId]="bien()?.id || 0"
+            ownerType="properties"
+            (onUpload)="uploadDocument($event)"
+            (onDelete)="deleteDocument($event)"
+            (onDownload)="downloadDocument($event)"
+          />
         }
 
         <!-- ══ FINANCES — TODO: brancher quand endpoint prêt ══ -->
@@ -346,6 +353,17 @@
       />
     }
 
+    <!-- ══ MODAL SUPPRESSION BIEN ══ -->
+    @if (showDeletePropertyConfirm()) {
+      <app-confirm-dialog
+        title="Supprimer le bien ?"
+        [message]="'Le bien « ' + bien()?.name + ' » sera définitivement supprimé.'"
+        [loading]="deletePropertyLoading()"
+        (confirmed)="deleteProperty()"
+        (cancelled)="showDeletePropertyConfirm.set(false)"
+      />
+    }
+
     <!-- ══ MODAL SUPPRESSION UNITÉ ══ -->
     @if (showDeleteUnit()) {
       @let delUnit = deletingUnit();
@@ -370,59 +388,11 @@
     <!-- ══ MODAL MODIFICATION DU BIEN ══ -->
     @if (showPropertyModal()) {
       <app-add-property-modal
-        [editingId]="bien()?.id ?? null"
+        [editingProperty]="bien() ?? null"
         [structureId]="bien()?.structure_id ?? 0"
         (closed)="showPropertyModal.set(false)"
         (saved)="loadProperty()"
       />
-    }
-
-    <!-- ══ MODAL SUPPRESSION BIEN ══ -->
-    @if (showDeletePropertyConfirm()) {
-      <div
-        class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-        (click)="showDeletePropertyConfirm.set(false)"
-      >
-        <div class="absolute inset-0 bg-primary-900/50 backdrop-blur-sm"></div>
-        <div
-          class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
-          (click)="$event.stopPropagation()"
-        >
-          <div
-            class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4"
-          >
-            <ng-icon name="lucideTrash2" size="24" class="text-red-500"></ng-icon>
-          </div>
-          <h3 class="font-bold text-primary-900 text-center mb-2">Supprimer le bien ?</h3>
-          <p class="text-sm text-primary-500 text-center mb-5">
-            Le bien <strong class="text-primary-700">{{ bien()?.name }}</strong> et toutes ses
-            données seront définitivement supprimés. Cette action est irréversible.
-          </p>
-          <div class="flex gap-2">
-            <button
-              (click)="deleteProperty()"
-              [disabled]="deletePropertyLoading()"
-              class="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all disabled:opacity-60 flex justify-center items-center gap-2"
-            >
-              @if (deletePropertyLoading()) {
-                <div
-                  class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
-                ></div>
-                Suppression...
-              } @else {
-                Supprimer
-              }
-            </button>
-            <button
-              (click)="showDeletePropertyConfirm.set(false)"
-              [disabled]="deletePropertyLoading()"
-              class="flex-1 py-2.5 text-sm font-semibold text-primary-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all disabled:opacity-60"
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
-      </div>
     }
     <!-- ══ DRAWER NOUVELLE LOCATION ══ -->
     @if (showLocationModal()) {

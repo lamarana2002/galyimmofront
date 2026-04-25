@@ -15,6 +15,7 @@ import { DatePipe, TitleCasePipe } from '@angular/common';
 import { StructureService } from '../../../services/structure.service';
 import { StructureModel } from '../../../models/structure.model';
 import { StructurePlanType } from '../../../enums/structure-plan-type.enum';
+import { ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-settings-tab',
@@ -31,7 +32,8 @@ import { StructurePlanType } from '../../../enums/structure-plan-type.enum';
     lucideCalendar,
     lucideCrown,
     lucideFacebook
-  })]
+  })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsTab {
   @Input({ required: true }) structure!: StructureModel;

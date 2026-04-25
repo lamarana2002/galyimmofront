@@ -4,7 +4,7 @@
 
   <!-- Modal -->
   <div
-    class="relative z-10 w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[92vh]"
+    class="relative z-10 w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden"
     (click)="$event.stopPropagation()"
   >
     <!-- ── Header ── -->
@@ -21,7 +21,7 @@
     </div>
 
     <!-- ── Body ── -->
-    <div class="overflow-y-auto flex-1 p-6 space-y-5">
+    <div class="overflow-y-auto flex-1 min-h-0 p-6 space-y-5">
       <!-- Erreur globale -->
       @if (error()) {
         <div
@@ -35,32 +35,31 @@
       <!-- ── Avatar ── -->
       <div class="flex items-center gap-4">
         <div class="relative flex-shrink-0">
-          @if (avatarPreview()) {
-            <img
-              [src]="avatarPreview()"
-              alt="Avatar"
+          @if (imagePreview()) {
+            <img 
+              [src]="imagePreview()" 
+              alt="Aperçu" 
               class="w-20 h-20 rounded-2xl object-cover border-2 border-gray-200 shadow-sm"
             />
           } @else {
-            <div
-              class="w-20 h-20 rounded-2xl bg-secondary-200 flex items-center justify-center text-2xl font-bold text-secondary-700 border-2 border-gray-200"
-            >
+            <div class="w-20 h-20 rounded-2xl bg-secondary-200 flex items-center justify-center text-2xl font-bold text-secondary-700 border-2 border-gray-200">
               {{ initials }}
             </div>
           }
-          <!-- Bouton changer avatar -->
-          <label
-            for="avatarInput"
+
+          <!-- Bouton changer image -->
+          <label 
+            for="imageInput" 
             class="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-primary-800 hover:bg-primary-900 rounded-lg flex items-center justify-center cursor-pointer shadow-md transition-all border-2 border-white"
           >
-            <ng-icon name="lucideUpload" size="12" class="text-white"></ng-icon>
+            <ng-icon name="lucideCamera" size="12" class="text-white"></ng-icon>
           </label>
-          <input
-            id="avatarInput"
-            type="file"
+          <input 
+            type="file" 
+            id="imageInput" 
+            class="hidden" 
             accept="image/*"
-            class="hidden"
-            (change)="onAvatarSelected($event)"
+            (change)="onImageSelected($event)"
           />
         </div>
         <div>

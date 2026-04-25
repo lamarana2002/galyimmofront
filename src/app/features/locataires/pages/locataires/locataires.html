@@ -166,9 +166,9 @@
                   <div
                     class="w-16 h-16 rounded-2xl border-4 border-white shadow-md overflow-hidden flex-shrink-0"
                   >
-                    @if (l.avatar && l.avatar !== 'avatar.png') {
+                    @if (l.image && l.image !== 'avatar.png') {
                       <img
-                        [src]="l.avatar"
+                        [src]="l.image"
                         [alt]="l.full_name"
                         class="w-full h-full object-cover"
                       />
@@ -305,9 +305,9 @@
                         <div
                           class="w-9 h-9 rounded-xl flex-shrink-0 overflow-hidden border border-gray-100"
                         >
-                          @if (l.avatar && l.avatar !== 'avatar.png') {
+                          @if (l.image && l.image !== 'avatar.png') {
                             <img
-                              [src]="l.avatar"
+                              [src]="l.image"
                               [alt]="l.full_name"
                               class="w-full h-full object-cover"
                             />

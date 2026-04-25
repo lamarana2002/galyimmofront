@@ -126,17 +126,28 @@ export function getPropertyTypeLabel(typeSlug: string): string {
 // ── Adresse ─────────────────────────────────────────────────
 
 export function getPropertyFullAddress(property: PropertyModel): string {
-  const parts = [property.address, property.city, property.postal_code, property.country].filter(
-    Boolean,
-  );
+  if (!property.adresse) return 'Adresse non renseignée';
+
+  const parts = [
+    property.adresse.repere,
+    property.adresse.square_area?.nom,
+    property.adresse.square_area?.quartier?.nom,
+    property.adresse.square_area?.quartier?.commune?.nom,
+    property.adresse.square_area?.quartier?.commune?.ville?.nom,
+  ].filter(Boolean);
+
   return parts.join(', ') || 'Adresse non renseignée';
 }
 
 export function getPropertyLocationShort(property: PropertyModel): string {
-  if (property.city && property.country) {
-    return `${property.city}, ${property.country}`;
+  if (!property.adresse?.square_area?.quartier?.commune?.ville) {
+    return 'Localisation inconnue';
   }
-  return property.city || property.country || 'Localisation inconnue';
+
+  const ville = property.adresse.square_area.quartier.commune.ville.nom;
+  const region = property.adresse.square_area.quartier.commune.ville.region?.nom;
+
+  return region ? `${ville}, ${region}` : ville;
 }
 
 // ── Finances ─────────────────────────────────────────────────

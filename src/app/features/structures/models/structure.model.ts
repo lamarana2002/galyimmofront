@@ -1,7 +1,8 @@
 import { StructurePlanType } from '../enums/structure-plan-type.enum';
 import { StructureStatus }   from '../enums/structure-status.enum';
 import { UserModel }         from '../../users/models/user.model';
-import { PropertyModel } from '../../properties/models/property.model';
+import { PropertyModel }     from '../../properties/models/property.model';
+import { PropertyDocument }  from '../../properties/models/property-document.model';
 
 // ── Correspond à la migration structures ──────────────────────────
 
@@ -20,10 +21,10 @@ export interface StructureModel {
   created_at:  string;
   updated_at:  string;
 
-
-  users?: UserModel[];
-  owner?: UserModel;
-  properties?: PropertyModel[]
+  users?:      UserModel[];
+  owner?:      UserModel;
+  properties?: PropertyModel[];
+  documents?:  PropertyDocument[];
 
   stats: {
     employes:  number;   // COUNT(users WHERE structure_id = ?)

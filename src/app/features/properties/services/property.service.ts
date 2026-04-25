@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BASE_URL } from '../../../shared/constants/app.constant';
+import { toFormDataIfNeeded } from '../../../shared/utils/form-data.utils';
 import { FilterProperty } from '../interfaces/filter-property.interface';
 import { IQueryParam } from '../../../shared/interfaces/query-parms.interface';
 import { Observable } from 'rxjs';
@@ -63,7 +64,7 @@ export class PropertyService {
    * Gère cover_image en FormData
    */
   create(payload: CreatePropertyPayload): Observable<ApiResponse<PropertyModel>> {
-    const body = this.toFormDataIfNeeded(payload);
+    const body = toFormDataIfNeeded(payload as unknown as Record<string, unknown>);
     return this.http.post<ApiResponse<PropertyModel>>(this.baseUrl, body);
   }
 
@@ -74,7 +75,7 @@ export class PropertyService {
    */
   update(payload: UpdatePropertyPayload): Observable<ApiResponse<PropertyModel>> {
     const { id, ...data } = payload;
-    const body = this.toFormDataIfNeeded(data);
+    const body = toFormDataIfNeeded(data as Record<string, unknown>);
 
     if (body instanceof FormData) {
       body.append('_method', 'PUT');
@@ -136,23 +137,4 @@ export class PropertyService {
     return httpParams;
   }
 
-  private toFormDataIfNeeded(
-    payload: Partial<CreatePropertyPayload>,
-  ): FormData | Partial<CreatePropertyPayload> {
-    const hasFile = payload.cover_image instanceof File;
-    if (!hasFile) return payload;
-
-    const form = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      if (value instanceof File) {
-        form.append(key, value);
-      } else if (typeof value === 'boolean') {
-        form.append(key, value ? '1' : '0');
-      } else if (value !== undefined && value !== null) {
-        form.append(key, value.toString());
-      }
-    });
-
-    return form;
-  }
 }

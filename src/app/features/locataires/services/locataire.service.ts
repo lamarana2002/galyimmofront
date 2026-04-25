@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { toFormDataIfNeeded } from '../../../shared/utils/form-data.utils';
 
 import { BASE_URL } from '../../../shared/constants/app.constant';
 import { ILocataire } from '../models/locataire.model';
@@ -32,7 +33,7 @@ export class LocataireService {
   create(payload: CreateLocatairePayload): Observable<ApiResponse<ILocataire>> {
     return this.http.post<ApiResponse<ILocataire>>(
       this.baseUrl,
-      this.toFormDataIfNeeded(payload)
+      toFormDataIfNeeded(payload as unknown as Record<string, unknown>)
     );
   }
 
@@ -40,7 +41,7 @@ export class LocataireService {
 
   update(payload: UpdateLocatairePayload): Observable<ApiResponse<ILocataire>> {
     const { id, ...data } = payload;
-    const body = this.toFormDataIfNeeded(data);
+    const body = toFormDataIfNeeded(data as unknown as Record<string, unknown>);
 
     // Laravel nécessite _method=PUT pour les FormData
     if (body instanceof FormData) {
@@ -86,20 +87,4 @@ export class LocataireService {
     return p;
   }
 
-  private toFormDataIfNeeded(
-    payload: Partial<CreateLocatairePayload>
-  ): FormData | Partial<CreateLocatairePayload> {
-    if (!(payload.avatar instanceof File)) return payload;
-
-    const form = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      if (value instanceof File) {
-        form.append(key, value);
-      } else if (value !== undefined && value !== null) {
-        form.append(key, value.toString());
-      }
-    });
-
-    return form;
-  }
 }

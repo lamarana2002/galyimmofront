@@ -195,10 +195,14 @@ export class AuthService {
   refreshUser(): Observable<AuthUser> {
     return this.http.get<AuthUser>(`${this.apiUrl}/me`).pipe(
       tap((user) => {
-        this._user.set(user);
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        this.updateUser(user);
       }),
     );
+  }
+
+  updateUser(user: AuthUser): void {
+    this._user.set(user);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
   // ── Token ──────────────────────────────────────────────────────

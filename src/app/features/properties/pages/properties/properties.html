@@ -207,9 +207,9 @@
 }
 @if (addPropertyModal()) {
   <app-add-property-modal
-    [editingId]="editingPropertyId()"
+    [editingProperty]="editingProperty()"
     [structureId]="structureId()!"
-    (closed)="addPropertyModal.set(false); editingPropertyId.set(null)"
-    (saved)="loadAll(currentPage()); addPropertyModal.set(false); editingPropertyId.set(null)"
+    (closed)="addPropertyModal.set(false); editingProperty.set(null)"
+    (saved)="loadAll(currentPage()); addPropertyModal.set(false); editingProperty.set(null)"
   />
 }

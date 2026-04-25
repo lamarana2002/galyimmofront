@@ -53,6 +53,7 @@ const TOAST_CONFIG: Record<ToastType, ToastConfig> = {
     provideIcons({ lucideCheck, lucideX, lucideTriangleAlert, lucideInfo, lucideCircleX }),
   ],
   templateUrl: './toast.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ToastComponent {
   private readonly toastService = inject(ToastService);

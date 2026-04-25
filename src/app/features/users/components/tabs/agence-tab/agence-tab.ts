@@ -1,5 +1,6 @@
 import {
   Component, OnInit, OnDestroy, signal, inject,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -34,6 +35,7 @@ interface AgenceForm {
     lucideBuilding2, lucideSave, lucideLoader, lucideUpload,
     lucideGlobe, lucideFacebook, lucideAlignLeft, lucideImage,
   })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AgenceTab implements OnInit, OnDestroy {
   private readonly structureService = inject(StructureService);
@@ -107,7 +109,7 @@ export class AgenceTab implements OnInit, OnDestroy {
   }
 
   // ── Setters ───────────────────────────────────────────────────
-  set(field: keyof AgenceForm, value: any): void {
+  set(field: keyof AgenceForm, value: AgenceForm[keyof AgenceForm]): void {
     this.form.update(f => ({ ...f, [field]: value }));
   }
 

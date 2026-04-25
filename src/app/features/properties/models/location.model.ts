@@ -4,6 +4,7 @@ import { PropertyModel } from './property.model';
 import { Payement } from './payment.model';
 import { ILocationUnit } from './location-unit.model';
 import { ILocataire } from '../../locataires/models/locataire.model';
+import { LocationStatusEnum } from '../enums/location-status.enum';
 
 export interface ILocationModel {
   id: number;
@@ -11,7 +12,7 @@ export interface ILocationModel {
   property_id: number;
   unite_locations_id: number;
   description: string | null;
-  status: 'active' | 'expired' | 'terminated' | 'pending';
+  status: LocationStatusEnum;
   date_location: string;      // Date de début
   montant: number;             // Loyer mensuel
   interval: string | null;     // Date d'échéance/prochain renouvellement

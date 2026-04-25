@@ -1,5 +1,6 @@
 import {
   Component, OnInit, OnDestroy, signal, computed, inject,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +15,7 @@ import { UserModel }     from '../../../models/user.model';
 import { UserStatus }    from '../../../enums/user-status.enum';
 import { UserService }   from '../../../services/user.service';
 import { ToastService }  from '../../../../../shared/services/toast.service';
+import { AuthService }   from '../../../../../core/auth/services/auth.service';
 import { UserModal }     from '../../modals/user-modal/user-modal';
 
 import { Pagination }             from '../../../../../shared/components/pagination/pagination';
@@ -31,10 +33,12 @@ import { ConfirmDialogComponent } from '../../../../../shared/components/confirm
     lucideUsers, lucideUserCheck, lucideUserX, lucideSearch,
     lucidePlus, lucidePencil, lucideTrash2, lucideRefreshCw, lucideShield,
   })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UsersHandlerTab implements OnInit, OnDestroy {
   private readonly userService = inject(UserService);
   private readonly toast       = inject(ToastService);
+  private readonly authService = inject(AuthService);
   private readonly destroy$    = new Subject<void>();
   private readonly search$     = new Subject<string>();
 
@@ -75,7 +79,13 @@ export class UsersHandlerTab implements OnInit, OnDestroy {
       { label: 'Suspendus',value: all.filter(u => u.status === UserStatus.SUSPENDED).length, color: 'bg-red-50 text-red-700', icon: 'lucideUserX'    },
     ];
   });
+  // ── Computed pour l'utilisateur connecté ──────────────────────
+  readonly currentUserId = computed(() => this.authService.user()?.id ?? null);
 
+  // ── Helpers ───────────────────────────────────────────────────
+  isCurrentUser(user: UserModel): boolean {
+    return user.id === this.currentUserId();
+  }
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
     this.search$
@@ -102,8 +112,7 @@ export class UsersHandlerTab implements OnInit, OnDestroy {
         this.totalPages.set(r.last_page);
         this.loading.set(false);
       },
-      error: (err) => {
-        console.error('[UsersHandlerTab] Erreur chargement users:', err);
+      error: () => {
         this.loading.set(false);
       },
     });

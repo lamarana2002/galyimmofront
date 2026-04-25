@@ -23,6 +23,8 @@ export function toFormDataIfNeeded(payload: Record<string, unknown>): FormData |
       fd.append(key, value);
     } else if (Array.isArray(value)) {
       value.forEach(item => fd.append(`${key}[]`, String(item)));
+    } else if (typeof value === 'boolean') {
+      fd.append(key, value ? '1' : '0');
     } else {
       fd.append(key, String(value));
     }

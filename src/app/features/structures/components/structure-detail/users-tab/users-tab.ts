@@ -1,4 +1,4 @@
-import { Component, inject, Input, computed } from '@angular/core';
+import { Component, inject, Input, computed, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
 import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state';
@@ -15,6 +15,7 @@ import { getInitials, getOwnerFullName } from '../../../utils/structure.utils';
   standalone: true,
   imports: [DatePipe, NgIcon, EmptyStateComponent],
   templateUrl: './users-tab.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UsersTab {
   @Input({ required: true }) structure!: StructureModel;

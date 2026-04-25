@@ -30,6 +30,7 @@ import { lucideSearchX, lucideCirclePlus } from '@ng-icons/lucide';
       }
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EmptyStateComponent {
   icon        = input<string>('lucideSearchX');

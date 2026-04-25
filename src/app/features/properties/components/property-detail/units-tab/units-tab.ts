@@ -1,4 +1,4 @@
-import { Component, Input, output } from '@angular/core';
+import { Component, Input, output, ChangeDetectionStrategy } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
@@ -15,6 +15,7 @@ import { ILocationUnit } from '../../../models/location-unit.model';
   imports: [NgIcon, RouterLink, DecimalPipe],
   templateUrl: './units-tab.html',
   styleUrl: './units-tab.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UnitsTab {
   addUnit = output<void>();

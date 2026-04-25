@@ -1,6 +1,7 @@
 import {
   Component, OnInit, OnDestroy, signal, computed, inject,
-} from '@angular/core';
+  ChangeDetectionStrategy,
+}  from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
@@ -28,6 +29,7 @@ import { ConfirmDialogComponent } from '../../../../../shared/components/confirm
     lucideShield, lucidePlus, lucidePencil, lucideTrash2,
     lucideRefreshCw, lucideKey,
   })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RolesTab implements OnInit, OnDestroy {
   private readonly roleService = inject(RoleService);
@@ -64,7 +66,12 @@ export class RolesTab implements OnInit, OnDestroy {
   loadRoles(): void {
     this.loading.set(true);
     this.roleService.findAll().pipe(takeUntil(this.destroy$)).subscribe({
-      next:  r => { this.roles.set(r.data); this.loading.set(false); },
+      next:  r => { 
+        // Filtrer le rôle super-admin
+        const filteredRoles = r.data.filter(role => role.name !== 'super-admin');
+        this.roles.set(filteredRoles); 
+        this.loading.set(false); 
+      },
       error: () => this.loading.set(false),
     });
   }

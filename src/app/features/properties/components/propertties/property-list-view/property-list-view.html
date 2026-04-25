@@ -95,9 +95,11 @@
 
             <!-- Localisation -->
             <td class="px-4 py-4">
-              <p class="text-sm text-primary-700 font-medium">{{ property.city || '—' }}</p>
+              <p class="text-sm text-primary-700 font-medium">
+                {{ property.adresse?.square_area?.quartier?.commune?.ville?.nom || '—' }}
+              </p>
               <p class="text-[11px] text-primary-400 truncate max-w-[160px]">
-                {{ property.address || '' }}
+                {{ property.adresse?.square_area?.quartier?.nom || '' }}
               </p>
             </td>
 

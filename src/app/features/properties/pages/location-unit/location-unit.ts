@@ -41,13 +41,13 @@ import {
   lucideRefreshCw,
   lucideRotateCcw,
 } from '@ng-icons/lucide';
+import { Subject, switchMap, takeUntil } from 'rxjs';
+
 import { UnitStatutEnum } from '../../enums/unit-status.enum';
 import { LocationUnitService } from '../../services/location-unit.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
-import { Subject, switchMap, takeUntil } from 'rxjs';
 import { ILocationUnit } from '../../models/location-unit.model';
-import { IUnitGallery } from '../../models/unit-gallery.model';
 import { getUnitStatusBadgeClass, getUnitStatusLabel } from '../../utils/property.utils';
 import { ILocationModel } from '../../models/location.model';
 import { UnitFormModal } from '../../components/modals/units/unit-form-modal/unit-form-modal';
@@ -57,71 +57,16 @@ import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
 import { GalleryTab } from '../../components/shared-tabs/gallery-tab/gallery-tab';
 import { CreateLocationModal } from '../../components/modals/create-location-modal/create-location-modal';
 import { LocationService } from '../../services/location.service';
+import { LocationStatusEnum } from '../../enums/location-status.enum';
+import { ContactModal } from '../../../../shared/components/modals/contact-modal/contact-modal';
+import { ContactService } from '../../../../shared/services/contact.service';
+import { IUnitGallery } from '../../models/unit-gallery.model';
 
-export interface Locataire {
-  id: number;
-  nom: string;
-  prenom: string;
-  email: string;
-  telephone: string;
-  avatar?: string;
-  profession?: string;
-  ville?: string;
-}
-
-export interface Contrat {
-  id: number;
-  reference: string;
-  dateDebut: Date;
-  dateFin: Date;
-  loyer: number;
-  caution: number;
-  statut: 'actif' | 'expiré' | 'résilié' | 'en_attente';
-  locataire: Locataire;
-}
-
-export interface GalleryImage {
-  id: number;
-  path: string;
-  caption?: string;
-}
-
-export interface UnitDocument {
-  id: number;
-  nom: string;
-  ext: string;
-  date: Date;
-}
-
-export interface UniteDetail {
-  id: number;
-  numero: string;
-  code?: string;
-  type?: string;
-  etage?: number;
-  lot?: string;
-  surface?: number;
-  statut: UnitStatutEnum;
-  pieces?: number;
-  chambres?: number;
-  sallesDeBain?: number;
-  loyer: number;
-  caution: number;
-  charges: number;
-  prixVente?: number;
-  actif: boolean;
-  description?: string;
-  // Relations
-  bien: { id: number; nom: string; code?: string };
-  locataireActuel?: Locataire;
-  contratActuel?: Contrat;
-  historiqueContrats?: Contrat[];
-  images?: GalleryImage[];
-  documents?: UnitDocument[];
-}
+// Pour la compatibilité avec property-gallery.service.ts
+export type GalleryImage = IUnitGallery;
 
 @Component({
-  selector: 'app-property-detail',
+  selector: 'app-location-unit',
   standalone: true,
   imports: [
     CommonModule,
@@ -137,6 +82,7 @@ export interface UniteDetail {
     GalleryTab,
     CreateLocationModal,
     ConfirmDialogComponent,
+    ContactModal,
   ],
   templateUrl: './location-unit.html',
   viewProviders: [
@@ -186,12 +132,19 @@ export class LocationUnit implements OnInit, OnDestroy {
   private readonly unitService = inject(LocationUnitService);
   private readonly locationService = inject(LocationService);
   private readonly toast = inject(ToastService);
+  private readonly contactService = inject(ContactService);
   private readonly destroy$ = new Subject<void>();
+
+  // Exposer les enums au template
+  readonly LocationStatusEnum = LocationStatusEnum;
+  readonly UnitStatutEnum = UnitStatutEnum;
 
   // État
   isLoading = signal(true);
   error = signal<string | null>(null);
   unite = signal<ILocationUnit | null>(null);
+  
+  // Modales & Confirmation
   showDeleteConfirm = signal(false);
   deleteLoading = signal(false);
 
@@ -206,18 +159,16 @@ export class LocationUnit implements OnInit, OnDestroy {
   editingUnit = signal<ILocationUnit | null>(null);
   unitSaving = signal(false);
   showLocationModal = signal(false);
+  showContactModal = signal(false);
 
   // UI
   activeTab = 'infos';
-
   tabs = [
     { key: 'infos', label: 'Informations', icon: 'lucideInfo' },
     { key: 'locataire', label: 'Locataire', icon: 'lucideUser' },
     { key: 'locations', label: 'Locations', icon: 'lucideShieldCheck' },
     { key: 'photos', label: 'Photos', icon: 'lucideImage' },
   ];
-
-  UnitStatutEnum = UnitStatutEnum;
 
   // ── Computed ──────────────────────────────────────────────────
   joursRestants = computed(() => {
@@ -233,19 +184,28 @@ export class LocationUnit implements OnInit, OnDestroy {
   });
 
   locationExpire = computed(() => {
-    return this.joursRestants() === 0 && this.unite()?.current_location?.status === 'active';
+    return (
+      this.joursRestants() === 0 &&
+      this.unite()?.current_location?.status === LocationStatusEnum.ACTIVE
+    );
   });
 
   allLocations = computed(() => {
     const unit = this.unite();
     if (!unit) return [];
+    
+    // Combiner current_location et locations
     const locations: ILocationModel[] = [...(unit.locations ?? [])];
     if (unit.current_location) {
-      const index = locations.findIndex((l) => l.id === unit.current_location?.id);
-      if (index !== -1) locations.splice(index, 1);
-      locations.unshift(unit.current_location);
+      const exists = locations.some(l => l.id === unit.current_location?.id);
+      if (!exists) {
+        locations.unshift(unit.current_location);
+      }
     }
-    return locations;
+    // Trier par date décroissante (plus récent en haut)
+    return locations.sort((a, b) => 
+      new Date(b.date_location).getTime() - new Date(a.date_location).getTime()
+    );
   });
 
   // ── Galerie ────────────────────────────────────────────────────
@@ -297,36 +257,13 @@ export class LocationUnit implements OnInit, OnDestroy {
     return getUnitStatusBadgeClass(status);
   }
 
-  getContratStatutClass(s: string): string {
-    return (
-      (
-        {
-          active: 'bg-green-100 text-green-700',
-          expired: 'bg-gray-100 text-gray-500',
-          terminated: 'bg-red-100 text-red-600',
-          pending: 'bg-amber-100 text-amber-700',
-        } as Record<string, string>
-      )[s] ?? 'bg-gray-100 text-gray-500'
-    );
-  }
-
-  getLocationStatutClass(s: UnitStatutEnum): string {
-    const classes: Record<string, string> = {
-      active: 'bg-green-100 text-green-700',
-      expired: 'bg-gray-100 text-gray-500',
-      terminated: 'bg-red-100 text-red-600',
-      pending: 'bg-amber-100 text-amber-700',
-    };
-    return classes[s] ?? 'bg-gray-100 text-gray-500';
-  }
-
   getInitials(nom: string, prenom: string): string {
     return `${prenom?.[0] ?? ''}${nom?.[0] ?? ''}`.toUpperCase();
   }
 
   // ── Actions ───────────────────────────────────────────────────
   openEditUnit(): void {
-    this.editingUnit.set(this.unite() ?? null);
+    this.editingUnit.set(this.unite());
     this.showUnitModal.set(true);
   }
 
@@ -382,8 +319,7 @@ export class LocationUnit implements OnInit, OnDestroy {
   renewLocation(): void {
     const currentLocation = this.unite()?.current_location;
     if (!currentLocation) return;
-
-    if (this.renewingLocation()) return; // Prevent multiple clicks
+    if (this.renewingLocation()) return;
 
     this.renewingLocation.set(true);
     this.locationService
@@ -399,7 +335,7 @@ export class LocationUnit implements OnInit, OnDestroy {
           this.renewingLocation.set(false);
         },
         error: (err) => {
-          this.toast.error(err?.error?.message ?? 'Erreur lors du renouvellement du contrat.');
+          this.toast.error(err?.error?.message ?? 'Erreur lors du renouvellement.');
           this.renewingLocation.set(false);
         },
       });
@@ -408,8 +344,7 @@ export class LocationUnit implements OnInit, OnDestroy {
   terminateLocation(): void {
     const currentLocation = this.unite()?.current_location;
     if (!currentLocation) return;
-
-    if (this.terminatingLocation()) return; // Prevent multiple clicks
+    if (this.terminatingLocation()) return;
 
     this.terminatingLocation.set(true);
     this.locationService
@@ -425,17 +360,37 @@ export class LocationUnit implements OnInit, OnDestroy {
           this.terminatingLocation.set(false);
         },
         error: (err) => {
-          this.toast.error(err?.error?.message ?? 'Erreur lors de la résiliation du contrat.');
+          this.toast.error(err?.error?.message ?? 'Erreur lors de la résiliation.');
           this.terminatingLocation.set(false);
         },
       });
   }
 
-  contacterLocataire(): void {
-    const locataire = this.unite()?.current_locataire;
-    if (locataire?.email) {
-      window.location.href = `mailto:${locataire.email}`;
+  contacterLocataire(data?: { subject: string; message: string }): void {
+    if (!data) {
+      this.showContactModal.set(true);
+      return;
     }
+
+    const locataire = this.unite()?.current_locataire;
+    if (!locataire?.email) {
+      this.toast.error("Ce locataire n'a pas d'adresse email.");
+      return;
+    }
+
+    this.contactService.sendEmail({
+      email: locataire.email,
+      subject: data.subject,
+      body: data.message
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.toast.success('Message envoyé avec succès.');
+        this.showContactModal.set(false);
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? "Erreur lors de l'envoi de l'email.");
+      }
+    });
   }
 
   affecterLocataire(): void {
@@ -453,7 +408,6 @@ export class LocationUnit implements OnInit, OnDestroy {
   }
 
   // ── Galerie ────────────────────────────────────────────────────
-
   onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
@@ -474,19 +428,9 @@ export class LocationUnit implements OnInit, OnDestroy {
   }
 
   uploadImage(): void {
-    const unit = this.unite();
-    if (!this.previewUrl || !unit) return;
-
-    this.isUploading.set(true);
-    // TODO: Appel API pour uploader l'image
-    // this.unitService.uploadGalleryImage(unit.id, file).subscribe(...)
-
-    // Simulation temporaire
-    setTimeout(() => {
-      this.isUploading.set(false);
-      this.previewUrl = null;
-      this.loadUnit();
-    }, 1000);
+    // TODO: Implémenter l'upload réel quand l'endpoint sera prêt
+    this.toast.info('Fonctionnalité bientôt disponible.');
+    this.previewUrl = null;
   }
 
   cancelUpload(): void {
@@ -499,14 +443,8 @@ export class LocationUnit implements OnInit, OnDestroy {
   }
 
   deleteImage(): void {
-    const id = this.deletingImageId;
-    if (!id) return;
-
-    // TODO: Appel API pour supprimer l'image
-    // this.unitService.deleteGalleryImage(id).subscribe(...)
-
+    this.toast.info('Fonctionnalité bientôt disponible.');
     this.showDeleteImage = false;
     this.deletingImageId = null;
-    this.loadUnit();
   }
 }

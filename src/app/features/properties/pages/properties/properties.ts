@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, computed, signal, WritableSignal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, computed, signal } from '@angular/core';
 import { CommonModule, TitleCasePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -99,7 +99,7 @@ export class Properties implements OnInit, OnDestroy {
   activeType   = signal<string>('all');
 
   // ── Modales ───────────────────────────────────────────────────
-  editingPropertyId = signal<number | null>(null);
+  editingProperty = signal<PropertyModel | null>(null);
   addPropertyModal = signal<boolean>(false);
 
   deleteTarget = signal<PropertyModel | null>(null);
@@ -217,9 +217,9 @@ export class Properties implements OnInit, OnDestroy {
     });
   }
 
-  //modal de mise a jour
-  editPropertty(id: number){
-    this.editingPropertyId.set(id);
+  editPropertty(id: number): void {
+    const property = this.allProperties().find(p => p.id === id) ?? null;
+    this.editingProperty.set(property);
     this.addPropertyModal.set(true);
   }
 
@@ -236,12 +236,14 @@ export class Properties implements OnInit, OnDestroy {
 
     if (filter?.search?.trim()) {
       const q = filter.search.toLowerCase();
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.code?.toLowerCase().includes(q) ||
-        p.address?.toLowerCase().includes(q) ||
-        p.city?.toLowerCase().includes(q)
-      );
+      result = result.filter(p => {
+        const fullAddress = propertyUtils.getPropertyFullAddress(p).toLowerCase();
+        return (
+          p.name.toLowerCase().includes(q) ||
+          p.code?.toLowerCase().includes(q) ||
+          fullAddress.includes(q)
+        );
+      });
     }
 
     if (filter?.status && filter.status !== 'all') {
