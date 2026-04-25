@@ -9,6 +9,7 @@ import { lucideTriangleAlert, lucideX } from '@ng-icons/lucide';
   imports: [CommonModule, NgIconComponent],
   viewProviders: [provideIcons({ lucideTriangleAlert, lucideX })],
   templateUrl: './confirm-dialog.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfirmDialogComponent {
   /** Titre de la boîte de dialogue. */

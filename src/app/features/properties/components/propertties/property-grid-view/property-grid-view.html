@@ -57,7 +57,7 @@
           {{ property.name }}
         </h3>
 
-        @if (property.address || property.city) {
+        @if (property.adresse) {
           <p class="text-[11px] text-primary-400 flex items-center gap-1 truncate">
             <ng-icon name="lucideMapPin" size="11"></ng-icon>
             {{ propertyUtils.getPropertyLocationShort(property) }}

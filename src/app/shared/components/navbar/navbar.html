@@ -71,10 +71,10 @@
           <button (click)="toggleNotifDropdown()" title="Notifications"
             class="relative p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200">
             <ng-icon name="lucideBell" size="20"></ng-icon>
-            @if (unreadNotifs > 0) {
+            @if (unreadCount() > 0) {
             <span
               class="absolute top-1 right-1 flex items-center justify-center w-4 h-4 text-[9px] font-bold text-white bg-secondary-500 rounded-full">
-              {{ unreadNotifs }}
+              {{ unreadCount() }}
             </span>
             }
           </button>
@@ -85,36 +85,63 @@
             (click)="$event.stopPropagation()">
             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
               <p class="text-sm font-semibold text-primary-900">Notifications</p>
-              <button (click)="markAllRead()"
-                class="text-xs text-secondary-500 hover:text-secondary-700 font-medium transition-colors">
-                Tout marquer lu
-              </button>
+              @if (notifications().length > 0) {
+                <button (click)="markAllRead()"
+                  class="text-xs text-secondary-500 hover:text-secondary-700 font-medium transition-colors">
+                  Tout marquer lu
+                </button>
+              }
             </div>
-            <ul class="divide-y divide-gray-100 max-h-72 overflow-y-auto">
-              @for (notif of notifications; track notif.id) {
-              <li class="flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
-                [class.bg-primary-50]="!notif.read">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-0.5"
-                  [class.bg-secondary-100]="notif.type === 'contract'" [class.bg-primary-100]="notif.type === 'visit'"
-                  [class.bg-green-100]="notif.type === 'payment'">
-                  <!-- Utilisation d'icônes simplifiées ou ng-icon ici aussi si besoin -->
-                  <ng-icon [name]="notif.type === 'contract' ? 'lucideUser' : (notif.type === 'visit' ? 'lucideBell' : 'lucideGlobe')" size="16"></ng-icon>
+            
+            <ul class="divide-y divide-gray-100 max-h-72 overflow-y-auto custom-scrollbar">
+              @for (notif of notifications(); track notif.id) {
+              <li 
+                class="flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer group"
+                [class.bg-slate-50]="!notif.lu"
+                [routerLink]="['/notifications']"
+                (click)="closeAllDropdowns()"
+              >
+                <!-- Avatar Circle -->
+                <div 
+                  class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mt-0.5 border border-transparent transition-all group-hover:border-primary-100 shadow-sm"
+                  [class]="notif.lu ? 'bg-gray-100 text-primary-300' : 'bg-primary-100 text-primary-600'"
+                >
+                  <ng-icon [name]="notif.lu ? 'lucideBellOff' : 'lucideBell'" size="16"></ng-icon>
                 </div>
+
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-primary-900 truncate">{{ notif.title }}</p>
-                  <p class="text-xs text-primary-500 mt-0.5 truncate">{{ notif.message }}</p>
-                  <p class="text-[10px] text-primary-400 mt-1">{{ notif.time }}</p>
+                  <div class="flex items-center justify-between gap-2 mb-0.5">
+                    <p class="text-sm text-primary-900 truncate" [class.font-bold]="!notif.lu">
+                      {{ notif.sujet }}
+                    </p>
+                    @if (!notif.lu) {
+                      <span class="w-1.5 h-1.5 rounded-full bg-secondary-500 flex-shrink-0"></span>
+                    }
+                  </div>
+                  <p class="text-xs text-primary-500 line-clamp-1 truncate" [class.text-primary-800]="!notif.lu">
+                    {{ notif.message }}
+                  </p>
+                  <p class="text-[9px] text-primary-300 mt-1 font-medium flex items-center gap-1 uppercase tracking-tight">
+                    <ng-icon name="lucideClock" size="10"></ng-icon>
+                    {{ notif.created_at | date:'HH:mm' }}
+                  </p>
                 </div>
-                @if (!notif.read) {
-                <div class="w-2 h-2 rounded-full bg-secondary-500 flex-shrink-0 mt-2"></div>
-                }
               </li>
+              } @empty {
+                <li class="py-10 px-4 text-center">
+                   <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-200">
+                      <ng-icon name="lucideBellOff" size="24"></ng-icon>
+                   </div>
+                   <p class="text-sm font-semibold text-primary-700">Aucune notification</p>
+                   <p class="text-[11px] text-primary-400 mt-1">Vous êtes à jour !</p>
+                </li>
               }
             </ul>
-            <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50">
+
+            <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50/50">
               <a routerLink="/notifications" (click)="closeAllDropdowns()"
-                class="text-xs text-secondary-500 hover:text-secondary-700 font-medium transition-colors">
-                Voir toutes les notifications →
+                class="block text-center text-xs text-secondary-500 hover:text-secondary-700 font-bold transition-all uppercase tracking-wide">
+                Voir toutes les notifications
               </a>
             </div>
           </div>

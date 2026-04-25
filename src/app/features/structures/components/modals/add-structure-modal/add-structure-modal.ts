@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, OnDestroy, output, signal } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { FormsModule } from '@angular/forms';
 import {
@@ -19,7 +19,7 @@ import { StructurePlanType } from '../../../enums/structure-plan-type.enum';
 import { CreateStructurePayload } from '../../../interfaces/create-structure-payload.interface';
 import { UpdateStructurePayload } from '../../../interfaces/update-structure-payload.interface';
 import { ToastService } from '../../../../../shared/services/toast.service';
-import { finalize } from 'rxjs';
+import { Subject, finalize, takeUntil } from 'rxjs';
 import { StructureService } from '../../../services/structure.service';
 
 @Component({
@@ -43,9 +43,10 @@ import { StructureService } from '../../../services/structure.service';
     }),
   ],
 })
-export class AddStructureModal implements OnInit {
+export class AddStructureModal implements OnInit, OnDestroy {
   private structureService = inject(StructureService);
   private toast = inject(ToastService);
+  private readonly destroy$ = new Subject<void>();
 
   // Inputs
   editingStructure = input<StructureModel | null>(null);
@@ -105,16 +106,16 @@ export class AddStructureModal implements OnInit {
     }
   }
 
-  onFileSelected(event: any, field: 'logo' | 'cover'): void {
-    const file = event.target.files[0];
+  onFileSelected(event: Event, field: 'logo' | 'cover'): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
       this.form.update((f) => ({ ...f, [field]: file }));
 
       const reader = new FileReader();
-      reader.onload = (e: any) => {
+      reader.onload = (e: ProgressEvent<FileReader>) => {
         this.form.update((f) => ({
           ...f,
-          [`${field}_preview`]: e.target.result,
+          [`${field}_preview`]: e.target?.result as string,
         }));
       };
       reader.readAsDataURL(file);
@@ -157,7 +158,7 @@ export class AddStructureModal implements OnInit {
       ? this.structureService.update({ id: this.editingStructure()!.id, ...payload } as UpdateStructurePayload)
       : this.structureService.create(payload as CreateStructurePayload);
 
-    req$.pipe(finalize(() => this.isSaving.set(false))).subscribe({
+    req$.pipe(takeUntil(this.destroy$), finalize(() => this.isSaving.set(false))).subscribe({
       next: (res) => {
         if (res.success) {
           this.toast.success(
@@ -174,6 +175,11 @@ export class AddStructureModal implements OnInit {
         this.toast.error(err?.error?.message ?? 'Erreur lors de la sauvegarde.');
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   closeModal(): void {

@@ -107,7 +107,7 @@
       Localisation
     </p>
     <div class="space-y-3.5">
-      @if (bien.address) {
+      @if (bien.adresse) {
         <div class="flex items-center gap-3">
           <div
             class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -115,25 +115,29 @@
             <ng-icon name="lucideMapPin" size="14" class="text-primary-600"></ng-icon>
           </div>
           <div>
-            <p class="text-[10px] text-primary-400">Adresse</p>
-            <p class="text-sm font-semibold text-primary-900">{{ bien.address }}</p>
+            <p class="text-[10px] text-primary-400">Ville / Quartier</p>
+            <p class="text-sm font-semibold text-primary-900">
+              {{ bien.adresse.square_area?.quartier?.commune?.ville?.nom }} - {{ bien.adresse.square_area?.quartier?.nom }}
+            </p>
           </div>
         </div>
-      }
-      @if (bien.city) {
-        <div class="flex items-center gap-3">
-          <div
-            class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"
-          >
-            <ng-icon name="lucideMapPin" size="14" class="text-primary-600"></ng-icon>
+
+        @if (bien.adresse.repere) {
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"
+            >
+              <ng-icon name="lucideMapPin" size="14" class="text-primary-600"></ng-icon>
+            </div>
+            <div>
+              <p class="text-[10px] text-primary-400">Repère / Adresse</p>
+              <p class="text-sm font-semibold text-primary-900">{{ bien.adresse.repere }}</p>
+            </div>
           </div>
-          <div>
-            <p class="text-[10px] text-primary-400">Ville</p>
-            <p class="text-sm font-semibold text-primary-900">{{ bien.city }}</p>
-          </div>
-        </div>
+        }
       }
-      @if (bien.latitude && bien.longitude) {
+
+      @if (bien.adresse?.latitude && bien.adresse?.longitude) {
         <div class="flex items-center gap-3">
           <div
             class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -143,7 +147,7 @@
           <div>
             <p class="text-[10px] text-primary-400">Coordonnées GPS</p>
             <p class="text-sm font-mono text-primary-800">
-              {{ bien.latitude }}, {{ bien.longitude }}
+              {{ bien.adresse?.latitude }}, {{ bien.adresse?.longitude }}
             </p>
           </div>
         </div>

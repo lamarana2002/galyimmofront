@@ -1,4 +1,4 @@
-import { Component, inject, Input, computed } from '@angular/core';
+import { Component, inject, Input, computed, ChangeDetectionStrategy } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideBuilding,
@@ -15,6 +15,7 @@ import { StructureModel } from '../../../models/structure.model';
 import { StructureService } from '../../../services/structure.service';
 import { PropertyTypeStyleConfig } from '../../../../properties/interfaces/property-type-styleConfig.interface';
 import { PropertyStatusEnum } from '../../../../properties/enums/property-status.enum';
+import { getPropertyFullAddress } from '../../../../properties/utils/property.utils';
 
 @Component({
   selector: 'app-properties-tab',
@@ -31,12 +32,14 @@ import { PropertyStatusEnum } from '../../../../properties/enums/property-status
       lucideMapPin,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PropertiesTab {
   @Input({ required: true }) structure!: StructureModel;
   
   protected readonly structureService = inject(StructureService);
   protected readonly PropertyStatus = PropertyStatusEnum;
+  protected readonly getFullAddress = getPropertyFullAddress;
 
   // ── Configuration des styles par type de propriété ────────────
   protected readonly propertyTypeStyles: Record<string, PropertyTypeStyleConfig> = {

@@ -1,6 +1,7 @@
 import {
   Component, OnInit, OnDestroy, signal, computed, inject,
-} from '@angular/core';
+  ChangeDetectionStrategy,
+}  from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
@@ -28,6 +29,7 @@ import { ConfirmDialogComponent } from '../../../../../shared/components/confirm
     lucideShield, lucidePlus, lucidePencil, lucideTrash2,
     lucideRefreshCw, lucideKey,
   })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RolesTab implements OnInit, OnDestroy {
   private readonly roleService = inject(RoleService);

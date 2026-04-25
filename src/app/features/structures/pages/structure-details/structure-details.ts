@@ -73,6 +73,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 import { PropertyDocumentService } from '../../../properties/services/property-document.service';
 import { UploadPropertyDocumentPayload } from '../../../properties/interfaces/upload-property-document-payload.interface';
 import { PropertyDocument } from '../../../properties/models/property-document.model';
+import { ContactService } from '../../../../shared/services/contact.service';
 
 @Component({
   selector: 'app-structure-details',
@@ -146,6 +147,7 @@ export class StructureDetails implements OnInit, OnDestroy {
   private readonly service  = inject(StructureService);
   private readonly toast    = inject(ToastService);
   private readonly documentService = inject(PropertyDocumentService);
+  private readonly contactService  = inject(ContactService);
   private readonly destroy$ = new Subject<void>();
 
   // Enums
@@ -308,10 +310,21 @@ export class StructureDetails implements OnInit, OnDestroy {
   }
 
   sendContactMessage(data?: { subject: string, message: string }): void {
-    // TODO: this.service.sendContact(data).subscribe(...)
-    this.showContactModal.set(false);
-    this.contactSubject.set('');
-    this.contactMessage.set('');
+    if (!data || !this.structure()?.owner?.email) return;
+
+    this.contactService.sendEmail({
+      email: this.structure()!.owner!.email,
+      subject: data.subject,
+      body: data.message
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.toast.success('Message envoyé au propriétaire.');
+        this.showContactModal.set(false);
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? "Erreur lors de l'envoi de l'email.");
+      }
+    });
   }
 
   openEditStructure(): void {

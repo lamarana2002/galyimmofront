@@ -10,7 +10,7 @@ export interface CreateLocatairePayload {
   telephone:    string;
   email:        string;
   description:  string;
-  avatar?:      File;     // optionnel — envoyé en FormData si présent
+  image?:      File;     // optionnel — envoyé en FormData si présent
 }
 
 // ── Mise à jour d'un locataire ─────────────────────────────────
@@ -24,7 +24,7 @@ export interface UpdateLocatairePayload {
   telephone:    string;
   email:        string;
   description?: string;
-  avatar?:      File;
+  image?:      File;
 }
 
 // ── Valeur initiale du formulaire ──────────────────────────────
@@ -36,7 +36,7 @@ export function emptyLocataireForm(): CreateLocatairePayload {
     telephone:   '',
     email:       '',
     description: '',
-    avatar:      undefined,
+    image:      undefined,
   };
 }
 

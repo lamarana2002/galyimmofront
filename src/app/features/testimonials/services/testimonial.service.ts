@@ -1,13 +1,13 @@
-import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-
+import { toFormDataIfNeeded } from '../../../shared/utils/form-data.utils';
 import { BASE_URL } from '../../../shared/constants/app.constant';
 import { TestimonialModel } from '../models/testimonial.model';
 import { PaginatedResponse } from '../../../shared/interfaces/paginated-response.interface';
 import { ApiResponse } from '../../../shared/interfaces/api-response.interface';
 import { IQueryParam } from '../../../shared/interfaces/query-parms.interface';
 import { CreateTestimonialPayload, UpdateTestimonialPayload } from '../interfaces/testimonial-payload.interface';
+import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 @Injectable({ providedIn: 'root' })
 export class TestimonialService {
@@ -25,12 +25,20 @@ export class TestimonialService {
   }
 
   create(payload: CreateTestimonialPayload): Observable<ApiResponse<TestimonialModel>> {
-    return this.http.post<ApiResponse<TestimonialModel>>(this.baseUrl, payload);
+    const body = toFormDataIfNeeded(payload as Record<string, any>);
+    return this.http.post<ApiResponse<TestimonialModel>>(this.baseUrl, body);
   }
 
   update(payload: UpdateTestimonialPayload): Observable<ApiResponse<TestimonialModel>> {
     const { id, ...data } = payload;
-    return this.http.put<ApiResponse<TestimonialModel>>(`${this.baseUrl}/${id}`, data);
+    const body = toFormDataIfNeeded(data as Record<string, any>);
+    
+    if (body instanceof FormData) {
+      body.append('_method', 'PUT');
+      return this.http.post<ApiResponse<TestimonialModel>>(`${this.baseUrl}/${id}`, body);
+    }
+    
+    return this.http.put<ApiResponse<TestimonialModel>>(`${this.baseUrl}/${id}`, body);
   }
 
   delete(id: number): Observable<ApiResponse<null>> {

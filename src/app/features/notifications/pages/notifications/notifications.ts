@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -10,53 +10,21 @@ import {
   lucideMail,
   lucideClock,
   lucideChevronRight,
+  lucideInbox,
+  lucideTrash2,
+  lucideCheckCircle2,
+  lucideArrowLeft,
+  lucideCircleAlert,
+  lucideUser,
+  lucideCalendar,
+  lucideCircle,
+  lucideSettings,
 } from '@ng-icons/lucide';
 
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state';
 import { NotificationModel } from '../../models/notification.model';
-
-const MOCK_NOTIFICATIONS: NotificationModel[] = [
-  {
-    id: 1,
-    category: 'contact',
-    title: 'Demande de contact reçue',
-    description: 'Un visiteur veut plus d’informations sur l’appartement Cocody. ',
-    source: 'Formulaire contact',
-    status: 'new',
-    created_at: 'Il y a 5 min',
-    read: false,
-  },
-  {
-    id: 2,
-    category: 'lead',
-    title: 'Nouvelle demande de visite',
-    description: 'Visite demandée pour la villa Marcory demain à 10h00.',
-    source: 'Portail client',
-    status: 'pending',
-    created_at: 'Il y a 20 min',
-    read: false,
-  },
-  {
-    id: 3,
-    category: 'payment',
-    title: 'Paiement partiel reçu',
-    description: 'Un acompte a été reçu pour le local Plateau.',
-    source: 'Transaction',
-    status: 'reviewed',
-    created_at: 'Il y a 2 h',
-    read: true,
-  },
-  {
-    id: 4,
-    category: 'system',
-    title: 'Mise à jour disponible',
-    description: 'Nouvelle version des documents de location disponible.',
-    source: 'Système',
-    status: 'reviewed',
-    created_at: 'Hier',
-    read: true,
-  },
-];
+import { NotificationService } from '../../services/notification.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-notifications',
@@ -73,29 +41,67 @@ const MOCK_NOTIFICATIONS: NotificationModel[] = [
       lucideMail,
       lucideClock,
       lucideChevronRight,
+      lucideInbox,
+      lucideTrash2,
+      lucideCheckCircle2,
+      lucideArrowLeft,
+      lucideCircleAlert,
+      lucideUser,
+      lucideCalendar,
+      lucideCircle,
+      lucideSettings,
     }),
   ],
 })
-export class Notifications {
-  notifications = signal<NotificationModel[]>(MOCK_NOTIFICATIONS);
+export class Notifications implements OnInit {
+  private readonly service = inject(NotificationService);
+  private readonly toast = inject(ToastService);
+
+  // ── État ──────────────────────────────────────────────────────
+  notifications = signal<NotificationModel[]>([]);
+  isLoading = signal(true);
   searchQuery = signal('');
   filter = signal<'all' | 'unread'>('all');
+  selectedNotification = signal<NotificationModel | null>(null);
 
-  unreadCount = computed(() => this.notifications().filter((item) => !item.read).length);
-  totalCount = computed(() => this.notifications().length);
+  // ── Computed ──────────────────────────────────────────────────
+  unreadCount = computed(() => this.notifications().filter((item) => !item.lu).length);
+  totalCount  = computed(() => this.notifications().length);
 
   filteredNotifications = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
-    return this.notifications().filter((notification) => {
-      const matchesFilter = this.filter() === 'unread' ? !notification.read : true;
-      const matchesQuery =
-        notification.title.toLowerCase().includes(query) ||
-        notification.description.toLowerCase().includes(query) ||
-        notification.source.toLowerCase().includes(query);
-      return matchesFilter && matchesQuery;
-    });
+    return this.notifications()
+      .filter((notification) => {
+        const matchesFilter = this.filter() === 'unread' ? !notification.lu : true;
+        const matchesQuery =
+          notification.sujet?.toLowerCase().includes(query) ||
+          notification.message?.toLowerCase().includes(query) ||
+          false;
+        return matchesFilter && matchesQuery;
+      })
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   });
 
+  // ── Lifecycle ─────────────────────────────────────────────────
+  ngOnInit(): void {
+    this.refresh();
+  }
+
+  refresh(): void {
+    this.isLoading.set(true);
+    this.service.findAll().subscribe({
+      next: (res) => {
+        this.notifications.set(res.data);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.toast.error('Erreur lors du chargement des notifications.');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  // ── Handlers ──────────────────────────────────────────────────
   setFilter(value: 'all' | 'unread'): void {
     this.filter.set(value);
   }
@@ -104,13 +110,60 @@ export class Notifications {
     this.searchQuery.set(query);
   }
 
-  markAsRead(id: number): void {
-    this.notifications.update((list) =>
-      list.map((item) => (item.id === id ? { ...item, read: true } : item)),
-    );
+  selectNotification(n: NotificationModel): void {
+    this.selectedNotification.set(n);
+    if (!n.lu) {
+      this.markAsRead(n);
+    }
+  }
+
+  markAsRead(n: NotificationModel): void {
+    const id = n.id;
+    this.service.markAsRead(id).subscribe({
+      next: () => {
+        this.notifications.update((list) =>
+          list.map((item) => (item.id === id ? { ...item, lu: true } : item))
+        );
+        // Mettre à jour l'objet sélectionné si c'est le même
+        const current = this.selectedNotification();
+        if (current && current.id === id) {
+          this.selectedNotification.set({ ...current, lu: true });
+        }
+      }
+    });
   }
 
   markAllRead(): void {
-    this.notifications.update((list) => list.map((item) => ({ ...item, read: true })));
+    this.service.markAllAsRead().subscribe({
+      next: () => {
+        this.notifications.update((list) => list.map((item) => ({ ...item, lu: true })));
+        this.toast.success('Toutes les notifications sont marquées comme lues.');
+        
+        const current = this.selectedNotification();
+        if (current) this.selectedNotification.set({...current, lu: true});
+      }
+    });
+  }
+
+  getCategoryIcon(type: string): string {
+    const map: Record<string, string> = {
+      contact: 'lucideMail',
+      visit:   'lucideCalendar',
+      payment: 'lucideCheckCircle2',
+      system:  'lucideSettings',
+      alert:   'lucideCircleAlert',
+    };
+    return map[type] || 'lucideBell';
+  }
+
+  getCategoryClass(type: string): string {
+    const map: Record<string, string> = {
+      contact: 'bg-blue-100 text-blue-600',
+      visit:   'bg-purple-100 text-purple-600',
+      payment: 'bg-emerald-100 text-emerald-600',
+      system:  'bg-slate-100 text-slate-600',
+      alert:   'bg-red-100 text-red-600',
+    };
+    return map[type] || 'bg-gray-100 text-gray-600';
   }
 }

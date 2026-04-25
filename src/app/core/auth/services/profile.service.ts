@@ -6,6 +6,13 @@ import { BASE_URL } from '../../../shared/constants/app.constant';
 import { AuthUser } from '../interfaces/auth-user.interface';
 import { ApiResponse } from '../../../shared/interfaces/api-response.interface';
 import { UpdateProfilePayload } from '../interfaces/update-profile-payload.interface';
+import { toFormDataIfNeeded } from '../../../shared/utils/form-data.utils';
+
+interface UpdatePasswordPayload {
+  current_password: string;
+  password: string;
+  password_confirmation: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
@@ -40,7 +47,7 @@ export class ProfileService {
 
   // ── API Actions ────────────────────────────────────────────────
   update(payload: UpdateProfilePayload): Observable<ApiResponse<AuthUser>> {
-    const body = this.toFormDataIfNeeded(payload);
+    const body = toFormDataIfNeeded(payload as Record<string, unknown>);
 
     if (body instanceof FormData) {
       // Laravel expects POST with _method=PUT for multipart requests with files
@@ -63,25 +70,8 @@ export class ProfileService {
     );
   }
 
-  updatePassword(payload: any): Observable<{ success: boolean; message: string }> {
+  updatePassword(payload: UpdatePasswordPayload): Observable<{ success: boolean; message: string }> {
     return this.http.post<{ success: boolean; message: string }>(`${this.apiUrl}/profile/password`, payload);
   }
 
-  // ── Private Helpers ────────────────────────────────────────────
-
-  private toFormDataIfNeeded(payload: UpdateProfilePayload): FormData | UpdateProfilePayload {
-    const hasFile = payload.avatar instanceof File;
-    if (!hasFile) return payload;
-
-    const form = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      if (value instanceof File) {
-        form.append(key, value);
-      } else if (value !== undefined && value !== null) {
-        form.append(key, value.toString());
-      }
-    });
-
-    return form;
-  }
 }

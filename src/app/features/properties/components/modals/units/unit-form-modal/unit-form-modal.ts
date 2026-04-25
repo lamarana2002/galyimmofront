@@ -1,5 +1,6 @@
-import { Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, OnDestroy, output, signal } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
+import { Subject, takeUntil } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import {
   lucideLayoutGrid,
@@ -44,8 +45,9 @@ import { PropertyTypeModel } from '../../../../models/propety-type.model';
     })
   ]
 })
-export class UnitFormModal implements OnInit {
+export class UnitFormModal implements OnInit, OnDestroy {
   private propertyTypeService = inject(PropertyTypeService);
+  private readonly destroy$ = new Subject<void>();
 
   // Inputs
   editingUnit = input<ILocationUnit | null>(null);
@@ -69,8 +71,13 @@ export class UnitFormModal implements OnInit {
     this.editingUnit() ? "Modifier l'unité" : "Ajouter une unité"
   );
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   ngOnInit(): void {
-    this.propertyTypeService.findAll().subscribe({
+    this.propertyTypeService.findAll().pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => this.propertyTypes.set(res.data),
     });
     const editData = this.editingUnit();
@@ -81,7 +88,7 @@ export class UnitFormModal implements OnInit {
     }
   }
   
-  updateForm(field: keyof CreateUnitPayload, value: any): void {
+  updateForm(field: keyof CreateUnitPayload, value: CreateUnitPayload[keyof CreateUnitPayload]): void {
     this._unitForm.update(f => ({ ...f, [field]: value }));
   }
 

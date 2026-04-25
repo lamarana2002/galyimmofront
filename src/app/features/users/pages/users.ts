@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucideUsers, lucideShield, lucideBuilding2 } from '@ng-icons/lucide';
 import { UsersHandlerTab } from '../components/tabs/users-handler-tab/users-handler-tab';
-import { RolesTab } from '../components/tabs/roles-tab/roles-tab';
 import { AgenceTab } from '../components/tabs/agence-tab/agence-tab';
+import { RolesTab } from '../components/tabs/roles-tab/roles-tab';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, NgIconComponent, UsersHandlerTab, RolesTab, AgenceTab],
+  imports: [CommonModule, NgIconComponent, RolesTab, UsersHandlerTab, AgenceTab],
   templateUrl: './users.html',
   styleUrl: './users.css',
   viewProviders: [provideIcons({ lucideUsers, lucideShield, lucideBuilding2 })],

@@ -1,5 +1,6 @@
 import {
   Component, OnInit, OnDestroy, signal, computed, inject,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -32,6 +33,7 @@ import { ConfirmDialogComponent } from '../../../../../shared/components/confirm
     lucideUsers, lucideUserCheck, lucideUserX, lucideSearch,
     lucidePlus, lucidePencil, lucideTrash2, lucideRefreshCw, lucideShield,
   })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UsersHandlerTab implements OnInit, OnDestroy {
   private readonly userService = inject(UserService);
@@ -104,16 +106,13 @@ export class UsersHandlerTab implements OnInit, OnDestroy {
     this.userService.findAll({ page: this.currentPage(), perPage: this.perPage, search }).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
-      next: r => {        
-        console.log(r.data);
-        
+      next: r => {
         this.users.set(r.data);
         this.totalItems.set(r.total);
         this.totalPages.set(r.last_page);
         this.loading.set(false);
       },
-      error: (err) => {
-        console.error('[UsersHandlerTab] Erreur chargement users:', err);
+      error: () => {
         this.loading.set(false);
       },
     });

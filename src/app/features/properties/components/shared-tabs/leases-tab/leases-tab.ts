@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucideShieldCheck, lucidePlus } from '@ng-icons/lucide';
@@ -20,6 +20,7 @@ import { LocationHelper } from '../../../utils/location.utils';
       lucidePlus,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LeasesTab {
   unit = input.required<ILocationUnit | undefined | null>();

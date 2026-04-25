@@ -1,8 +1,9 @@
-import { Component, Input, OnInit, computed, inject, output, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, computed, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucideX, lucideSave, lucideLoader } from '@ng-icons/lucide';
+import { Subject, takeUntil } from 'rxjs';
 import { FaqModel } from '../../../models/faq.model';
 import { FaqService } from '../../../services/faq.service';
 import {
@@ -19,20 +20,22 @@ import {
   templateUrl: './faq-modal.html',
   styleUrl: './faq-modal.css',
   viewProviders: [provideIcons({ lucideX, lucideSave, lucideLoader })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FaqModal implements OnInit {
-  @Input() faq: FaqModel | null = null;
+export class FaqModal implements OnInit, OnDestroy {
+  faq = input<FaqModel | null>(null);
 
   readonly saved = output<FaqModel>();
   readonly cancel = output<void>();
 
   private readonly service = inject(FaqService);
+  private readonly destroy$ = new Subject<void>();
 
   saving = signal(false);
   error = signal<string | null>(null);
   form = signal<CreateFaqPayload>(emptyFaqForm());
 
-  isEdit = computed(() => !!this.faq);
+  isEdit = computed(() => !!this.faq());
   title = computed(() => (this.isEdit() ? 'Modifier la FAQ' : 'Ajouter une FAQ'));
   isValid = computed(() => {
     const form = this.form();
@@ -51,8 +54,8 @@ export class FaqModal implements OnInit {
       position: initialForm.position ?? 0,
     });
 
-    if (this.faq) {
-      const payload = faqToUpdatePayload(this.faq);
+    if (this.faq()) {
+      const payload = faqToUpdatePayload(this.faq()!);
       this.form.set({
         question: payload.question || '',
         answer: payload.answer || '',
@@ -68,11 +71,11 @@ export class FaqModal implements OnInit {
     this.saving.set(true);
     this.error.set(null);
 
-    const observable = this.faq
-      ? this.service.update({ id: this.faq.id, ...this.form() } as UpdateFaqPayload)
+    const observable = this.faq()
+      ? this.service.update({ id: this.faq()!.id, ...this.form() } as UpdateFaqPayload)
       : this.service.create(this.form());
 
-    observable.subscribe({
+    observable.pipe(takeUntil(this.destroy$)).subscribe({
       next: (response) => {
         this.saving.set(false);
         this.saved.emit(response.data);
@@ -82,6 +85,11 @@ export class FaqModal implements OnInit {
         this.error.set(err?.error?.message ?? 'Erreur lors de l’enregistrement.');
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   close(): void {

@@ -1,8 +1,9 @@
-import { Component, Input, OnInit, computed, inject, output, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, computed, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucideX, lucideSave, lucideUpload, lucideLoader } from '@ng-icons/lucide';
+import { Subject, takeUntil } from 'rxjs';
 import { TeamModel } from '../../../models/team.model';
 import { TeamService } from '../../../services/team.service';
 import {
@@ -19,21 +20,23 @@ import {
   templateUrl: './team-modal.html',
   styleUrl: './team-modal.css',
   viewProviders: [provideIcons({ lucideX, lucideSave, lucideUpload, lucideLoader })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TeamModal implements OnInit {
-  @Input() team: TeamModel | null = null;
+export class TeamModal implements OnInit, OnDestroy {
+  team = input<TeamModel | null>(null);
 
   readonly saved = output<TeamModel>();
   readonly cancel = output<void>();
 
   private readonly service = inject(TeamService);
+  private readonly destroy$ = new Subject<void>();
 
   saving = signal(false);
   error = signal<string | null>(null);
   imagePreview = signal<string | null>(null);
   form = signal<CreateTeamPayload>(emptyTeamForm());
 
-  isEdit = computed(() => !!this.team);
+  isEdit = computed(() => !!this.team());
   title = computed(() => (this.isEdit() ? 'Modifier le membre' : 'Ajouter un membre'));
   isValid = computed(() => {
     const form = this.form();
@@ -56,8 +59,8 @@ export class TeamModal implements OnInit {
       sort_order: initialForm.sort_order ?? 0,
     });
 
-    if (this.team) {
-      const payload = teamToUpdatePayload(this.team);
+    if (this.team()) {
+      const payload = teamToUpdatePayload(this.team()!);
       this.form.set({
         name: payload.name || '',
         role: payload.role || '',
@@ -67,8 +70,8 @@ export class TeamModal implements OnInit {
         sort_order: payload.sort_order ?? 0,
       });
 
-      if (this.team.image) {
-        this.imagePreview.set(this.team.image);
+      if (this.team()?.image) {
+        this.imagePreview.set(this.team()!.image ?? null);
       }
     }
   }
@@ -90,11 +93,11 @@ export class TeamModal implements OnInit {
     this.saving.set(true);
     this.error.set(null);
 
-    const observable = this.team
-      ? this.service.update({ id: this.team.id, ...this.form() } as UpdateTeamPayload)
+    const observable = this.team()
+      ? this.service.update({ id: this.team()!.id, ...this.form() } as UpdateTeamPayload)
       : this.service.create(this.form());
 
-    observable.subscribe({
+    observable.pipe(takeUntil(this.destroy$)).subscribe({
       next: (response) => {
         this.saving.set(false);
         this.saved.emit(response.data);
@@ -104,6 +107,11 @@ export class TeamModal implements OnInit {
         this.error.set(err?.error?.message ?? 'Erreur lors de l’enregistrement.');
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   close(): void {

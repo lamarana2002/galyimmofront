@@ -10,7 +10,7 @@ export interface ILocataire {
   email: string;
   sexe: string | null;
   description: string | null;
-  avatar: string;
+  image: string;
   status: UserStatusEnum;
   
   // Relations

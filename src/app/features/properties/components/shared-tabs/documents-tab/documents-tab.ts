@@ -1,4 +1,4 @@
-import { Component, input, output, signal, inject } from '@angular/core';
+import { Component, input, output, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -45,6 +45,7 @@ import { ConfirmDialogComponent } from '../../../../../shared/components/confirm
       lucideEye
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DocumentsTab {
   private toast = inject(ToastService);
@@ -92,8 +93,8 @@ export class DocumentsTab {
     if (!this.showUploadForm()) this.resetForm();
   }
 
-  fileSelected(event: any) {
-    const file = event.target.files[0];
+  fileSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
         this.toast.error('Le fichier ne doit pas dépasser 10 Mo');

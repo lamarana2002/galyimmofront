@@ -236,12 +236,14 @@ export class Properties implements OnInit, OnDestroy {
 
     if (filter?.search?.trim()) {
       const q = filter.search.toLowerCase();
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.code?.toLowerCase().includes(q) ||
-        p.address?.toLowerCase().includes(q) ||
-        p.city?.toLowerCase().includes(q)
-      );
+      result = result.filter(p => {
+        const fullAddress = propertyUtils.getPropertyFullAddress(p).toLowerCase();
+        return (
+          p.name.toLowerCase().includes(q) ||
+          p.code?.toLowerCase().includes(q) ||
+          fullAddress.includes(q)
+        );
+      });
     }
 
     if (filter?.status && filter.status !== 'all') {

@@ -56,7 +56,7 @@ export class LocataireModal implements OnInit {
   // ── État ──────────────────────────────────────────────────────
   saving = signal(false);
   error = signal<string | null>(null);
-  avatarPreview = signal<string | null>(null);
+  imagePreview = signal<string | null>(null);
 
   // ── Genre Enum ─────────────────────────────────────────────────
   genreOptions = [
@@ -90,7 +90,7 @@ export class LocataireModal implements OnInit {
     // Réinitialiser l'état complètement
     this.saving.set(false);
     this.error.set(null);
-    this.avatarPreview.set(null);
+    this.imagePreview.set(null);
     this.form.set(emptyLocataireForm());
 
     if (this.locataire) {
@@ -103,28 +103,28 @@ export class LocataireModal implements OnInit {
         telephone: payload.telephone || '',
         email: payload.email || '',
         description: payload.description || '',
-        avatar: undefined,
+        image: undefined,
       });
 
-      // Afficher l'avatar actuel
-      if (this.locataire.avatar) {
-        this.avatarPreview.set(this.locataire.avatar);
+      // Afficher l'image actuelle
+      if (this.locataire.image) {
+        this.imagePreview.set(this.locataire.image);
       }
     }
   }
 
   // ── Actions ───────────────────────────────────────────────────
-  onAvatarSelected(event: Event): void {
+  onImageSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
 
     // Preview immédiat
     const reader = new FileReader();
-    reader.onload = (e) => this.avatarPreview.set(e.target?.result as string);
+    reader.onload = (e) => this.imagePreview.set(e.target?.result as string);
     reader.readAsDataURL(file);
 
     // Stocker le fichier dans le formulaire
-    this.form.update((f) => ({ ...f, avatar: file }));
+    this.form.update((f) => ({ ...f, image: file }));
   }
 
   save(): void {

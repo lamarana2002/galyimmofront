@@ -98,8 +98,6 @@ export class Teams implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          console.log(response);
-          
           this.allTeams.set(response.data || []);
           this.applyFilters();
           this.currentPage.set(response.current_page || 1);

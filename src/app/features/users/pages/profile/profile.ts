@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -19,6 +19,7 @@ import {
   lucideBuilding
 } from '@ng-icons/lucide';
 
+import { Subject, takeUntil } from 'rxjs';
 import { ProfileService } from '../../../../core/auth/services/profile.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { AuthUser } from '../../../../core/auth/interfaces/auth-user.interface';
@@ -48,10 +49,11 @@ import { UpdateProfilePayload } from '../../../../core/auth/interfaces/update-pr
     }),
   ],
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnDestroy {
   private profileService = inject(ProfileService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private readonly destroy$ = new Subject<void>();
 
   // ── Signals ─────────────────────────────────────────────────────
   currentUser = this.profileService.currentUser;
@@ -110,8 +112,8 @@ export class ProfileComponent {
   }
 
   // ── Handlers ──────────────────────────────────────────────────
-  onAvatarSelected(event: any) {
-    const file = event.target.files[0];
+  onAvatarSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
         this.toast.error('Le fichier doit être une image');
@@ -136,7 +138,7 @@ export class ProfileComponent {
     };
 
     this.isLoading.set(true);
-    this.profileService.update(payload).subscribe({
+    this.profileService.update(payload).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         this.isLoading.set(false);
         if (res.success) {
@@ -165,7 +167,7 @@ export class ProfileComponent {
     }
 
     this.isPasswordLoading.set(true);
-    this.profileService.updatePassword(form).subscribe({
+    this.profileService.updatePassword(form).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         this.isPasswordLoading.set(false);
         if (res.success) {
@@ -178,6 +180,11 @@ export class ProfileComponent {
         this.toast.error(err?.error?.message || 'Le mot de passe actuel est incorrect');
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   resetPasswordForm() {

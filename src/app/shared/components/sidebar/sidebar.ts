@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { SidebarService } from './sidebar.service';
 import { Subscription } from 'rxjs';
 import {
@@ -47,6 +47,7 @@ type User = {
   ],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Sidebar implements OnInit, OnDestroy {
   profile = inject(ProfileService);

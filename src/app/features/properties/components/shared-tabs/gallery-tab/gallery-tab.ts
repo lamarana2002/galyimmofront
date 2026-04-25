@@ -1,4 +1,4 @@
-import { Component, Input, output, signal, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, Input, output, signal, CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
 import { provideIcons } from '@ng-icons/core';
 import {
@@ -22,7 +22,8 @@ export interface IGalleryItem {
   viewProviders: [provideIcons({
     lucideUpload, lucideImage, lucideZoomIn, lucideTrash2,
     lucideX, lucideChevronLeft, lucideChevronRight, lucideBox
-  })]
+  })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GalleryTab {
   // ── Image events ──────────────────────────────────────────────

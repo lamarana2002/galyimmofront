@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { toFormDataIfNeeded } from '../../../shared/utils/form-data.utils';
 
 import { StructureModel } from '../models/structure.model';
 import { StructureStatus } from '../enums/structure-status.enum';
@@ -54,7 +55,7 @@ export class StructureService {
    * Envoie en FormData si logo ou cover sont présents (fichiers)
    */
   create(payload: CreateStructurePayload): Observable<ApiResponse<StructureModel>> {
-    const body = this.toFormDataIfNeeded(payload);
+    const body = toFormDataIfNeeded(payload as unknown as Record<string, unknown>);
     return this.http.post<ApiResponse<StructureModel>>(this.baseUrl, body);
   }
 
@@ -66,7 +67,7 @@ export class StructureService {
    */
   update(payload: UpdateStructurePayload): Observable<ApiResponse<StructureModel>> {
     const { id, ...data } = payload;
-    const body = this.toFormDataIfNeeded(data);
+    const body = toFormDataIfNeeded(data as Record<string, unknown>);
 
     // Laravel nécessite _method=PUT pour les FormData
     if (body instanceof FormData) {
@@ -157,27 +158,4 @@ export class StructureService {
     return params;
   }
 
-  /**
-   * Convertit un payload en FormData si des fichiers sont présents
-   * Sinon retourne le payload tel quel (JSON)
-   */
-  private toFormDataIfNeeded(
-    payload: Partial<CreateStructurePayload>
-  ): FormData | Partial<CreateStructurePayload> {
-    const hasFile = payload.logo instanceof File || payload.cover instanceof File;
-    if (!hasFile) return payload;
-
-    const form = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      if (value instanceof File) {
-        form.append(key, value);
-      } else if (typeof value === 'boolean') {
-        form.append(key, value ? '1' : '0');
-      } else if (value !== undefined && value !== null) {
-        form.append(key, value.toString());
-      }
-    });
-
-    return form;
-  }
 }

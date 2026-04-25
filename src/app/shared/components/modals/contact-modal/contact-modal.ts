@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, SimpleChanges, OnChanges, output } from '@angular/core';
+import { Component, Input, OnInit, SimpleChanges, OnChanges, output, ChangeDetectionStrategy } from '@angular/core';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { FormsModule } from '@angular/forms';
 import { lucideMessageSquare, lucideSend, lucideX } from '@ng-icons/lucide';
@@ -10,6 +10,7 @@ import { getInitials } from '../../../../features/structures/utils/structure.uti
   imports: [NgIconComponent, FormsModule],
   templateUrl: './contact-modal.html',
   viewProviders: [provideIcons({ lucideMessageSquare, lucideX, lucideSend })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ContactModal implements OnInit, OnChanges {
   @Input() title = 'Nous contacter';

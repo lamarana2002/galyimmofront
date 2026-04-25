@@ -8,7 +8,6 @@ import { ApiResponse } from '../../../shared/interfaces/api-response.interface';
 import { PaginatedResponse } from '../../../shared/interfaces/paginated-response.interface';
 import { IQueryParam } from '../../../shared/interfaces/query-parms.interface';
 import { PropertyGallery } from '../models/property-gallery.model';
-import { GalleryImage } from '../pages/location-unit/location-unit';
 import { CreatePropertyGalleryPayload } from '../interfaces/create-property-gallery-payload.interface';
 import { UpdatePropertyGalleryPayload } from '../interfaces/update-propertyy-gallery-payload.interface';
 
@@ -128,8 +127,8 @@ export class PropertyGalleryService {
   /**
    * Définit une image comme image principale
    */
-  setAsMain(id: number, propertyId: number): Observable<ApiResponse<GalleryImage>> {
-    return this.http.post<ApiResponse<GalleryImage>>(`${this.baseUrl}/${id}/set-main`, {
+  setAsMain(id: number, propertyId: number): Observable<ApiResponse<PropertyGallery>> {
+    return this.http.post<ApiResponse<PropertyGallery>>(`${this.baseUrl}/${id}/set-main`, {
       property_id: propertyId,
     });
   }

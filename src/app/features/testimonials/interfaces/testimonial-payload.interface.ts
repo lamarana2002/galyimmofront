@@ -5,7 +5,7 @@ export interface CreateTestimonialPayload {
   role?: string | null;
   content: string;
   note?: number;
-  image?: string | null;
+  image?: string | File | null;
   is_visible?: boolean;
   position?: number;
 }

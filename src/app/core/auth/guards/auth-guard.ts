@@ -44,6 +44,8 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
 
 // ── Guard 3 bis : permission autorisée ? ──────────────────────────
 export const permissionGuard = (allowedPermissions: string[]): CanActivateFn => {
+  console.log(allowedPermissions);
+  
   return () => {
     const auth   = inject(AuthService);
     const router = inject(Router);

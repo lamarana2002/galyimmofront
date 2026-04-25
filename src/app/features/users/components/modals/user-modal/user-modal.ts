@@ -1,12 +1,13 @@
 import {
   Component,
-  Input,
   OnInit,
   OnDestroy,
+  ChangeDetectionStrategy,
   output,
   signal,
   computed,
   inject,
+  input,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,13 +26,12 @@ import {
   lucideMapPin,
   lucideAlignLeft,
 } from '@ng-icons/lucide';
-import { Subject, of, takeUntil } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 
 import { UserModel } from '../../../models/user.model';
 import { IRole, IPermission } from '../../../models/role.model';
 import { UserService } from '../../../services/user.service';
 import { RoleService } from '../../../services/role.service';
-import { AuthService } from '../../../../../core/auth/services/auth.service';
 import { CreateUserPayload, UpdateUserPayload } from '../../../interfaces/user-payload.interface';
 import { GenreEnum } from '../../../../../shared/enums/genre.enum';
 
@@ -57,6 +57,7 @@ interface UserForm {
   standalone: true,
   imports: [CommonModule, FormsModule, NgIconComponent],
   templateUrl: './user-modal.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: [
     provideIcons({
       lucideX,
@@ -75,14 +76,13 @@ interface UserForm {
   ],
 })
 export class UserModal implements OnInit, OnDestroy {
-  @Input() user: UserModel | null = null;
+  user = input<UserModel | null>(null);
 
   readonly saved = output<UserModel>();
   readonly cancel = output<void>();
 
   private readonly userService = inject(UserService);
   private readonly roleService = inject(RoleService);
-  private readonly authService = inject(AuthService);
   private readonly destroy$ = new Subject<void>();
 
   // ── État ──────────────────────────────────────────────────────
@@ -116,7 +116,7 @@ export class UserModal implements OnInit, OnDestroy {
   ];
 
   // ── Computed ──────────────────────────────────────────────────
-  isEdit = computed(() => !!this.user);
+  isEdit = computed(() => !!this.user());
   title = computed(() => (this.isEdit() ? "Modifier l'utilisateur" : 'Nouvel utilisateur'));
 
   readonly selectedPermissions = computed(() => {
@@ -158,23 +158,24 @@ export class UserModal implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadRoles();
-    if (this.user) {
+    const u = this.user();
+    if (u) {
       this.form.set({
-        prenom: this.user.prenom ?? '',
-        nom: this.user.nom ?? '',
-        login: this.user.login ?? '',
-        email: this.user.email ?? '',
-        telephone: this.user.telephone ?? '',
-        genre: this.user.genre ?? '',
-        pays: this.user.pays ?? '',
-        ville: this.user.ville ?? '',
-        adresse: this.user.adresse ?? '',
-        description: this.user.description ?? '',
+        prenom: u.prenom ?? '',
+        nom: u.nom ?? '',
+        login: u.login ?? '',
+        email: u.email ?? '',
+        telephone: u.telephone ?? '',
+        genre: u.genre ?? '',
+        pays: u.pays ?? '',
+        ville: u.ville ?? '',
+        adresse: u.adresse ?? '',
+        description: u.description ?? '',
         password: '',
         password_confirmation: '',
-        selectedRoles: (this.user as any).roles?.map((r: IRole) => r.id) ?? [],
+        selectedRoles: (u as UserModel & { roles?: IRole[] }).roles?.map((r: IRole) => r.id) ?? [],
       });
-      if (this.user.avatar) this.avatarPreview.set(this.user.avatar);
+      if (u.avatar) this.avatarPreview.set(u.avatar);
     }
   }
 
@@ -219,7 +220,7 @@ export class UserModal implements OnInit, OnDestroy {
   }
 
   // ── Setters ngModel ───────────────────────────────────────────
-  set(field: keyof UserForm, value: any): void {
+  set(field: keyof UserForm, value: UserForm[keyof UserForm]): void {
     this.form.update((f) => ({ ...f, [field]: value }));
   }
 
@@ -231,9 +232,10 @@ export class UserModal implements OnInit, OnDestroy {
 
     const f = this.form();
 
-    if (this.user) {
+    const u = this.user();
+    if (u) {
       const payload: UpdateUserPayload = {
-        id: this.user.id,
+        id: u.id,
         prenom: f.prenom,
         nom: f.nom,
         login: f.login,

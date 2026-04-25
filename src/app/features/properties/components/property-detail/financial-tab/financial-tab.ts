@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
 import { UnitStatutEnum } from '../../../enums/unit-status.enum';
 import {
@@ -25,6 +25,7 @@ import { PropertyModel } from '../../../models/property.model';
   viewProviders: [
     provideIcons({ lucideTrendingUp, lucideBanknote, lucideWrench, lucideAlertTriangle }),
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FinancialTab {
   @Input({ required: true }) bien!: PropertyModel;

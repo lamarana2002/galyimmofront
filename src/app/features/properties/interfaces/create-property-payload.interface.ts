@@ -6,12 +6,11 @@ export interface CreatePropertyPayload {
   name: string;
   code?: string;
   has_units: boolean;
-  address?: string;
-  city?: string;
-  postal_code?: string;
-  country?: string;
-  latitude?: number;
-  longitude?: number;
+  square_area_id?: number | null;
+  repere?: string;
+  latitude?: number | string;
+  longitude?: number | string;
+  what3words?: string;
   total_surface?: number;
   total_floors?: number;
   sale_price?: number;

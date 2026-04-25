@@ -1,8 +1,9 @@
-import { Component, Input, OnInit, computed, inject, output, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, computed, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { lucideX, lucideSave, lucideLoader, lucideStar } from '@ng-icons/lucide';
+import { lucideX, lucideSave, lucideLoader, lucideStar, lucideImage } from '@ng-icons/lucide';
+import { Subject, takeUntil } from 'rxjs';
 import { TestimonialModel } from '../../../models/testimonial.model';
 import { TestimonialService } from '../../../services/testimonial.service';
 import {
@@ -18,22 +19,25 @@ import {
   imports: [CommonModule, FormsModule, NgIconComponent],
   templateUrl: './testimonial-modal.html',
   styleUrl: './testimonial-modal.css',
-  viewProviders: [provideIcons({ lucideX, lucideSave, lucideLoader, lucideStar })],
+  viewProviders: [provideIcons({ lucideX, lucideSave, lucideLoader, lucideStar, lucideImage })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TestimonialModal implements OnInit {
-  @Input() testimonial: TestimonialModel | null = null;
+export class TestimonialModal implements OnInit, OnDestroy {
+  testimonial = input<TestimonialModel | null>(null);
 
   readonly saved = output<TestimonialModel>();
   readonly cancel = output<void>();
 
   private readonly service = inject(TestimonialService);
+  private readonly destroy$ = new Subject<void>();
 
   saving = signal(false);
   error = signal<string | null>(null);
   form = signal<CreateTestimonialPayload>(emptyTestimonialForm());
+  imagePreview = signal<string | null>(null);
 
   get isEdit(): boolean {
-    return !!this.testimonial;
+    return !!this.testimonial();
   }
   
   get title(): string {
@@ -55,22 +59,37 @@ export class TestimonialModal implements OnInit {
       role: initialForm.role || '',
       content: initialForm.content || '',
       note: initialForm.note ?? 5,
-      image: initialForm.image || '',
+      image: null,
       is_visible: initialForm.is_visible ?? true,
       position: initialForm.position ?? 0,
     });
+    this.imagePreview.set(null);
 
-    if (this.testimonial) {
-      const payload = testimonialToUpdatePayload(this.testimonial);
+    if (this.testimonial()) {
+      const payload = testimonialToUpdatePayload(this.testimonial()!);
       this.form.set({
         name: payload.name || '',
         role: payload.role || '',
         content: payload.content || '',
         note: payload.note ?? 5,
-        image: payload.image || '',
+        image: null, // On garde null pour ne pas renvoyer l'URL si on ne change pas l'image
         is_visible: payload.is_visible ?? true,
         position: payload.position ?? 0,
       });
+      this.imagePreview.set(this.testimonial()?.image || null);
+    }
+  }
+
+  onImageSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      this.form.update((f) => ({ ...f, image: file }));
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.imagePreview.set(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   }
 
@@ -80,11 +99,11 @@ export class TestimonialModal implements OnInit {
     this.saving.set(true);
     this.error.set(null);
 
-    const observable = this.testimonial
-      ? this.service.update({ id: this.testimonial.id, ...this.form() } as UpdateTestimonialPayload)
+    const observable = this.testimonial()
+      ? this.service.update({ id: this.testimonial()!.id, ...this.form() } as UpdateTestimonialPayload)
       : this.service.create(this.form());
 
-    observable.subscribe({
+    observable.pipe(takeUntil(this.destroy$)).subscribe({
       next: (response) => {
         this.saving.set(false);
         this.saved.emit(response.data);
@@ -94,6 +113,11 @@ export class TestimonialModal implements OnInit {
         this.error.set(err?.error?.message ?? 'Erreur lors de l’enregistrement.');
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   close(): void {

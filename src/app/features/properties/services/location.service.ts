@@ -15,17 +15,7 @@ export class LocationService {
   private readonly baseUrl = `${BASE_URL}/locations`;
 
   create(payload: CreateLocationPayload): Observable<ApiResponse<ILocationModel>> {
-    const form = new FormData();
-    form.append('client', payload.client.toString());
-    form.append('immeuble', payload.immeuble.toString());
-    form.append('uniteLocation', payload.uniteLocation.toString());
-    form.append('interval', payload.interval.toString());
-    form.append('montant', payload.montant.toString());
-    form.append('methodePayement', payload.methodePayement);
-    form.append('date', payload.date);
-    form.append('image', payload.image);
-
-    return this.http.post<ApiResponse<ILocationModel>>(this.baseUrl, form);
+    return this.http.post<ApiResponse<ILocationModel>>(this.baseUrl, payload);
   }
 
   findAll(params?: IQueryParam): Observable<PaginatedResponse<ILocationModel>> {

@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
@@ -28,11 +28,12 @@ import { ContactModal } from '../../../../../shared/components/modals/contact-mo
       lucideUserPlus,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TenantTab {
   unit = input.required<ILocationUnit | undefined | null>();
 
-  onContact = output<void>();
+  onContact = output<{ subject: string, message: string }>();
   onAffect = output<void>();
 
   getInitials(nom: string, prenom: string): string {    
@@ -46,8 +47,7 @@ export class TenantTab {
   }
 
   sendContactMessage(data: { subject: string, message: string }) {
-    // Émettre l'événement ou gérer l'envoi
-    this.onContact.emit();
+    this.onContact.emit(data);
     this.showContactModal.set(false);
   }
 }

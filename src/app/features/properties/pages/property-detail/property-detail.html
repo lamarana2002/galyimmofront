@@ -89,10 +89,10 @@
                 </span>
               }
             </div>
-            @if (b.address || b.city) {
+            @if (b.adresse) {
               <p class="text-sm text-primary-400 flex items-center gap-1 mb-1">
                 <ng-icon name="lucideMapPin" size="13"></ng-icon>
-                {{ adresseComplete() }}
+                {{ getFullAddress(b) }}
               </p>
             }
             @if (b.description) {
@@ -291,7 +291,7 @@
         @if (activeTab() === 'locataire') {
           <app-tenant-tab
             [unit]="b.units?.[0]"
-            (onContact)="contacterLocataire()"
+            (onContact)="contacterLocataire($event)"
             (onAffect)="affecterLocataire()"
           />
         }

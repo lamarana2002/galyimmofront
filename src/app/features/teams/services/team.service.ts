@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { toFormDataIfNeeded } from '../../../shared/utils/form-data.utils';
 
 import { BASE_URL } from '../../../shared/constants/app.constant';
 import { TeamModel } from '../models/team.model';
@@ -25,12 +26,12 @@ export class TeamService {
   }
 
   create(payload: CreateTeamPayload): Observable<ApiResponse<TeamModel>> {
-    return this.http.post<ApiResponse<TeamModel>>(this.baseUrl, this.toFormDataIfNeeded(payload));
+    return this.http.post<ApiResponse<TeamModel>>(this.baseUrl, toFormDataIfNeeded(payload as unknown as Record<string, unknown>));
   }
 
   update(payload: UpdateTeamPayload): Observable<ApiResponse<TeamModel>> {
     const { id, ...data } = payload;
-    const body = this.toFormDataIfNeeded(data);
+    const body = toFormDataIfNeeded(data as Record<string, unknown>);
 
     if (body instanceof FormData) {
       body.append('_method', 'PUT');
@@ -63,25 +64,4 @@ export class TeamService {
     return p;
   }
 
-  private toFormDataIfNeeded(
-    payload: Partial<CreateTeamPayload> | Omit<UpdateTeamPayload, 'id'>,
-  ): FormData | typeof payload {
-    if (!('image' in payload) || !(payload.image instanceof File)) return payload;
-
-    const form = new FormData();
-
-    Object.entries(payload).forEach(([key, value]) => {
-      if (value instanceof File) {
-        form.append(key, value);
-      } else if (value !== undefined && value !== null) {
-        if (key === 'is_public') {
-          form.append(key, value ? '1' : '0');
-        } else {
-          form.append(key, value.toString());
-        }
-      }
-    });
-
-    return form;
-  }
 }

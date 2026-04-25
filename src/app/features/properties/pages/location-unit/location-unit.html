@@ -261,7 +261,7 @@
         @if (activeTab === 'locataire') {
           <app-tenant-tab
             [unit]="unite()"
-            (onContact)="contacterLocataire()"
+            (onContact)="contacterLocataire($event)"
             (onAffect)="affecterLocataire()"
           />
         }
@@ -608,5 +608,16 @@
     [loading]="terminatingLocation()"
     (confirmed)="terminateLocation()"
     (cancelled)="showTerminateConfirm.set(false)"
+  />
+}
+
+@if (showContactModal()) {
+  <app-contact-modal
+    title="Contacter le locataire"
+    [recipientFullName]="unite()?.current_locataire?.prenom + ' ' + unite()?.current_locataire?.nom"
+    [recipientEmail]="unite()?.current_locataire?.email || ''"
+    [initialSubject]="'Concernant votre location'"
+    (sendMessage)="contacterLocataire($event)"
+    (cancel)="showContactModal.set(false)"
   />
 }
