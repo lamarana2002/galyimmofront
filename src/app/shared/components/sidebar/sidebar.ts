@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { SidebarService } from './sidebar.service';
-import { Subscription } from 'rxjs';
 import {
   lucideBuilding,
   lucideBuilding2,
@@ -14,6 +13,7 @@ import {
   lucideUserRound,
   lucideUsers,
   lucideMessageSquare,
+  lucideBanknote,
 } from '@ng-icons/lucide';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ProfileService } from '../../../core/auth/services/profile.service';
@@ -28,6 +28,7 @@ type User = {
 
 @Component({
   selector: 'app-sidebar',
+  standalone: true,
   imports: [NgIcon, RouterLink, RouterLinkActive],
   providers: [
     provideIcons({
@@ -43,13 +44,14 @@ type User = {
       lucideChartNoAxesCombined,
       lucideHelpCircle,
       lucideMessageSquare,
+      lucideBanknote,
     }),
   ],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Sidebar implements OnInit, OnDestroy {
+export class Sidebar implements OnInit {
   profile = inject(ProfileService);
   userRoles = this.profile.roleNamesArray;
 
@@ -58,6 +60,7 @@ export class Sidebar implements OnInit, OnDestroy {
     { label: 'Propriétés', icon: 'lucideHome', link: '/properties', role: 'proprietaire' },
     { label: 'Locataires', icon: 'lucideUserRound', link: '/locataires', role: 'proprietaire' },
     { label: 'Contrats', icon: 'lucideFileText', link: '/contrats', role: 'proprietaire' },
+    { label: 'Paiements', icon: 'lucideBanknote', link: '/payments', role: 'proprietaire' },
     { label: 'Teams', icon: 'lucideUsers', link: '/teams', role: 'proprietaire' },
     { label: 'FAQs', icon: 'lucideHelpCircle', link: '/faqs', role: 'proprietaire' },
     { label: 'Témoignages', icon: 'lucideMessageSquare', link: '/testimonials', role: 'proprietaire' },
@@ -71,8 +74,8 @@ export class Sidebar implements OnInit, OnDestroy {
     },
   ];
 
-  isOpen = false;
-  private sub!: Subscription;
+  sidebarService = inject(SidebarService);
+  isOpen = this.sidebarService.isOpen;
 
   currentUser: User = {
     name: 'Neil Sims',
@@ -84,17 +87,9 @@ export class Sidebar implements OnInit, OnDestroy {
   unreadCount = 2;
   isUserDropdownOpen = false;
 
-  constructor(private sidebarService: SidebarService) {}
+  constructor() {}
 
-  ngOnInit(): void {
-    this.sub = this.sidebarService.isOpen$.subscribe((val) => {
-      this.isOpen = val;
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
-  }
+  ngOnInit(): void {}
 
   close(): void {
     this.sidebarService.close();

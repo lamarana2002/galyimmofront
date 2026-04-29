@@ -301,6 +301,14 @@
           <app-leases-tab [unit]="b.units?.[0]" (onNewLease)="affecterLocataire()" />
         }
 
+        <!-- ══ PAIEMENTS ══ -->
+        @if (activeTab() === 'paiements') {
+          <app-unit-payments-tab 
+            [unitId]="b.units?.[0]?.id ?? 0"
+            (addPayment)="openPaymentModal()"
+          />
+        }
+
         <!-- ══ GALERIE — TODO: brancher quand endpoint prêt ══ -->
         @if (activeTab() === 'galerie') {
           <app-gallery-tab
@@ -404,6 +412,15 @@
           (locationError)="onLocationError($event)"
         />
       }
+    }
+
+    <!-- ══ MODAL PAIEMENT ══ -->
+    @if (showPaymentModal()) {
+      <app-payment-modal
+        [contractId]="b.units?.[0]?.current_location?.id?.toString() ?? ''"
+        (close)="closePaymentModal()"
+        (paymentSuccess)="onPaymentSuccess()"
+      />
     }
   }
   <!-- fin @else if (bien()) -->

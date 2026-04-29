@@ -61,6 +61,8 @@ import { LocationStatusEnum } from '../../enums/location-status.enum';
 import { ContactModal } from '../../../../shared/components/modals/contact-modal/contact-modal';
 import { ContactService } from '../../../../shared/services/contact.service';
 import { IUnitGallery } from '../../models/unit-gallery.model';
+import { UnitPaymentsTab } from '../../components/shared-tabs/unit-payments-tab/unit-payments-tab';
+import { PaymentModalComponent } from '../../../../shared/components/payment-modal/payment-modal';
 
 // Pour la compatibilité avec property-gallery.service.ts
 export type GalleryImage = IUnitGallery;
@@ -83,6 +85,8 @@ export type GalleryImage = IUnitGallery;
     CreateLocationModal,
     ConfirmDialogComponent,
     ContactModal,
+    UnitPaymentsTab,
+    PaymentModalComponent
   ],
   templateUrl: './location-unit.html',
   viewProviders: [
@@ -160,6 +164,7 @@ export class LocationUnit implements OnInit, OnDestroy {
   unitSaving = signal(false);
   showLocationModal = signal(false);
   showContactModal = signal(false);
+  showPaymentModal = signal(false);
 
   // UI
   activeTab = 'infos';
@@ -168,6 +173,7 @@ export class LocationUnit implements OnInit, OnDestroy {
     { key: 'locataire', label: 'Locataire', icon: 'lucideUser' },
     { key: 'locations', label: 'Locations', icon: 'lucideShieldCheck' },
     { key: 'photos', label: 'Photos', icon: 'lucideImage' },
+    { key: 'paiements', label: 'Paiements', icon: 'lucideBanknote' },
   ];
 
   // ── Computed ──────────────────────────────────────────────────
@@ -446,5 +452,25 @@ export class LocationUnit implements OnInit, OnDestroy {
     this.toast.info('Fonctionnalité bientôt disponible.');
     this.showDeleteImage = false;
     this.deletingImageId = null;
+  }
+
+  // ── Paiements ──────────────────────────────────────────────────
+  openPaymentModal(): void {
+    const currentLocation = this.unite()?.current_location;
+    if (!currentLocation) {
+      this.toast.warning('Aucun contrat actif pour enregistrer un paiement.');
+      return;
+    }
+    this.showPaymentModal.set(true);
+  }
+
+  closePaymentModal(): void {
+    this.showPaymentModal.set(false);
+  }
+
+  onPaymentSuccess(): void {
+    this.toast.success('Paiement enregistré avec succès.');
+    this.showPaymentModal.set(false);
+    // Reload if needed
   }
 }

@@ -2,8 +2,8 @@
 <aside
   aria-label="Sidebar"
   class="fixed top-0 left-0 z-50 w-64 h-screen transition-transform duration-300 bg-primary-800"
-  [class.-translate-x-full]="!isOpen"
-  [class.translate-x-0]="isOpen"
+  [class.-translate-x-full]="!isOpen()"
+  [class.translate-x-0]="isOpen()"
   [class.sm:translate-x-0]="true"
 >
   <div class="h-full flex flex-col">
@@ -146,6 +146,6 @@
 </aside>
 
 <!-- Overlay mobile pour fermer en cliquant à l'extérieur -->
-@if (isOpen) {
+@if (isOpen()) {
   <div class="fixed inset-0 z-30 bg-primary-900/50 sm:hidden" (click)="close()"></div>
 }

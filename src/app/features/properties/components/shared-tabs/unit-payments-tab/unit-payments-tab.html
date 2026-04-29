@@ -1,0 +1,142 @@
+<div class="space-y-6 animate-fade-in">
+  
+  <!-- Header & Actions -->
+  <div class="flex items-center justify-between">
+    <h3 class="text-lg font-bold text-gray-900">Historique des Paiements</h3>
+    <button (click)="onAddPayment()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors shadow-sm">
+      <ng-icon name="lucidePlus" size="18" class="mr-2"></ng-icon>
+      Enregistrer un paiement
+    </button>
+  </div>
+
+  <!-- Résumé Financier (Cards) -->
+  @if (summary(); as sum) {
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      
+      <!-- Attendu -->
+      <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+        <p class="text-sm font-medium text-gray-500 mb-1">Loyer Total Attendu</p>
+        <p class="text-2xl font-bold text-gray-900">{{ sum.expected_rent | number }} FCFA</p>
+      </div>
+
+      <!-- Payé -->
+      <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+        <p class="text-sm font-medium text-gray-500 mb-1">Total Payé</p>
+        <p class="text-2xl font-bold text-emerald-600">{{ sum.total_paid | number }} FCFA</p>
+      </div>
+
+      <!-- Reste à payer -->
+      <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm relative overflow-hidden">
+        <div class="absolute right-0 top-0 h-full w-2" [class]="sum.balance_due > 0 ? 'bg-red-500' : 'bg-emerald-500'"></div>
+        <p class="text-sm font-medium text-gray-500 mb-1">Reste à Payer</p>
+        <p class="text-2xl font-bold" [class]="sum.balance_due > 0 ? 'text-red-600' : 'text-emerald-600'">
+          {{ sum.balance_due | number }} FCFA
+        </p>
+      </div>
+
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 bg-white rounded-xl border border-gray-200">
+      <svg class="animate-spin h-8 w-8 text-primary-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="text-gray-500">Chargement de l'historique...</p>
+    </div>
+  } @else {
+    <!-- Table -->
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th scope="col" class="px-5 py-3 font-semibold">Date</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Période</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Référence</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Montant</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Méthode</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Statut</th>
+              <th scope="col" class="px-5 py-3 font-semibold text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (payment of payments(); track payment.id) {
+              <tr class="bg-white border-b border-gray-50 hover:bg-gray-50/80 transition-colors">
+                
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                  <div class="font-medium text-gray-900">{{ payment.paid_at | date:'dd MMM yyyy' }}</div>
+                </td>
+
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    {{ formatPeriod(payment.period_start, payment.period_end) }}
+                  </span>
+                </td>
+                
+                <td class="px-5 py-3.5">
+                  <span class="text-gray-900 font-medium">{{ payment.reference }}</span>
+                  @if (payment.notes) {
+                    <p class="text-xs text-gray-400 mt-0.5 truncate max-w-[150px]">{{ payment.notes }}</p>
+                  }
+                </td>
+                
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                  <div class="font-bold text-gray-900">{{ payment.amount | number }} FCFA</div>
+                </td>
+                
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+                    <ng-icon name="lucideBanknote" size="14"></ng-icon>
+                    {{ getPaymentMethodLabel(payment.method) }}
+                  </span>
+                </td>
+                
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                  @if (payment.status === 'completed') {
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-100 text-emerald-700">
+                      <ng-icon name="lucideCheckCircle" size="14"></ng-icon>
+                      Payé
+                    </span>
+                  } @else if (payment.status === 'pending') {
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-100 text-amber-700">
+                      <ng-icon name="lucideClock" size="14"></ng-icon>
+                      En attente
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700">
+                      <ng-icon name="lucideAlertTriangle" size="14"></ng-icon>
+                      Échec
+                    </span>
+                  }
+                </td>
+                
+                <td class="px-5 py-3.5 text-right">
+                  <button class="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors mr-1" title="Télécharger le reçu">
+                    <ng-icon name="lucideDownload" size="16"></ng-icon>
+                  </button>
+                  <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                    <ng-icon name="lucideMoreVertical" size="16"></ng-icon>
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="px-5 py-10 text-center">
+                  <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-4">
+                    <ng-icon name="lucideBanknote" size="24" class="text-gray-400"></ng-icon>
+                  </div>
+                  <p class="text-sm font-medium text-gray-900">Aucun paiement trouvé</p>
+                  <p class="text-sm text-gray-500 mt-1">L'historique des paiements de cette unité est vide.</p>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+</div>

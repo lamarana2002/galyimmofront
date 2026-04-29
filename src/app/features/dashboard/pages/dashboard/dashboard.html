@@ -1,0 +1,140 @@
+<div class="animate-fade-in pb-10">
+  <!-- En-tête -->
+  <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Bonjour, {{ userName }} ! 👋</h1>
+      <p class="text-sm text-gray-500 mt-1">Voici ce qui se passe aujourd'hui avec vos propriétés.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <a routerLink="/properties" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors shadow-sm cursor-pointer">
+        <ng-icon name="lucidePlusCircle" size="18" class="mr-2"></ng-icon>
+        Nouvelle Propriété
+      </a>
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+    @for (stat of stats; track stat.title) {
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+        <div class="flex items-center justify-between">
+          <p class="text-sm font-medium text-gray-500">{{ stat.title }}</p>
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110" [ngClass]="stat.bg">
+             <ng-icon [name]="stat.icon" size="20" [class]="stat.text"></ng-icon>
+          </div>
+        </div>
+        <div class="mt-4 flex items-baseline gap-2">
+          <p class="text-3xl font-bold text-gray-900">{{ stat.value }}</p>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full" 
+                [class.bg-emerald-100]="stat.trend.includes('+')"
+                [class.text-emerald-700]="stat.trend.includes('+')"
+                [class.bg-gray-100]="stat.trend === 'Stable'"
+                [class.text-gray-700]="stat.trend === 'Stable'">
+             {{ stat.trend }}
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Graphiques -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Chart: Revenus -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 lg:col-span-2 relative">
+       <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Évolution des Revenus</h3>
+            <p class="text-xs text-gray-500">Derniers 6 mois</p>
+          </div>
+       </div>
+       <div class="w-full h-[300px]">
+          @if(revenueChartOptions) {
+             <apx-chart
+              [series]="revenueChartOptions.series"
+              [chart]="revenueChartOptions.chart"
+              [xaxis]="revenueChartOptions.xaxis"
+              [yaxis]="revenueChartOptions.yaxis"
+              [dataLabels]="revenueChartOptions.dataLabels"
+              [stroke]="revenueChartOptions.stroke"
+              [tooltip]="revenueChartOptions.tooltip"
+              [fill]="revenueChartOptions.fill"
+            ></apx-chart>
+          }
+       </div>
+    </div>
+
+    <!-- Chart: Donut Occupation -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col relative w-full overflow-hidden">
+       <div class="mb-4">
+         <h3 class="text-lg font-semibold text-gray-900">Statut des Unités</h3>
+       </div>
+       <div class="flex-1 flex items-center justify-center w-full">
+         @if(propertiesChartOptions) {
+             <apx-chart
+              class="w-full"
+              [series]="propertiesChartOptions.series"
+              [chart]="propertiesChartOptions.chart"
+              [labels]="propertiesChartOptions.labels"
+              [colors]="propertiesChartOptions.colors"
+              [plotOptions]="propertiesChartOptions.plotOptions"
+              [dataLabels]="propertiesChartOptions.dataLabels"
+              [legend]="propertiesChartOptions.legend"
+            ></apx-chart>
+         }
+       </div>
+    </div>
+  </div>
+
+  <!-- Activités Récentes et Raccourcis -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+     <!-- Activité -->
+     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 lg:col-span-2">
+       <div class="flex items-center justify-between mb-6">
+         <h3 class="text-lg font-semibold text-gray-900">Activité Récente</h3>
+         <button class="text-sm font-medium text-primary-600 hover:text-primary-800 transition-colors cursor-pointer">Tout voir</button>
+       </div>
+       
+       <div class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-gray-200 before:to-transparent">
+         @for(act of recentActivities; track act.desc) {
+            <div class="relative flex items-start gap-4">
+               <div class="absolute left-0 mt-1.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-primary-500 ml-4 z-10 box-content shadow-sm"></div>
+               <div class="ml-10 bg-gray-50/80 hover:bg-gray-50 p-3 rounded-xl border border-gray-100 flex-1 transition-colors">
+                  <p class="text-sm font-medium text-gray-900">{{ act.desc }}</p>
+                  <p class="text-xs text-gray-500 mt-1 line-clamp-1">{{ act.date }}</p>
+               </div>
+            </div>
+         }
+       </div>
+     </div>
+
+     <!-- Actions Rapides -->
+     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+       <div class="mb-5">
+         <h3 class="text-lg font-semibold text-gray-900">Actions Rapides</h3>
+       </div>
+       <div class="flex flex-col gap-3">
+          <a routerLink="/properties" class="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:border-primary-200 hover:bg-primary-50 text-gray-700 hover:text-primary-700 transition-all group cursor-pointer">
+             <div class="flex items-center gap-3">
+                <ng-icon name="lucideBuilding" size="20" class="text-gray-400 group-hover:text-primary-500"></ng-icon>
+                <span class="text-sm font-medium">Ajouter Propiété</span>
+             </div>
+             <ng-icon name="lucideArrowRight" size="16" class="text-gray-300 group-hover:translate-x-1 transition-transform"></ng-icon>
+          </a>
+          <a routerLink="/locataires" class="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 transition-all group cursor-pointer">
+             <div class="flex items-center gap-3">
+                <ng-icon name="lucideUsers" size="20" class="text-gray-400 group-hover:text-emerald-500"></ng-icon>
+                <span class="text-sm font-medium">Nouveau Locataire</span>
+             </div>
+             <ng-icon name="lucideArrowRight" size="16" class="text-gray-300 group-hover:translate-x-1 transition-transform"></ng-icon>
+          </a>
+          <a routerLink="/contrats" class="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:border-amber-200 hover:bg-amber-50 text-gray-700 hover:text-amber-700 transition-all group cursor-pointer">
+             <div class="flex items-center gap-3">
+                <ng-icon name="lucideFileText" size="20" class="text-gray-400 group-hover:text-amber-500"></ng-icon>
+                <span class="text-sm font-medium">Générer Contrat</span>
+             </div>
+             <ng-icon name="lucideArrowRight" size="16" class="text-gray-300 group-hover:translate-x-1 transition-transform"></ng-icon>
+          </a>
+       </div>
+     </div>
+  </div>
+</div>

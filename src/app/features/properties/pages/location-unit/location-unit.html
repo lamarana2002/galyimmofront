@@ -283,6 +283,14 @@
           />
         }
 
+        <!-- ═══ ONGLET PAIEMENTS ═══ -->
+        @if (activeTab === 'paiements') {
+          <app-unit-payments-tab 
+            [unitId]="unite()?.id ?? 0"
+            (addPayment)="openPaymentModal()"
+          />
+        }
+
         <!-- ═══ ONGLET DOCUMENTS ═══ -->
         <!-- @if (activeTab === 'documents') {
           @if (!unite.documents || unite.documents.length === 0) {
@@ -619,5 +627,13 @@
     [initialSubject]="'Concernant votre location'"
     (sendMessage)="contacterLocataire($event)"
     (cancel)="showContactModal.set(false)"
+  />
+}
+
+@if (showPaymentModal()) {
+  <app-payment-modal
+    [contractId]="unite()?.current_location?.id?.toString() ?? ''"
+    (close)="closePaymentModal()"
+    (paymentSuccess)="onPaymentSuccess()"
   />
 }
