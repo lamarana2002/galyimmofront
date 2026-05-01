@@ -184,13 +184,27 @@
                         </a>
                       }
                       @if (location.property?.id) {
-                        <a
-                          [routerLink]="['/properties', location.property?.id]"
-                          class="p-2 text-primary-400 hover:text-primary-700 rounded-lg hover:bg-primary-50 transition-all"
-                          title="Voir bien"
-                        >
-                          <ng-icon name="lucideHome" size="15"></ng-icon>
-                        </a>
+                        @if (location.property!.has_units) {
+                          <!-- Bien avec unités → /properties/1/units/3?tab=locations -->
+                          <a
+                            [routerLink]="['/properties', location.property!.id, 'units', location.unite_location!.id]"
+                            [queryParams]="{ tab: 'locations' }"
+                            class="p-2 text-primary-400 hover:text-primary-700 rounded-lg hover:bg-primary-50 transition-all"
+                            title="Voir l'unité"
+                          >
+                            <ng-icon name="lucideHome" size="15"></ng-icon>
+                          </a>
+                        } @else {
+                          <!-- Bien simple → /properties/11?tab=contrats -->
+                          <a
+                            [routerLink]="['/properties', location.property!.id]"
+                            [queryParams]="{ tab: 'contrats' }"
+                            class="p-2 text-primary-400 hover:text-primary-700 rounded-lg hover:bg-primary-50 transition-all"
+                            title="Voir le bien"
+                          >
+                            <ng-icon name="lucideHome" size="15"></ng-icon>
+                          </a>
+                        }
                       }
                       @if (location.status === LocationStatusEnum.ACTIVE) {
                         <button

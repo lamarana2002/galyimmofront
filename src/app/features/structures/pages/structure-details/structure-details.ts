@@ -212,6 +212,12 @@ export class StructureDetails implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadStructure();
+
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['tab']) {
+        this.activeTab.set(params['tab']);
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -249,6 +255,12 @@ export class StructureDetails implements OnInit, OnDestroy {
   // ── Onglets ───────────────────────────────────────────────────
   setActiveTab(tab: string): void {
     this.activeTab.set(tab);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   // ── Actions ───────────────────────────────────────────────────

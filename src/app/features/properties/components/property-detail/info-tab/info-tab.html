@@ -34,7 +34,7 @@
           </div>
         </div>
       }
-      @if (bien.units) {
+      @if (bien.has_units && bien.units) {
         <div class="flex items-center gap-3">
           <div
             class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -46,6 +46,41 @@
             <p class="text-sm font-semibold text-primary-900">{{ bien.units.length }}</p>
           </div>
         </div>
+      }
+      @if (!bien.has_units && primaryUnit) {
+        @if (primaryUnit.rooms) {
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+              <ng-icon name="lucideDoorOpen" size="14" class="text-primary-600"></ng-icon>
+            </div>
+            <div>
+              <p class="text-[10px] text-primary-400">Pièces</p>
+              <p class="text-sm font-semibold text-primary-900">{{ primaryUnit.rooms }}</p>
+            </div>
+          </div>
+        }
+        @if (primaryUnit.bedrooms) {
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+              <ng-icon name="lucideBed" size="14" class="text-primary-600"></ng-icon>
+            </div>
+            <div>
+              <p class="text-[10px] text-primary-400">Chambres</p>
+              <p class="text-sm font-semibold text-primary-900">{{ primaryUnit.bedrooms }}</p>
+            </div>
+          </div>
+        }
+        @if (primaryUnit.bathrooms) {
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+              <ng-icon name="lucideBath" size="14" class="text-primary-600"></ng-icon>
+            </div>
+            <div>
+              <p class="text-[10px] text-primary-400">Salles d'eau</p>
+              <p class="text-sm font-semibold text-primary-900">{{ primaryUnit.bathrooms }}</p>
+            </div>
+          </div>
+        }
       }
       <div class="flex items-center gap-3">
         <div
