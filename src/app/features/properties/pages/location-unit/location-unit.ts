@@ -147,7 +147,7 @@ export class LocationUnit implements OnInit, OnDestroy {
   isLoading = signal(true);
   error = signal<string | null>(null);
   unite = signal<ILocationUnit | null>(null);
-  
+
   // Modales & Confirmation
   showDeleteConfirm = signal(false);
   deleteLoading = signal(false);
@@ -199,7 +199,7 @@ export class LocationUnit implements OnInit, OnDestroy {
   allLocations = computed(() => {
     const unit = this.unite();
     if (!unit) return [];
-    
+
     // Combiner current_location et locations
     const locations: ILocationModel[] = [...(unit.locations ?? [])];
     if (unit.current_location) {
@@ -209,7 +209,7 @@ export class LocationUnit implements OnInit, OnDestroy {
       }
     }
     // Trier par date décroissante (plus récent en haut)
-    return locations.sort((a, b) => 
+    return locations.sort((a, b) =>
       new Date(b.date_location).getTime() - new Date(a.date_location).getTime()
     );
   });
@@ -223,6 +223,12 @@ export class LocationUnit implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadUnit();
+
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['tab']) {
+        this.activeTab = params['tab'];
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -268,6 +274,15 @@ export class LocationUnit implements OnInit, OnDestroy {
   }
 
   // ── Actions ───────────────────────────────────────────────────
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+  }
   openEditUnit(): void {
     this.editingUnit.set(this.unite());
     this.showUnitModal.set(true);
