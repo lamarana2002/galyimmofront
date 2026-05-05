@@ -1,18 +1,16 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, signal } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SidebarService {
-  private _isOpen = new BehaviorSubject<boolean>(false);
-  isOpen$ = this._isOpen.asObservable();
+  isOpen = signal(false);
 
   toggle(): void {
-    this._isOpen.next(!this._isOpen.value);
+    this.isOpen.update(v => !v);
   }
 
   close(): void {
-    this._isOpen.next(false);
+    this.isOpen.set(false);
   }
 }

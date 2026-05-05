@@ -113,6 +113,51 @@
           </div>
         </div>
 
+        <!-- SECTION: Configuration de location (bien simple sans unités) -->
+        @if (!form().has_units) {
+          <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5">
+            <h4 class="text-sm font-bold text-primary-800 mb-4 flex items-center gap-2">
+              <ng-icon name="lucideKey" size="16" class="text-secondary-500"></ng-icon>
+              Configuration de location
+            </h4>
+            <p class="text-xs text-primary-400 mb-4 -mt-2">
+              Ce bien n'a pas d'unités — ces informations serviront à créer automatiquement la fiche de location.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-primary-600 mb-1.5">Pièces (Total)</label>
+                <input [(ngModel)]="form().rooms" type="number" min="0" placeholder="0"
+                  class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-primary-600 mb-1.5">Chambres</label>
+                <input [(ngModel)]="form().bedrooms" type="number" min="0" placeholder="0"
+                  class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-primary-600 mb-1.5">Salles d'eau</label>
+                <input [(ngModel)]="form().bathrooms" type="number" min="0" placeholder="0"
+                  class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-primary-600 mb-1.5">Loyer mensuel (GNF)</label>
+                <input [(ngModel)]="form().rent_amount" type="number" min="0" placeholder="0"
+                  class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-primary-600 mb-1.5">Caution (GNF)</label>
+                <input [(ngModel)]="form().security_deposit" type="number" min="0" placeholder="0"
+                  class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-primary-600 mb-1.5">Charges/mois (GNF)</label>
+                <input [(ngModel)]="form().monthly_charges" type="number" min="0" placeholder="0"
+                  class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400 bg-white" />
+              </div>
+            </div>
+          </div>
+        }
+
         <!-- SECTION: Localisation (Découpage Géo) -->
         <div class="bg-gray-50/50 border border-gray-100 rounded-2xl p-5">
           <h4 class="text-sm font-bold text-primary-800 mb-4 flex items-center gap-2">

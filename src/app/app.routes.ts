@@ -130,7 +130,19 @@ export const routes: Routes = [
     loadComponent: () => import('./layouts/app-layout/app-layout').then((m) => m.AppLayout),
     canActivate: [authGuard],
     children: [
-      { path: '', redirectTo: 'properties', pathMatch: 'full' }, // ← redirection par défaut
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/pages/dashboard/dashboard').then((m) => m.DashboardComponent),
+      },
+
+      {
+        path: 'payments',
+        loadComponent: () =>
+          import('./features/payments/pages/payments-list/payments-list').then((m) => m.PaymentsListComponent),
+      },
 
       {
         path: 'structures',

@@ -1,7 +1,7 @@
-import { Component, inject, signal, computed, effect, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { 
   lucideUser, 
@@ -49,10 +49,11 @@ import { UpdateProfilePayload } from '../../../../core/auth/interfaces/update-pr
     }),
   ],
 })
-export class ProfileComponent implements OnDestroy {
+export class ProfileComponent implements OnInit, OnDestroy {
   private profileService = inject(ProfileService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private readonly destroy$ = new Subject<void>();
 
   // ── Signals ─────────────────────────────────────────────────────
@@ -109,6 +110,24 @@ export class ProfileComponent implements OnDestroy {
         });
       }
     }, { allowSignalWrites: true });
+  }
+
+  ngOnInit(): void {
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['tab']) {
+        this.activeTab.set(params['tab'] as 'infos' | 'security');
+      }
+    });
+  }
+
+  setActiveTab(tab: 'infos' | 'security'): void {
+    this.activeTab.set(tab);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   // ── Handlers ──────────────────────────────────────────────────

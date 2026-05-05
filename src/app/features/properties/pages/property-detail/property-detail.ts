@@ -82,6 +82,8 @@ import { CreateLocationModal } from '../../components/modals/create-location-mod
 import { PropertyDocumentService } from '../../services/property-document.service';
 import { UploadPropertyDocumentPayload } from '../../interfaces/upload-property-document-payload.interface';
 import { ContactService } from '../../../../shared/services/contact.service';
+import { UnitPaymentsTab } from '../../components/shared-tabs/unit-payments-tab/unit-payments-tab';
+import { PaymentModalComponent } from '../../../../shared/components/payment-modal/payment-modal';
 
 @Component({
   selector: 'app-property-detail',
@@ -102,7 +104,9 @@ import { ContactService } from '../../../../shared/services/contact.service';
     TenantTab,
     InfoTab,
     UnitsTab,
-    FinancialTab
+    FinancialTab,
+    UnitPaymentsTab,
+    PaymentModalComponent
 ],
   templateUrl: './property-detail.html',
   viewProviders: [
@@ -194,11 +198,33 @@ export class PropertyDetail implements OnInit, OnDestroy {
       { key: 'infos', label: 'Informations', icon: 'lucideInfo' },
       { key: 'locataire', label: 'Locataire', icon: 'lucideUser' },
       { key: 'contrats', label: 'Contrats', icon: 'lucideShieldCheck' },
+      { key: 'paiements', label: 'Paiements', icon: 'lucideBanknote' },
       { key: 'galerie', label: 'Galerie', icon: 'lucideImage' },
       { key: 'documents', label: 'Documents', icon: 'lucideFile' },
       { key: 'activite', label: 'Activité', icon: 'lucideHistory' },
     ];
   });
+
+  // ── Paiements ─────────────────────────────────────────────────
+  showPaymentModal = signal(false);
+
+  openPaymentModal(): void {
+    const unit = this.bien()?.units?.[0];
+    if (!unit || !unit.current_location) {
+      this.toast.warning('Aucun contrat actif pour enregistrer un paiement.');
+      return;
+    }
+    this.showPaymentModal.set(true);
+  }
+
+  closePaymentModal(): void {
+    this.showPaymentModal.set(false);
+  }
+
+  onPaymentSuccess(): void {
+    this.toast.success('Paiement enregistré avec succès.');
+    this.showPaymentModal.set(false);
+  }
 
   // ── Modales unité ─────────────────────────────────────────────
   showUnitModal = signal(false);
@@ -257,6 +283,12 @@ export class PropertyDetail implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadProperty();
+    
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['tab']) {
+        this.activeTab.set(params['tab']);
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -289,6 +321,12 @@ export class PropertyDetail implements OnInit, OnDestroy {
   // ── Onglets ───────────────────────────────────────────────────
   setActiveTab(tab: string): void {
     this.activeTab.set(tab);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true // Évite d'encombrer l'historique de navigation
+    });
   }
 
   // ── Actions Bien ──────────────────────────────────────────────

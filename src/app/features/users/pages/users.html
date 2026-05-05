@@ -23,7 +23,7 @@
     <div class="px-6 pb-0">
       <div class="flex gap-1">
         @for (tab of tabs; track tab.key) {
-          <button (click)="activeTab.set(tab.key)"
+          <button (click)="setActiveTab(tab.key)"
             class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium
                    border-b-2 transition-all whitespace-nowrap"
             [class]="activeTab() === tab.key

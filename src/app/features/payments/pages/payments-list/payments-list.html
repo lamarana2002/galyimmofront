@@ -1,0 +1,184 @@
+<div class="min-h-screen" style="background: #f4f1ee">
+  <!-- ══ BREADCRUMB + HEADER ══ -->
+  <div class="bg-white border-b border-gray-200 shadow-sm sticky top-16 z-30">
+    <div class="px-6 py-3.5">
+      <!-- Fil d'Ariane -->
+      <div class="flex items-center gap-1.5 text-xs text-primary-400 mb-3 flex-wrap">
+        <a routerLink="/dashboard" class="hover:text-primary-700 transition-colors font-medium">Tableau de bord</a>
+        <span class="text-primary-200">/</span>
+        <span class="text-primary-700 font-semibold">Paiements</span>
+      </div>
+
+      <!-- Header compact -->
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-4">
+          <!-- Icône page -->
+          <div class="w-12 h-12 rounded-xl bg-primary-800 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <ng-icon name="lucideBanknote" size="22" class="text-white"></ng-icon>
+          </div>
+
+          <div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <h1 class="text-lg font-bold text-primary-900" style="letter-spacing: -0.02em">
+                Historique des Paiements
+              </h1>
+              <span class="px-2 py-0.5 text-[10px] font-bold bg-green-100 text-green-700 rounded-full">
+                Mois en cours
+              </span>
+            </div>
+            <!-- Méta compact -->
+            <div class="flex items-center gap-3 mt-0.5 text-xs text-primary-400">
+              <span class="flex items-center gap-1">
+                Vue globale comptable de l'ensemble des encaissements.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions header (Filtres & Export) -->
+        <div class="flex items-center gap-2">
+          <!-- Filtres basiques -->
+          <div class="flex items-center bg-gray-50 border border-gray-200 rounded-xl p-1 gap-1">
+            <button class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white shadow-sm text-primary-700">
+              Tous
+            </button>
+            <button class="px-3 py-1.5 text-xs font-medium rounded-lg text-primary-500 hover:text-primary-700 transition-colors">
+              Encaissés
+            </button>
+            <button class="px-3 py-1.5 text-xs font-medium rounded-lg text-primary-500 hover:text-primary-700 transition-colors">
+              En attente
+            </button>
+          </div>
+
+          <button class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-primary-600 bg-white hover:bg-primary-50 border border-gray-200 rounded-xl transition-all ml-2">
+            <ng-icon name="lucideFilter" size="13"></ng-icon>
+            Filtres avancés
+          </button>
+          <button class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xl transition-all shadow-sm">
+            <ng-icon name="lucideDownload" size="13"></ng-icon>
+            Exporter
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CONTENU PRINCIPAL ══ -->
+  <div class="px-6 py-5">
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center min-h-[50vh]">
+        <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600"></div>
+        <p class="mt-4 text-primary-600 font-medium">Chargement des transactions...</p>
+      </div>
+    } @else {
+      <!-- Conteneur Tableau -->
+      <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left text-primary-600">
+            <thead class="text-xs text-primary-400 uppercase bg-gray-50 border-b border-gray-100">
+              <tr>
+                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Date</th>
+                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Période</th>
+                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Référence</th>
+                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Contrat (ID)</th>
+                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Montant</th>
+                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Méthode</th>
+                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Statut</th>
+                <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (payment of payments(); track payment.id) {
+                <tr class="hover:bg-gray-50/50 transition-colors group">
+                  
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="font-medium text-primary-900">{{ payment.paid_at | date:'dd/MM/yyyy' }}</div>
+                    <div class="text-[11px] text-primary-400 mt-0.5">{{ payment.paid_at | date:'HH:mm' }}</div>
+                  </td>
+
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                      {{ formatPeriod(payment.period_start, payment.period_end) }}
+                    </span>
+                  </td>
+                  
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="font-semibold text-primary-800">{{ payment.reference }}</div>
+                    @if (payment.notes) {
+                      <div class="text-[11px] text-primary-400 mt-0.5 truncate max-w-[150px]">{{ payment.notes }}</div>
+                    }
+                  </td>
+  
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-50 border border-gray-100 rounded-lg text-primary-600 font-mono text-xs cursor-pointer hover:bg-gray-100 transition-colors">
+                      <ng-icon name="lucideShieldCheck" size="12" class="text-primary-400"></ng-icon>
+                      {{ payment.contract_id }}
+                    </div>
+                  </td>
+                  
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-bold text-primary-900">{{ payment.amount | number:'1.0-0' }}</div>
+                    <div class="text-[10px] text-primary-400 mt-0.5">FCFA</div>
+                  </td>
+                  
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-50 border border-gray-100 text-primary-600">
+                      <ng-icon name="lucideBanknote" size="13" class="text-primary-400"></ng-icon>
+                      {{ getPaymentMethodLabel(payment.method) }}
+                    </span>
+                  </td>
+                  
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    @if (payment.status === 'completed') {
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-green-50 text-green-700 border border-green-100">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        Encaissé
+                      </span>
+                    } @else if (payment.status === 'pending') {
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        En attente
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-100">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        Échec
+                      </span>
+                    }
+                  </td>
+                  
+                  <td class="px-6 py-4 whitespace-nowrap text-right">
+                    <button class="p-1.5 text-primary-400 hover:text-secondary-500 hover:bg-secondary-50 rounded-lg transition-all mr-1 opacity-0 group-hover:opacity-100" title="Générer Quittance">
+                      <ng-icon name="lucideDownload" size="15"></ng-icon>
+                    </button>
+                    <button class="p-1.5 text-primary-400 hover:text-primary-700 hover:bg-gray-100 rounded-lg transition-all">
+                      <ng-icon name="lucideMoreVertical" size="15"></ng-icon>
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="px-6 py-20 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-50 mb-4 border border-gray-100">
+                      <ng-icon name="lucideBanknote" size="28" class="text-primary-300"></ng-icon>
+                    </div>
+                    <p class="text-base font-semibold text-primary-900">Aucune transaction</p>
+                    <p class="text-sm text-primary-400 mt-1 max-w-sm mx-auto">Vous n'avez pas encore enregistré de paiements ou aucun paiement ne correspond à vos filtres.</p>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination Component -->
+        <app-pagination 
+          [currentPage]="currentPage()" 
+          [totalItems]="totalItems()" 
+          [perPage]="perPage()" 
+          (pageChange)="onPageChange($event)">
+        </app-pagination>
+      </div>
+    }
+  </div>
+</div>

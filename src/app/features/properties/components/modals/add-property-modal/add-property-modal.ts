@@ -22,6 +22,7 @@ import {
   lucideInfo,
   lucideLayoutGrid,
   lucideBanknote,
+  lucideKey,
 } from '@ng-icons/lucide';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { GeoService } from '../../../../../shared/services/geo.service';
@@ -47,6 +48,13 @@ interface PropertyForm {
   cover_image: File | null;
   cover_image_preview: string | null;
   amenities: string;
+  // Champs location (utilisés uniquement si has_units = false)
+  rooms: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  rent_amount: number | null;
+  security_deposit: number | null;
+  monthly_charges: number | null;
 }
 
 @Component({
@@ -55,20 +63,21 @@ interface PropertyForm {
   templateUrl: './add-property-modal.html',
   styleUrl: './add-property-modal.css',
   viewProviders: [
-    provideIcons({ 
-      lucideImage, 
-      lucideSave, 
-      lucideHouse, 
-      lucideBriefcase, 
-      lucideShoppingBag, 
-      lucideAlertTriangle, 
+    provideIcons({
+      lucideImage,
+      lucideSave,
+      lucideHouse,
+      lucideBriefcase,
+      lucideShoppingBag,
+      lucideAlertTriangle,
       lucideMapPin,
       lucidePencil,
       lucidePlus,
       lucideX,
       lucideInfo,
       lucideLayoutGrid,
-      lucideBanknote
+      lucideBanknote,
+      lucideKey,
     }),
   ],
 })
@@ -140,6 +149,12 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     cover_image: null,
     cover_image_preview: null,
     amenities: '',
+    rooms: null,
+    bedrooms: null,
+    bathrooms: null,
+    rent_amount: null,
+    security_deposit: null,
+    monthly_charges: null,
   });
 
   ngOnInit(): void {
@@ -166,7 +181,27 @@ export class AddPropertyModal implements OnInit, OnDestroy {
         cover_image: null,
         cover_image_preview: property.cover_image,
         amenities: property.amenities ? JSON.stringify(property.amenities, null, 2) : '',
+        rooms: null,
+        bedrooms: null,
+        bathrooms: null,
+        rent_amount: null,
+        security_deposit: null,
+        monthly_charges: null,
       });
+      if (!property.has_units) {
+        const primaryUnit = property.units?.find(u => u.is_primary) ?? property.units?.[0] ?? null;
+        if (primaryUnit) {
+          this.form.update(f => ({
+            ...f,
+            rooms: primaryUnit.rooms,
+            bedrooms: primaryUnit.bedrooms,
+            bathrooms: primaryUnit.bathrooms,
+            rent_amount: primaryUnit.rent_amount,
+            security_deposit: primaryUnit.security_deposit,
+            monthly_charges: primaryUnit.monthly_charges,
+          }));
+        }
+      }
       // Pré-remplissage de la géo-localisation
       if (property.adresse) {
         this.selectedCountryId.set(property.adresse.square_area?.quartier?.commune?.ville?.region?.country_id ?? null);
@@ -358,6 +393,16 @@ export class AddPropertyModal implements OnInit, OnDestroy {
       amenities:
         Array.isArray(current.amenities) && current.amenities.length > 0 ? current.amenities : null,
       ...(current.cover_image instanceof File ? { cover_image: current.cover_image } : {}),
+      ...(!current.has_units ? {
+        primary_unit: {
+          rooms: current.rooms,
+          bedrooms: current.bedrooms,
+          bathrooms: current.bathrooms,
+          rent_amount: current.rent_amount,
+          security_deposit: current.security_deposit,
+          monthly_charges: current.monthly_charges,
+        },
+      } : {}),
     };
 
     const editingProperty = this.editingProperty();

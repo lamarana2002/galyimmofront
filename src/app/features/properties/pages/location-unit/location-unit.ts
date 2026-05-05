@@ -61,6 +61,8 @@ import { LocationStatusEnum } from '../../enums/location-status.enum';
 import { ContactModal } from '../../../../shared/components/modals/contact-modal/contact-modal';
 import { ContactService } from '../../../../shared/services/contact.service';
 import { IUnitGallery } from '../../models/unit-gallery.model';
+import { UnitPaymentsTab } from '../../components/shared-tabs/unit-payments-tab/unit-payments-tab';
+import { PaymentModalComponent } from '../../../../shared/components/payment-modal/payment-modal';
 
 // Pour la compatibilité avec property-gallery.service.ts
 export type GalleryImage = IUnitGallery;
@@ -83,6 +85,8 @@ export type GalleryImage = IUnitGallery;
     CreateLocationModal,
     ConfirmDialogComponent,
     ContactModal,
+    UnitPaymentsTab,
+    PaymentModalComponent
   ],
   templateUrl: './location-unit.html',
   viewProviders: [
@@ -143,7 +147,7 @@ export class LocationUnit implements OnInit, OnDestroy {
   isLoading = signal(true);
   error = signal<string | null>(null);
   unite = signal<ILocationUnit | null>(null);
-  
+
   // Modales & Confirmation
   showDeleteConfirm = signal(false);
   deleteLoading = signal(false);
@@ -160,6 +164,7 @@ export class LocationUnit implements OnInit, OnDestroy {
   unitSaving = signal(false);
   showLocationModal = signal(false);
   showContactModal = signal(false);
+  showPaymentModal = signal(false);
 
   // UI
   activeTab = 'infos';
@@ -168,6 +173,7 @@ export class LocationUnit implements OnInit, OnDestroy {
     { key: 'locataire', label: 'Locataire', icon: 'lucideUser' },
     { key: 'locations', label: 'Locations', icon: 'lucideShieldCheck' },
     { key: 'photos', label: 'Photos', icon: 'lucideImage' },
+    { key: 'paiements', label: 'Paiements', icon: 'lucideBanknote' },
   ];
 
   // ── Computed ──────────────────────────────────────────────────
@@ -193,7 +199,7 @@ export class LocationUnit implements OnInit, OnDestroy {
   allLocations = computed(() => {
     const unit = this.unite();
     if (!unit) return [];
-    
+
     // Combiner current_location et locations
     const locations: ILocationModel[] = [...(unit.locations ?? [])];
     if (unit.current_location) {
@@ -203,7 +209,7 @@ export class LocationUnit implements OnInit, OnDestroy {
       }
     }
     // Trier par date décroissante (plus récent en haut)
-    return locations.sort((a, b) => 
+    return locations.sort((a, b) =>
       new Date(b.date_location).getTime() - new Date(a.date_location).getTime()
     );
   });
@@ -217,6 +223,12 @@ export class LocationUnit implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadUnit();
+
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['tab']) {
+        this.activeTab = params['tab'];
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -262,6 +274,15 @@ export class LocationUnit implements OnInit, OnDestroy {
   }
 
   // ── Actions ───────────────────────────────────────────────────
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+  }
   openEditUnit(): void {
     this.editingUnit.set(this.unite());
     this.showUnitModal.set(true);
@@ -446,5 +467,25 @@ export class LocationUnit implements OnInit, OnDestroy {
     this.toast.info('Fonctionnalité bientôt disponible.');
     this.showDeleteImage = false;
     this.deletingImageId = null;
+  }
+
+  // ── Paiements ──────────────────────────────────────────────────
+  openPaymentModal(): void {
+    const currentLocation = this.unite()?.current_location;
+    if (!currentLocation) {
+      this.toast.warning('Aucun contrat actif pour enregistrer un paiement.');
+      return;
+    }
+    this.showPaymentModal.set(true);
+  }
+
+  closePaymentModal(): void {
+    this.showPaymentModal.set(false);
+  }
+
+  onPaymentSuccess(): void {
+    this.toast.success('Paiement enregistré avec succès.');
+    this.showPaymentModal.set(false);
+    // Reload if needed
   }
 }

@@ -10,6 +10,7 @@
         <span class="text-primary-200">/</span>
         <a
           [routerLink]="['/properties', unite()?.property?.id]"
+          [queryParams]="{ tab: 'unites' }"
           class="hover:text-primary-700 transition-colors font-medium truncate max-w-[180px]"
         >
           {{ unite()?.property?.name }}
@@ -114,7 +115,7 @@
         <div class="flex gap-1 min-w-max">
           @for (tab of tabs; track tab.key) {
             <button
-              (click)="activeTab = tab.key"
+              (click)="setActiveTab(tab.key)"
               class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap"
               [class]="
                 activeTab === tab.key
@@ -280,6 +281,14 @@
             (onUploadImage)="uploadImage()"
             (onCancelUpload)="cancelUpload()"
             (onFileSelected)="onFileSelected($event)"
+          />
+        }
+
+        <!-- ═══ ONGLET PAIEMENTS ═══ -->
+        @if (activeTab === 'paiements') {
+          <app-unit-payments-tab 
+            [unitId]="unite()?.id ?? 0"
+            (addPayment)="openPaymentModal()"
           />
         }
 
@@ -619,5 +628,13 @@
     [initialSubject]="'Concernant votre location'"
     (sendMessage)="contacterLocataire($event)"
     (cancel)="showContactModal.set(false)"
+  />
+}
+
+@if (showPaymentModal()) {
+  <app-payment-modal
+    [contractId]="unite()?.current_location?.id?.toString() ?? ''"
+    (close)="closePaymentModal()"
+    (paymentSuccess)="onPaymentSuccess()"
   />
 }
