@@ -125,7 +125,7 @@ export class DashboardComponent implements OnInit {
         }
       },
       tooltip: { theme: 'light' }
-    } as any;
+    } as unknown as ChartOptions;
   }
 
   private initPropertiesChart(): void {
@@ -152,6 +152,6 @@ export class DashboardComponent implements OnInit {
        },
        dataLabels: { enabled: false },
        legend: { position: 'bottom' }
-    } as any;
+    } as unknown as ChartOptions;
   }
 }

@@ -1,77 +1,134 @@
-import { Component, Input, OnInit, Output, EventEmitter, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  Input,
+  OnChanges,
+  Output,
+  EventEmitter,
+  inject,
+  signal,
+  SimpleChanges,
+} from '@angular/core';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   lucidePlus,
   lucideBanknote,
   lucideDownload,
-  lucideMoreVertical,
   lucideCheckCircle,
   lucideClock,
-  lucideAlertTriangle
+  lucideAlertTriangle,
+  lucideEye,
+  lucideFileText,
+  lucideChevronRight,
+  lucideRefreshCw,
+  lucideCalendar,
 } from '@ng-icons/lucide';
-import { PaymentService } from '../../../../../features/payments/services/payment.service';
-import { Payment, ContractFinancialSummary } from '../../../../../features/payments/models/payment.model';
+import { FactureService } from '../../../../../features/payments/services/facture.service';
+import { Facture, FacturePayment } from '../../../../../features/payments/models/facture.model';
 import { formatPaymentPeriod, getPaymentMethodLabel } from '../../../../../features/payments/utils/payment.utils';
+import { PaymentDetailDrawer } from './payment-detail-drawer';
 
 @Component({
   selector: 'app-unit-payments-tab',
   standalone: true,
-  imports: [CommonModule, NgIconComponent],
+  imports: [CommonModule, NgIconComponent, DatePipe, DecimalPipe, PaymentDetailDrawer],
   providers: [
     provideIcons({
       lucidePlus,
       lucideBanknote,
       lucideDownload,
-      lucideMoreVertical,
       lucideCheckCircle,
       lucideClock,
-      lucideAlertTriangle
-    })
+      lucideAlertTriangle,
+      lucideEye,
+      lucideFileText,
+      lucideChevronRight,
+      lucideRefreshCw,
+      lucideCalendar,
+    }),
   ],
-  templateUrl: './unit-payments-tab.html'
+  templateUrl: './unit-payments-tab.html',
 })
-export class UnitPaymentsTab implements OnInit {
-  @Input() unitId!: number;
+export class UnitPaymentsTab implements OnChanges {
+  @Input() locationId: number | null = null;
   @Output() addPayment = new EventEmitter<void>();
 
-  private paymentService = inject(PaymentService);
+  private factureService = inject(FactureService);
 
-  payments = signal<Payment[]>([]);
-  summary = signal<ContractFinancialSummary | null>(null);
-  isLoading = signal(true);
+  factures = signal<Facture[]>([]);
+  selectedFacture = signal<Facture | null>(null);
+  payments = signal<FacturePayment[]>([]);
+  drawerPayment = signal<FacturePayment | null>(null);
 
-  ngOnInit() {
-    this.loadPayments();
+  isLoadingFactures = signal(false);
+  isLoadingPayments = signal(false);
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['locationId'] && this.locationId) {
+      this.loadFactures();
+    }
   }
 
-  loadPayments() {
-    this.isLoading.set(true);
-    this.paymentService.getUnitPayments(this.unitId.toString()).subscribe({
+  loadFactures(): void {
+    if (!this.locationId) return;
+    this.isLoadingFactures.set(true);
+    this.selectedFacture.set(null);
+    this.payments.set([]);
+
+    this.factureService.getByLocation(this.locationId).subscribe({
       next: (res) => {
-        if (res.success) {
-          this.payments.set(res.data.payments);
-          if (res.data.summary) {
-            this.summary.set(res.data.summary);
-          }
-        }
-        this.isLoading.set(false);
+        this.factures.set(res.data ?? []);
+        this.isLoadingFactures.set(false);
       },
       error: () => {
-        this.isLoading.set(false);
-      }
+        this.isLoadingFactures.set(false);
+      },
     });
   }
 
-  onAddPayment() {
+  selectFacture(facture: Facture): void {
+    this.selectedFacture.set(facture);
+    this.isLoadingPayments.set(true);
+    this.payments.set([]);
+
+    this.factureService.getById(facture.id).subscribe({
+      next: (res) => {
+        this.payments.set(res.data.payments ?? []);
+        this.selectedFacture.set(res.data);
+        this.isLoadingPayments.set(false);
+      },
+      error: () => {
+        this.isLoadingPayments.set(false);
+      },
+    });
+  }
+
+  openDrawer(payment: FacturePayment): void {
+    this.drawerPayment.set(payment);
+  }
+
+  closeDrawer(): void {
+    this.drawerPayment.set(null);
+  }
+
+  onAddPayment(): void {
     this.addPayment.emit();
+  }
+
+  reload(): void {
+    this.loadFactures();
   }
 
   formatPeriod(start: string, end: string): string {
     return formatPaymentPeriod(start, end);
   }
 
-  getPaymentMethodLabel(method: string): string {
+  getMethodLabel(method: string): string {
     return getPaymentMethodLabel(method);
+  }
+
+  getProgressPercent(facture: Facture): number {
+    if (!facture.amount) return 0;
+    return Math.min(100, Math.round((facture.paid_amount / facture.amount) * 100));
   }
 }

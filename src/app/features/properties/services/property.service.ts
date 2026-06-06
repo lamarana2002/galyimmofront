@@ -64,7 +64,7 @@ export class PropertyService {
    * Gère cover_image en FormData
    */
   create(payload: CreatePropertyPayload): Observable<ApiResponse<PropertyModel>> {
-    const body = toFormDataIfNeeded(payload as unknown as Record<string, unknown>);
+    const body = toFormDataIfNeeded(payload);
     return this.http.post<ApiResponse<PropertyModel>>(this.baseUrl, body);
   }
 
@@ -121,7 +121,7 @@ export class PropertyService {
     let httpParams = new HttpParams();
     if (!params) return httpParams;
 
-    const map: Record<string, any> = {
+    const map: Record<string, string | number | null | undefined> = {
       page: params.page,
       per_page: params.perPage,
       search: params.search,

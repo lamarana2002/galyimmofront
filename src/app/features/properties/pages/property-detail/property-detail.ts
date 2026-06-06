@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -40,6 +40,7 @@ import {
   lucideShieldCheck,
   lucideUserPlus,
   lucideXCircle,
+  lucideRotateCcw,
 } from '@ng-icons/lucide';
 import { Subject, switchMap, takeUntil } from 'rxjs';
 
@@ -83,7 +84,13 @@ import { PropertyDocumentService } from '../../services/property-document.servic
 import { UploadPropertyDocumentPayload } from '../../interfaces/upload-property-document-payload.interface';
 import { ContactService } from '../../../../shared/services/contact.service';
 import { UnitPaymentsTab } from '../../components/shared-tabs/unit-payments-tab/unit-payments-tab';
+import { RenewLocationModal } from '../../../../shared/components/renew-location-modal/renew-location-modal';
+import { RenewLocationPayload } from '../../interfaces/renew-location-payload.interface';
 import { PaymentModalComponent } from '../../../../shared/components/payment-modal/payment-modal';
+import { LocationService } from '../../services/location.service';
+import { LocationStatusEnum } from '../../enums/location-status.enum';
+import { ContactModal } from '../../../../shared/components/modals/contact-modal/contact-modal';
+import { UnitSidePanel } from '../../components/shared-tabs/unit-side-panel/unit-side-panel';
 
 @Component({
   selector: 'app-property-detail',
@@ -106,8 +113,11 @@ import { PaymentModalComponent } from '../../../../shared/components/payment-mod
     UnitsTab,
     FinancialTab,
     UnitPaymentsTab,
-    PaymentModalComponent
-],
+    PaymentModalComponent,
+    ContactModal,
+    UnitSidePanel,
+    RenewLocationModal,
+  ],
   templateUrl: './property-detail.html',
   viewProviders: [
     provideIcons({
@@ -147,6 +157,7 @@ import { PaymentModalComponent } from '../../../../shared/components/payment-mod
       lucideShieldCheck,
       lucideUserPlus,
       lucideXCircle,
+      lucideRotateCcw,
     }),
   ],
 })
@@ -158,11 +169,13 @@ export class PropertyDetail implements OnInit, OnDestroy {
   private readonly galleryService = inject(PropertyGalleryService);
   protected readonly toast = inject(ToastService);
   private readonly documentService = inject(PropertyDocumentService);
-  private readonly contactService  = inject(ContactService);
+  private readonly contactService = inject(ContactService);
+  private readonly locationService = inject(LocationService);
   private readonly destroy$ = new Subject<void>();
 
   // ── Enums & utils exposés au template ─────────────────────────
   readonly PropertyStatus = PropertyStatusEnum;
+  readonly LocationStatusEnum = LocationStatusEnum;
   readonly getStatutLabel = getPropertyStatusLabel;
   readonly getStatutClass = getPropertyStatusBadgeClass;
   readonly getStatutDotClass = getPropertyStatusDotClass;
@@ -205,6 +218,8 @@ export class PropertyDetail implements OnInit, OnDestroy {
     ];
   });
 
+  @ViewChild('paymentsTab') paymentsTabRef?: UnitPaymentsTab;
+
   // ── Paiements ─────────────────────────────────────────────────
   showPaymentModal = signal(false);
 
@@ -224,6 +239,7 @@ export class PropertyDetail implements OnInit, OnDestroy {
   onPaymentSuccess(): void {
     this.toast.success('Paiement enregistré avec succès.');
     this.showPaymentModal.set(false);
+    this.paymentsTabRef?.reload();
   }
 
   // ── Modales unité ─────────────────────────────────────────────
@@ -242,6 +258,13 @@ export class PropertyDetail implements OnInit, OnDestroy {
   showPropertyModal = signal(false);
   showDeletePropertyConfirm = signal(false);
   deletePropertyLoading = signal(false);
+
+  // ── Contrat (bien simple) ─────────────────────────────────────
+  showRenewConfirm = signal(false);
+  showTerminateConfirm = signal(false);
+  renewingLocation = signal(false);
+  terminatingLocation = signal(false);
+  showContactModal = signal(false);
 
   // ── Galerie ───────────────────────────────────────────────────
   showDeleteImage = signal(false);
@@ -569,7 +592,12 @@ export class PropertyDetail implements OnInit, OnDestroy {
     this.showLocationModal.set(true);
   }
 
-  contacterLocataire(data: { subject: string; message: string }): void {
+  contacterLocataire(data?: { subject: string; message: string }): void {
+    if (!data) {
+      this.showContactModal.set(true);
+      return;
+    }
+
     const locataire = this.bien()?.units?.[0]?.current_locataire;
     if (!locataire?.email) {
       this.toast.error('Ce locataire n\'a pas d\'adresse email.');
@@ -583,10 +611,53 @@ export class PropertyDetail implements OnInit, OnDestroy {
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.toast.success('Message envoyé avec succès.');
+        this.showContactModal.set(false);
       },
       error: (err) => {
         this.toast.error(err?.error?.message ?? 'Erreur lors de l\'envoi de l\'email.');
       }
+    });
+  }
+
+  renewLocation(payload: RenewLocationPayload): void {
+    const location = this.bien()?.units?.[0]?.current_location;
+    if (!location || this.renewingLocation()) return;
+
+    this.renewingLocation.set(true);
+    this.locationService.renew(location.id, payload).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toast.success('Contrat renouvelé avec succès.');
+          this.showRenewConfirm.set(false);
+          this.loadProperty();
+        }
+        this.renewingLocation.set(false);
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? 'Erreur lors du renouvellement.');
+        this.renewingLocation.set(false);
+      },
+    });
+  }
+
+  terminateLocation(): void {
+    const location = this.bien()?.units?.[0]?.current_location;
+    if (!location || this.terminatingLocation()) return;
+
+    this.terminatingLocation.set(true);
+    this.locationService.terminate(location.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toast.success('Contrat résilié avec succès.');
+          this.showTerminateConfirm.set(false);
+          this.loadProperty();
+        }
+        this.terminatingLocation.set(false);
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? 'Erreur lors de la résiliation.');
+        this.terminatingLocation.set(false);
+      },
     });
   }
   onLocationSaved(): void {

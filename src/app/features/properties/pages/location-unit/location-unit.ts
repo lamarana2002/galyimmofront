@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -62,6 +62,9 @@ import { ContactModal } from '../../../../shared/components/modals/contact-modal
 import { ContactService } from '../../../../shared/services/contact.service';
 import { IUnitGallery } from '../../models/unit-gallery.model';
 import { UnitPaymentsTab } from '../../components/shared-tabs/unit-payments-tab/unit-payments-tab';
+import { UnitSidePanel } from '../../components/shared-tabs/unit-side-panel/unit-side-panel';
+import { RenewLocationModal } from '../../../../shared/components/renew-location-modal/renew-location-modal';
+import { RenewLocationPayload } from '../../interfaces/renew-location-payload.interface';
 import { PaymentModalComponent } from '../../../../shared/components/payment-modal/payment-modal';
 
 // Pour la compatibilité avec property-gallery.service.ts
@@ -86,7 +89,9 @@ export type GalleryImage = IUnitGallery;
     ConfirmDialogComponent,
     ContactModal,
     UnitPaymentsTab,
-    PaymentModalComponent
+    PaymentModalComponent,
+    UnitSidePanel,
+    RenewLocationModal,
   ],
   templateUrl: './location-unit.html',
   viewProviders: [
@@ -157,6 +162,8 @@ export class LocationUnit implements OnInit, OnDestroy {
   showTerminateConfirm = signal(false);
   renewingLocation = signal(false);
   terminatingLocation = signal(false);
+
+  @ViewChild('paymentsTab') paymentsTabRef?: UnitPaymentsTab;
 
   // Modal UI
   showUnitModal = signal(false);
@@ -337,14 +344,14 @@ export class LocationUnit implements OnInit, OnDestroy {
       });
   }
 
-  renewLocation(): void {
+  renewLocation(payload: RenewLocationPayload): void {
     const currentLocation = this.unite()?.current_location;
     if (!currentLocation) return;
     if (this.renewingLocation()) return;
 
     this.renewingLocation.set(true);
     this.locationService
-      .renew(currentLocation.id)
+      .renew(currentLocation.id, payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -486,6 +493,6 @@ export class LocationUnit implements OnInit, OnDestroy {
   onPaymentSuccess(): void {
     this.toast.success('Paiement enregistré avec succès.');
     this.showPaymentModal.set(false);
-    // Reload if needed
+    this.paymentsTabRef?.reload();
   }
 }

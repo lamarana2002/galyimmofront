@@ -1,11 +1,10 @@
-<div class="min-h-screen" style="background: #f4f1ee">
+<div class="min-h-screen bg-page">
   <div class="bg-white border-b border-gray-200 sticky top-16 z-30 shadow-sm">
     <div class="px-6 py-4">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1
-            class="text-xl font-bold text-primary-900 flex items-center gap-3"
-            style="letter-spacing: -0.02em"
+            class="text-xl font-bold text-primary-900 flex items-center gap-3" tracking-heading
           >
             <div class="w-9 h-9 rounded-lg bg-primary-800 flex items-center justify-center">
               <ng-icon name="lucideFileText" size="16" class="text-white"></ng-icon>
@@ -246,3 +245,11 @@
     }
   </div>
 </div>
+
+@if (showRenewModal()) {
+  <app-renew-location-modal
+    [rentAmount]="pendingRenewLocation()?.montant ?? 0"
+    (close)="showRenewModal.set(false); pendingRenewLocation.set(null)"
+    (confirmed)="confirmRenew($event)"
+  />
+}

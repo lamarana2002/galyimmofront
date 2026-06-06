@@ -10,7 +10,7 @@
  * Parcourt toutes les clés (profondeur 1). Les valeurs null/undefined
  * sont ignorées. Les tableaux sont sérialisés avec la notation clé[].
  */
-export function toFormDataIfNeeded(payload: Record<string, unknown>): FormData | Record<string, unknown> {
+export function toFormDataIfNeeded<T extends object>(payload: T): FormData | T {
   const hasFile = Object.values(payload).some(v => v instanceof File);
   if (!hasFile) return payload;
 

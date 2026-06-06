@@ -33,7 +33,7 @@ export class LocataireService {
   create(payload: CreateLocatairePayload): Observable<ApiResponse<ILocataire>> {
     return this.http.post<ApiResponse<ILocataire>>(
       this.baseUrl,
-      toFormDataIfNeeded(payload as unknown as Record<string, unknown>)
+      toFormDataIfNeeded(payload)
     );
   }
 
@@ -41,7 +41,7 @@ export class LocataireService {
 
   update(payload: UpdateLocatairePayload): Observable<ApiResponse<ILocataire>> {
     const { id, ...data } = payload;
-    const body = toFormDataIfNeeded(data as unknown as Record<string, unknown>);
+    const body = toFormDataIfNeeded(data);
 
     // Laravel nécessite _method=PUT pour les FormData
     if (body instanceof FormData) {
@@ -72,7 +72,7 @@ export class LocataireService {
     let p = new HttpParams();
     if (!params) return p;
 
-    const map: Record<string, any> = {
+    const map: Record<string, string | number | null | undefined> = {
       page:     params.page,
       per_page: params.perPage,
       search:   params.search,

@@ -84,7 +84,7 @@ export function unitToUpdatePayload(unit: ILocationUnit): UpdateUnitPayload {
     security_deposit:  unit.security_deposit,
     monthly_charges:   unit.monthly_charges,
     sale_price:        unit.sale_price,
-    status:            unit.status as unknown as PropertyStatusEnum,
+    status:            unit.status,
     description:       unit.description,
     amenities:         unit.amenities,
     is_furnished:      unit.is_furnished,

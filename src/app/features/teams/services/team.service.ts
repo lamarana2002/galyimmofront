@@ -26,7 +26,7 @@ export class TeamService {
   }
 
   create(payload: CreateTeamPayload): Observable<ApiResponse<TeamModel>> {
-    return this.http.post<ApiResponse<TeamModel>>(this.baseUrl, toFormDataIfNeeded(payload as unknown as Record<string, unknown>));
+    return this.http.post<ApiResponse<TeamModel>>(this.baseUrl, toFormDataIfNeeded(payload));
   }
 
   update(payload: UpdateTeamPayload): Observable<ApiResponse<TeamModel>> {
@@ -49,7 +49,7 @@ export class TeamService {
     let p = new HttpParams();
     if (!params) return p;
 
-    const map: Record<string, any> = {
+    const map: Record<string, string | number | null | undefined> = {
       page: params.page,
       per_page: params.perPage,
       search: params.search,

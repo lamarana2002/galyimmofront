@@ -122,6 +122,15 @@
     --font-mono: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
 }
 
+/* ─── Page utilities ────────────────────────────────────────────── */
+@utility bg-page {
+  background-color: #f4f1ee;
+}
+
+@utility tracking-heading {
+  letter-spacing: -0.02em;
+}
+
 /* ─── Toast animations ──────────────────────────────────────────── */
 @keyframes toast-in {
   from { opacity: 0; transform: translateX(100%); }

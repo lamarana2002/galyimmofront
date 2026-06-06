@@ -25,13 +25,13 @@ export class TestimonialService {
   }
 
   create(payload: CreateTestimonialPayload): Observable<ApiResponse<TestimonialModel>> {
-    const body = toFormDataIfNeeded(payload as Record<string, any>);
+    const body = toFormDataIfNeeded(payload);
     return this.http.post<ApiResponse<TestimonialModel>>(this.baseUrl, body);
   }
 
   update(payload: UpdateTestimonialPayload): Observable<ApiResponse<TestimonialModel>> {
     const { id, ...data } = payload;
-    const body = toFormDataIfNeeded(data as Record<string, any>);
+    const body = toFormDataIfNeeded(data);
     
     if (body instanceof FormData) {
       body.append('_method', 'PUT');
@@ -49,7 +49,7 @@ export class TestimonialService {
     let p = new HttpParams();
     if (!params) return p;
 
-    const map: Record<string, any> = {
+    const map: Record<string, string | number | null | undefined> = {
       page: params.page,
       per_page: params.perPage,
       search: params.search,

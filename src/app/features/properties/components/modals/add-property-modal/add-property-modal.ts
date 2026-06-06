@@ -236,8 +236,8 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     });
   }
 
-  onCountryChange(event: any): void {
-    const id = Number(event.target.value);
+  onCountryChange(event: Event): void {
+    const id = Number((event.target as HTMLSelectElement).value);
     this.selectedCountryId.set(id);
     this.selectedRegionId.set(null);
     this.clearGeoDown(0);
@@ -246,8 +246,8 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     }
   }
 
-  onRegionChange(event: any): void {
-    const id = Number(event.target.value);
+  onRegionChange(event: Event): void {
+    const id = Number((event.target as HTMLSelectElement).value);
     this.selectedRegionId.set(id);
     this.selectedVilleId.set(null);
     this.clearGeoDown(1);
@@ -256,8 +256,8 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     }
   }
 
-  onVilleChange(event: any): void {
-    const id = Number(event.target.value);
+  onVilleChange(event: Event): void {
+    const id = Number((event.target as HTMLSelectElement).value);
     this.selectedVilleId.set(id);
     this.selectedCommuneId.set(null);
     this.clearGeoDown(2);
@@ -266,8 +266,8 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     }
   }
 
-  onCommuneChange(event: any): void {
-    const id = Number(event.target.value);
+  onCommuneChange(event: Event): void {
+    const id = Number((event.target as HTMLSelectElement).value);
     this.selectedCommuneId.set(id);
     this.selectedQuartierId.set(null);
     this.clearGeoDown(3);
@@ -276,8 +276,8 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     }
   }
 
-  onQuartierChange(event: any): void {
-    const id = Number(event.target.value);
+  onQuartierChange(event: Event): void {
+    const id = Number((event.target as HTMLSelectElement).value);
     this.selectedQuartierId.set(id);
     this.selectedSquareAreaId.set(null);
     this.clearGeoDown(4);
@@ -286,8 +286,8 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     }
   }
 
-  onSquareAreaChange(event: any): void {
-    const id = Number(event.target.value);
+  onSquareAreaChange(event: Event): void {
+    const id = Number((event.target as HTMLSelectElement).value);
     this.selectedSquareAreaId.set(id);
     this.form.update(f => ({ ...f, square_area_id: id || null }));
   }
@@ -372,12 +372,12 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     this.saving.set(true);
     const current = this.form();
 
-    const payload = {
+    const payload: CreatePropertyPayload = {
       structure_id: this.structureId(),
       name: current.name,
       code: current.code,
-      property_type_id: current.property_type_id,
-      status: current.status,
+      property_type_id: Number(current.property_type_id),
+      status: current.status as PropertyStatusEnum,
       square_area_id: current.square_area_id,
       repere: current.repere,
       latitude: current.latitude,
@@ -390,8 +390,7 @@ export class AddPropertyModal implements OnInit, OnDestroy {
       has_units: current.has_units,
       is_active: current.is_active,
       description: current.description,
-      amenities:
-        Array.isArray(current.amenities) && current.amenities.length > 0 ? current.amenities : null,
+      amenities: null,
       ...(current.cover_image instanceof File ? { cover_image: current.cover_image } : {}),
       ...(!current.has_units ? {
         primary_unit: {
@@ -407,8 +406,8 @@ export class AddPropertyModal implements OnInit, OnDestroy {
 
     const editingProperty = this.editingProperty();
     const request = editingProperty
-      ? this.propertyService.update({ id: editingProperty.id, ...payload } as unknown as import('../../../interfaces/update-property-payload.interface').UpdatePropertyPayload)
-      : this.propertyService.create(payload as unknown as CreatePropertyPayload);
+      ? this.propertyService.update({ id: editingProperty.id, ...payload })
+      : this.propertyService.create(payload);
 
     request.pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {

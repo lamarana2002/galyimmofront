@@ -40,7 +40,7 @@ export interface ILocationUnit {
   description: string | null;
   
   // ── Métadonnées ────────────────────────────────────────
-  amenities: Record<string, any> | null;
+  amenities: Record<string, string> | null;
   is_furnished: boolean;
   is_active: boolean;
   

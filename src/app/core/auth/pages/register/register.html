@@ -1,5 +1,5 @@
 <!-- Hauteur écran fixe, zéro scroll global -->
-<div class="h-screen flex overflow-hidden" style="background:#f4f1ee;">
+<div class="h-screen flex overflow-hidden bg-page">
 
   <!-- ══ PANNEAU GAUCHE ══ -->
   <div class="hidden lg:flex lg:w-[420px] xl:w-[460px] flex-shrink-0 relative overflow-hidden flex-col justify-between p-10"
@@ -22,7 +22,7 @@
     <!-- Contenu central -->
     <div class="relative z-10 space-y-5">
       <div>
-        <h2 class="text-2xl xl:text-3xl font-bold text-white leading-tight mb-2" style="letter-spacing:-0.03em;">
+        <h2 class="text-2xl xl:text-3xl font-bold text-white leading-tight mb-2" tracking-[-0.03em]>
           Rejoignez des milliers<br>
           <span style="color:var(--color-secondary-300);">d'agences immobilières</span>
         </h2>
@@ -105,15 +105,15 @@
           </div>
 
           @if (currentStep === 1) {
-            <h1 class="text-xl font-bold text-primary-900" style="letter-spacing:-0.02em;">Vos informations</h1>
+            <h1 class="text-xl font-bold text-primary-900" tracking-heading>Vos informations</h1>
             <p class="text-sm text-primary-400 mt-0.5">Profil personnel et localisation</p>
           }
           @if (currentStep === 2) {
-            <h1 class="text-xl font-bold text-primary-900" style="letter-spacing:-0.02em;">Votre structure</h1>
+            <h1 class="text-xl font-bold text-primary-900" tracking-heading>Votre structure</h1>
             <p class="text-sm text-primary-400 mt-0.5">Agence, plan tarifaire et médias</p>
           }
           @if (currentStep === 3) {
-            <h1 class="text-xl font-bold text-primary-900" style="letter-spacing:-0.02em;">Sécurité & confirmation</h1>
+            <h1 class="text-xl font-bold text-primary-900" tracking-heading>Sécurité & confirmation</h1>
             <p class="text-sm text-primary-400 mt-0.5">Mot de passe et acceptation des conditions</p>
           }
         </div>

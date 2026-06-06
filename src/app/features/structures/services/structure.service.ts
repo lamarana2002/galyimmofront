@@ -55,7 +55,7 @@ export class StructureService {
    * Envoie en FormData si logo ou cover sont présents (fichiers)
    */
   create(payload: CreateStructurePayload): Observable<ApiResponse<StructureModel>> {
-    const body = toFormDataIfNeeded(payload as unknown as Record<string, unknown>);
+    const body = toFormDataIfNeeded(payload);
     return this.http.post<ApiResponse<StructureModel>>(this.baseUrl, body);
   }
 
@@ -141,7 +141,7 @@ export class StructureService {
     let params = new HttpParams();
     if (!query) return params;
 
-    const map: Record<string, any> = {
+    const map: Record<string, string | number | null | undefined> = {
       page:     query.page,
       per_page: query.perPage,
       search:   query.search,

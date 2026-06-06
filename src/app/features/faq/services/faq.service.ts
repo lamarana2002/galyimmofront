@@ -41,7 +41,7 @@ export class FaqService {
     let p = new HttpParams();
     if (!params) return p;
 
-    const map: Record<string, any> = {
+    const map: Record<string, string | number | null | undefined> = {
       page: params.page,
       per_page: params.perPage,
       search: params.search,

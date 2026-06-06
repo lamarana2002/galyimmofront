@@ -34,7 +34,7 @@ export class UserService {
   create(payload: CreateUserPayload): Observable<ApiResponse<UserModel>> {
     return this.http.post<ApiResponse<UserModel>>(
       this.baseUrl,
-      toFormDataIfNeeded(payload as unknown as Record<string, unknown>)
+      toFormDataIfNeeded(payload)
     );
   }
 
@@ -42,7 +42,7 @@ export class UserService {
 
   update(payload: UpdateUserPayload): Observable<ApiResponse<UserModel>> {
     const { id, ...data } = payload;
-    const body = toFormDataIfNeeded(data as unknown as Record<string, unknown>);
+    const body = toFormDataIfNeeded(data);
 
     if (body instanceof FormData) {
       body.append('_method', 'PUT');
@@ -70,7 +70,7 @@ export class UserService {
     let p = new HttpParams();
     if (!params) return p;
 
-    const map: Record<string, any> = {
+    const map: Record<string, string | number | null | undefined> = {
       page:     params.page,
       per_page: params.perPage,
       search:   params.search,

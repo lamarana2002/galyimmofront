@@ -183,7 +183,7 @@ export class LocationUnitService {
     let httpParams = new HttpParams();
     if (!params) return httpParams;
 
-    const map: Record<string, any> = {
+    const map: Record<string, string | number | boolean | null | undefined> = {
       page: params.page,
       per_page: params.perPage,
       search: params.search,

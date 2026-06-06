@@ -8,6 +8,7 @@ import { PaginatedResponse } from '../../../shared/interfaces/paginated-response
 import { IQueryParam } from '../../../shared/interfaces/query-parms.interface';
 import { ILocationModel } from '../models/location.model';
 import { CreateLocationPayload } from '../interfaces/create-location-payload.interface';
+import { RenewLocationPayload } from '../interfaces/renew-location-payload.interface';
 
 @Injectable({ providedIn: 'root' })
 export class LocationService {
@@ -35,8 +36,8 @@ export class LocationService {
     });
   }
 
-  renew(id: number): Observable<ApiResponse<ILocationModel>> {
-    return this.http.post<ApiResponse<ILocationModel>>(`${this.baseUrl}/${id}/renew`, {});
+  renew(id: number, payload: RenewLocationPayload): Observable<ApiResponse<ILocationModel>> {
+    return this.http.post<ApiResponse<ILocationModel>>(`${this.baseUrl}/${id}/renew`, payload);
   }
 
   terminate(id: number): Observable<ApiResponse<ILocationModel>> {

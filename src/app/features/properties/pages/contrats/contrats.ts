@@ -29,6 +29,8 @@ import { LoadingComponent } from '../../../../shared/components/loading/loading'
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state';
 import { LocationStatusEnum } from '../../enums/location-status.enum';
 import { LocationHelper } from '../../utils/location.utils';
+import { RenewLocationModal } from '../../../../shared/components/renew-location-modal/renew-location-modal';
+import { RenewLocationPayload } from '../../interfaces/renew-location-payload.interface';
 
 @Component({
   selector: 'app-contrats',
@@ -43,6 +45,7 @@ import { LocationHelper } from '../../utils/location.utils';
     Pagination,
     LoadingComponent,
     EmptyStateComponent,
+    RenewLocationModal,
   ],
   templateUrl: './contrats.html',
   viewProviders: [
@@ -88,6 +91,10 @@ export class Contrats implements OnInit, OnDestroy {
   // Actions
   renewingId = signal<number | null>(null);
   terminatingId = signal<number | null>(null);
+
+  // Renouvellement modal
+  showRenewModal = signal(false);
+  pendingRenewLocation = signal<ILocationModel | null>(null);
 
   readonly statusFilters: Array<{
     label: string;
@@ -214,11 +221,18 @@ export class Contrats implements OnInit, OnDestroy {
   }
 
   renewContract(location: ILocationModel): void {
-    if (this.renewingId()) return; // Prevent multiple clicks
+    this.pendingRenewLocation.set(location);
+    this.showRenewModal.set(true);
+  }
+
+  confirmRenew(payload: RenewLocationPayload): void {
+    const location = this.pendingRenewLocation();
+    if (!location) return;
 
     this.renewingId.set(location.id);
+    this.showRenewModal.set(false);
     this.locationService
-      .renew(location.id)
+      .renew(location.id, payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -227,10 +241,12 @@ export class Contrats implements OnInit, OnDestroy {
             this.loadContracts(this.currentPage());
           }
           this.renewingId.set(null);
+          this.pendingRenewLocation.set(null);
         },
         error: (err) => {
           this.toast.error(err?.error?.message ?? 'Erreur lors du renouvellement du contrat.');
           this.renewingId.set(null);
+          this.pendingRenewLocation.set(null);
         },
       });
   }
