@@ -1,23 +1,25 @@
-import { Component, computed, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { lucideShieldCheck, lucidePlus } from '@ng-icons/lucide';
+import { lucideShieldCheck, lucidePlus, lucideEye } from '@ng-icons/lucide';
 
 import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state';
 import { ILocationUnit } from '../../../models/location-unit.model';
 import { ILocationModel } from '../../../models/location.model';
 import { LocationStatusEnum } from '../../../enums/location-status.enum';
 import { LocationHelper } from '../../../utils/location.utils';
+import { LeaseDetailDrawer } from '../lease-detail-drawer/lease-detail-drawer';
 
 @Component({
   selector: 'app-leases-tab',
   standalone: true,
-  imports: [CommonModule, NgIconComponent, DatePipe, DecimalPipe, TitleCasePipe, EmptyStateComponent],
+  imports: [CommonModule, NgIconComponent, DatePipe, DecimalPipe, TitleCasePipe, EmptyStateComponent, LeaseDetailDrawer],
   templateUrl: './leases-tab.html',
   viewProviders: [
     provideIcons({
       lucideShieldCheck,
       lucidePlus,
+      lucideEye,
     }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,6 +30,16 @@ export class LeasesTab {
   LocationHelper = LocationHelper;
 
   onNewLease = output<void>();
+
+  selectedLocation = signal<ILocationModel | null>(null);
+
+  viewDetails(location: ILocationModel): void {
+    this.selectedLocation.set(location);
+  }
+
+  closeDetails(): void {
+    this.selectedLocation.set(null);
+  }
 
   allLocations = computed(() => {
     const u = this.unit();

@@ -12,6 +12,7 @@ import { UnitStatutEnum } from '../enums/unit-status.enum';
 import { IQueryParam } from '../../../shared/interfaces/query-parms.interface';
 import { UnitStats } from '../models/unit-stats.model';
 import { UnitFilters } from '../interfaces/filter-unit.interface';
+import { IUnitGallery } from '../models/unit-gallery.model';
 
 @Injectable({ providedIn: 'root' })
 export class LocationUnitService {
@@ -96,7 +97,8 @@ export class LocationUnitService {
    * Crée une nouvelle unité locative
    */
   create(payload: CreateUnitPayload): Observable<ApiResponse<ILocationUnit>> {
-    return this.http.post<ApiResponse<ILocationUnit>>(this.baseUrl, payload);
+    const body = payload.model_3d instanceof File ? this.toFormData(payload) : payload;
+    return this.http.post<ApiResponse<ILocationUnit>>(this.baseUrl, body);
   }
 
   /**
@@ -115,6 +117,14 @@ export class LocationUnitService {
    */
   update(payload: UpdateUnitPayload): Observable<ApiResponse<ILocationUnit>> {
     const { id, ...data } = payload;
+
+    if (data.model_3d instanceof File) {
+      // Laravel ne lit pas un corps multipart envoyé en PUT : POST + _method=PUT
+      const formData = this.toFormData(data);
+      formData.append('_method', 'PUT');
+      return this.http.post<ApiResponse<ILocationUnit>>(`${this.baseUrl}/${id}`, formData);
+    }
+
     return this.http.put<ApiResponse<ILocationUnit>>(`${this.baseUrl}/${id}`, data);
   }
 
@@ -141,6 +151,26 @@ export class LocationUnitService {
       `${this.baseUrl}/${id}/financials`,
       financials,
     );
+  }
+
+  // ── GALERIE ───────────────────────────────────────────────────────
+
+  /**
+   * Upload d'une image dans la galerie d'une unité
+   */
+  uploadGalleryImage(uniteLocationId: number, file: File): Observable<ApiResponse<IUnitGallery>> {
+    const formData = new FormData();
+    formData.append('unite_location_id', uniteLocationId.toString());
+    formData.append('image', file);
+
+    return this.http.post<ApiResponse<IUnitGallery>>(`${this.baseUrl}/gallery`, formData);
+  }
+
+  /**
+   * Supprime une image de la galerie d'une unité
+   */
+  deleteGalleryImage(id: number): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(`${this.baseUrl}/gallery/${id}`);
   }
 
   // ── DELETE ────────────────────────────────────────────────────────
@@ -178,6 +208,28 @@ export class LocationUnitService {
   }
 
   // ── PRIVATE ───────────────────────────────────────────────────────
+
+  private toFormData(payload: object): FormData {
+    const formData = new FormData();
+
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value === undefined) return;
+
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else if (typeof value === 'boolean') {
+        formData.append(key, value ? '1' : '0');
+      } else if (value === null) {
+        formData.append(key, '');
+      } else if (typeof value === 'object') {
+        Object.entries(value).forEach(([k, v]) => formData.append(`${key}[${k}]`, String(v)));
+      } else {
+        formData.append(key, String(value));
+      }
+    });
+
+    return formData;
+  }
 
   private buildParams(params?: UnitFilters & IQueryParam): HttpParams {
     let httpParams = new HttpParams();

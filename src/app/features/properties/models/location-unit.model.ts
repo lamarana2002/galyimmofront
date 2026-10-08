@@ -1,7 +1,7 @@
 import { PropertyDocument } from './property-document.model';
 import { UnitStatutEnum } from '../enums/unit-status.enum';
 import { PropertyModel } from './property.model';
-import { PropertyTypeModel } from './propety-type.model';
+import { PropertyTypeModel } from './property-type.model';
 import { ILocationModel } from './location.model';
 import { IUnitGallery } from './unit-gallery.model';
 import { ILocataire } from '../../locataires/models/locataire.model';

@@ -41,6 +41,7 @@ export class GalleryTab {
   // ── Inputs ────────────────────────────────────────────────────
   @Input({ required: true }) gallery!: IGalleryItem[] | undefined | null;
   @Input() previewUrl:     string | null = null;
+  @Input() isUploading:    boolean = false;
   @Input() model3dUrl:     string | null = null;
   @Input() model3dPreview: string | null = null; // filename after file selected
 

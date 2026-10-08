@@ -9,7 +9,7 @@ import { PaginatedResponse } from '../../../shared/interfaces/paginated-response
 import { IQueryParam } from '../../../shared/interfaces/query-parms.interface';
 import { PropertyGallery } from '../models/property-gallery.model';
 import { CreatePropertyGalleryPayload } from '../interfaces/create-property-gallery-payload.interface';
-import { UpdatePropertyGalleryPayload } from '../interfaces/update-propertyy-gallery-payload.interface';
+import { UpdatePropertyGalleryPayload } from '../interfaces/update-property-gallery-payload.interface';
 
 export interface GalleryFilters {
   property_id?: number;

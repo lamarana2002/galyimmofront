@@ -52,7 +52,6 @@ import { getUnitStatusBadgeClass, getUnitStatusLabel } from '../../utils/propert
 import { ILocationModel } from '../../models/location.model';
 import { UnitFormModal } from '../../components/modals/units/unit-form-modal/unit-form-modal';
 import { CreateUnitPayload, UpdateUnitPayload } from '../../interfaces/unit-payload.interface';
-import { TenantTab } from '../../components/shared-tabs/tenant-tab/tenant-tab';
 import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
 import { GalleryTab } from '../../components/shared-tabs/gallery-tab/gallery-tab';
 import { CreateLocationModal } from '../../components/modals/create-location-modal/create-location-modal';
@@ -82,7 +81,6 @@ export type GalleryImage = IUnitGallery;
     DecimalPipe,
     TitleCasePipe,
     UnitFormModal,
-    TenantTab,
     LeasesTab,
     GalleryTab,
     CreateLocationModal,
@@ -177,7 +175,6 @@ export class LocationUnit implements OnInit, OnDestroy {
   activeTab = 'infos';
   tabs = [
     { key: 'infos', label: 'Informations', icon: 'lucideInfo' },
-    { key: 'locataire', label: 'Locataire', icon: 'lucideUser' },
     { key: 'locations', label: 'Locations', icon: 'lucideShieldCheck' },
     { key: 'photos', label: 'Photos', icon: 'lucideImage' },
     { key: 'paiements', label: 'Paiements', icon: 'lucideBanknote' },
@@ -222,10 +219,12 @@ export class LocationUnit implements OnInit, OnDestroy {
   });
 
   // ── Galerie ────────────────────────────────────────────────────
-  showDeleteImage = false;
-  deletingImageId: number | null = null;
-  previewUrl: string | null = null;
+  showDeleteImage = signal(false);
+  deletingImageId = signal<number | null>(null);
+  previewUrl = signal<string | null>(null);
+  selectedFile = signal<File | null>(null);
   isUploading = signal(false);
+  isDeletingImage = signal(false);
 
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
@@ -450,30 +449,74 @@ export class LocationUnit implements OnInit, OnDestroy {
       return;
     }
 
+    this.selectedFile.set(file);
+
     const reader = new FileReader();
-    reader.onload = (e) => (this.previewUrl = e.target?.result as string);
+    reader.onload = (e) => this.previewUrl.set(e.target?.result as string);
     reader.readAsDataURL(file);
   }
 
   uploadImage(): void {
-    // TODO: Implémenter l'upload réel quand l'endpoint sera prêt
-    this.toast.info('Fonctionnalité bientôt disponible.');
-    this.previewUrl = null;
+    const unit = this.unite();
+    const file = this.selectedFile();
+    if (!unit || !file) return;
+
+    this.isUploading.set(true);
+    this.unitService
+      .uploadGalleryImage(unit.id, file)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            this.unite.update((u) =>
+              u ? { ...u, gallery: [...(u.gallery ?? []), response.data!] } : u,
+            );
+            this.toast.success('Image ajoutée avec succès.');
+          }
+          this.previewUrl.set(null);
+          this.selectedFile.set(null);
+          this.isUploading.set(false);
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? "Erreur lors de l'envoi de l'image.");
+          this.isUploading.set(false);
+        },
+      });
   }
 
   cancelUpload(): void {
-    this.previewUrl = null;
+    this.previewUrl.set(null);
+    this.selectedFile.set(null);
   }
 
   confirmDeleteImage(id: number): void {
-    this.deletingImageId = id;
-    this.showDeleteImage = true;
+    this.deletingImageId.set(id);
+    this.showDeleteImage.set(true);
   }
 
   deleteImage(): void {
-    this.toast.info('Fonctionnalité bientôt disponible.');
-    this.showDeleteImage = false;
-    this.deletingImageId = null;
+    const id = this.deletingImageId();
+    if (!id || this.isDeletingImage()) return;
+
+    this.isDeletingImage.set(true);
+    this.unitService
+      .deleteGalleryImage(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.unite.update((u) =>
+            u ? { ...u, gallery: u.gallery?.filter((img) => img.id !== id) ?? [] } : u,
+          );
+          this.toast.success('Image supprimée avec succès.');
+          this.isDeletingImage.set(false);
+          this.showDeleteImage.set(false);
+          this.deletingImageId.set(null);
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
+          this.isDeletingImage.set(false);
+        },
+      });
   }
 
   // ── Paiements ──────────────────────────────────────────────────

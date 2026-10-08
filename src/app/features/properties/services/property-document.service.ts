@@ -21,7 +21,7 @@ export interface DocumentFilters {
 @Injectable({ providedIn: 'root' })
 export class PropertyDocumentService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${BASE_URL}/documents`; // Shared base if applicable, or generic name
+  private readonly baseUrl = `${BASE_URL}/properties/documents`; // Shared base if applicable, or generic name
 
   // ── READ ──────────────────────────────────────────────────────────
 

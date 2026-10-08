@@ -15,7 +15,7 @@ export class NotificationService {
   }
 
   markAsRead(id: number | string): Observable<ApiResponse<void>> {
-    return this.http.post<ApiResponse<void>>(`${this.baseUrl}/${id}/read`, {});
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/${id}/read`, {});
   }
 
   markAllAsRead(): Observable<ApiResponse<void>> {

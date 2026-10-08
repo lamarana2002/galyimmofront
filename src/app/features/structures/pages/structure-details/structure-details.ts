@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, computed, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, computed, signal, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -376,6 +376,8 @@ export class StructureDetails implements OnInit, OnDestroy {
   }
 
   // ── Documents ───────────────────────────────────────────────────
+  @ViewChild('documentsTab') documentsTabRef?: DocumentsTab;
+
   uploadDocument(payload: UploadPropertyDocumentPayload): void {
     this.documentService.upload(payload).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
@@ -383,8 +385,12 @@ export class StructureDetails implements OnInit, OnDestroy {
           this.structure.update(s => s ? { ...s, documents: [...(s.documents || []), res.data!] } : s);
           this.toast.success('Document ajouté avec succès.');
         }
+        this.documentsTabRef?.onUploadSuccess();
       },
-      error: (err) => this.toast.error(err?.error?.message ?? "Erreur lors de l'envoi du document.")
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? "Erreur lors de l'envoi du document.");
+        this.documentsTabRef?.onUploadError();
+      }
     });
   }
 

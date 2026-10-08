@@ -35,16 +35,23 @@
       <div class="flex gap-2 justify-center">
         <button
           (click)="cancelUpload()"
-          class="px-4 py-2 text-xs font-semibold text-primary-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-all"
+          [disabled]="isUploading"
+          class="px-4 py-2 text-xs font-semibold text-primary-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         >
           Annuler
         </button>
         <button
           (click)="uploadImage()"
-          class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all"
+          [disabled]="isUploading"
+          class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <ng-icon name="lucideUpload" size="13"></ng-icon>
-          Envoyer
+          @if (isUploading) {
+            <span class="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+            Envoi…
+          } @else {
+            <ng-icon name="lucideUpload" size="13"></ng-icon>
+            Envoyer
+          }
         </button>
       </div>
     }

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PropertyTypeModel } from '../models/propety-type.model';
+import { PropertyTypeModel } from '../models/property-type.model';
 import { HttpClient } from '@angular/common/http';
 import { BASE_URL } from '../../../shared/constants/app.constant';
 import { ApiResponse } from '../../../shared/interfaces/api-response.interface';

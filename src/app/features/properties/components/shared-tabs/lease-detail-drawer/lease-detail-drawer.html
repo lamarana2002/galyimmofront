@@ -1,0 +1,141 @@
+<!-- ══ BACKDROP ══ -->
+<div class="fixed inset-0 z-[9997] bg-primary-900/40" (click)="close()"></div>
+
+<!-- ══ DRAWER ══ -->
+<div class="fixed inset-y-0 right-0 z-[9998] flex w-full max-w-md flex-col bg-white shadow-2xl">
+
+  <!-- En-tête -->
+  <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 flex-shrink-0">
+    <div>
+      <h2 class="text-base font-bold text-primary-900">Détail du contrat</h2>
+      <p class="mt-0.5 text-xs text-primary-400 font-mono">Ref-{{ location().id }}</p>
+    </div>
+    <button (click)="close()"
+      class="rounded-lg p-1.5 text-primary-400 transition-colors hover:bg-gray-100 hover:text-primary-700">
+      <ng-icon name="lucideX" size="18" />
+    </button>
+  </div>
+
+  <!-- Corps scrollable -->
+  <div class="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+    <!-- ── LOCATAIRE ── -->
+    <div class="bg-gray-50 rounded-xl border border-gray-100 p-4">
+      <p class="text-xs font-bold text-primary-400 uppercase tracking-wider flex items-center gap-2 mb-3">
+        <ng-icon name="lucideUser" size="13"></ng-icon>
+        Locataire
+      </p>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-11 h-11 rounded-full bg-secondary-200 flex items-center justify-center text-sm font-bold text-secondary-700 flex-shrink-0">
+          {{ getInitials(location().locataire?.nom, location().locataire?.prenom) }}
+        </div>
+        <div class="min-w-0">
+          <p class="font-semibold text-primary-900 text-sm leading-tight truncate">
+            {{ location().locataire?.prenom }} {{ location().locataire?.nom }}
+          </p>
+          @if (location().locataire?.sexe) {
+            <p class="text-xs text-primary-400 mt-0.5">{{ location().locataire?.sexe }}</p>
+          }
+        </div>
+      </div>
+      <div class="space-y-2">
+        <div class="flex items-center gap-2 text-xs text-primary-600">
+          <ng-icon name="lucideMail" size="12" class="text-primary-400 flex-shrink-0"></ng-icon>
+          <span class="truncate">{{ location().locataire?.email || '—' }}</span>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-primary-600">
+          <ng-icon name="lucidePhone" size="12" class="text-primary-400 flex-shrink-0"></ng-icon>
+          <span>{{ location().locataire?.telephone || '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CONTRAT ── -->
+    <div class="bg-gray-50 rounded-xl border border-gray-100 p-4">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-xs font-bold text-primary-400 uppercase tracking-wider flex items-center gap-2">
+          <ng-icon name="lucideShieldCheck" size="13"></ng-icon>
+          Contrat
+        </p>
+        <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border"
+          [class]="LocationHelper.getStatusBadgeClass(location().status)">
+          {{ LocationHelper.getStatusLabel(location().status) }}
+        </span>
+      </div>
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-primary-500">Début</span>
+          <span class="text-xs font-semibold text-primary-800">
+            {{ location().date_location | date: 'dd/MM/yyyy' }}
+          </span>
+        </div>
+        @if (location().end_date) {
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-primary-500">Fin</span>
+            <span class="text-xs font-semibold text-primary-800">
+              {{ location().end_date | date: 'dd/MM/yyyy' }}
+            </span>
+          </div>
+        }
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-primary-500">Loyer mensuel</span>
+          <span class="text-xs font-semibold text-primary-800">
+            {{ location().montant | number: '1.0-0' }} GNF
+          </span>
+        </div>
+        @if (location().description) {
+          <div class="pt-2 border-t border-gray-200">
+            <p class="text-xs text-primary-600 leading-relaxed">{{ location().description }}</p>
+          </div>
+        }
+      </div>
+      @if (location().contrat_url) {
+        <a
+          [href]="location().contrat_url"
+          target="_blank"
+          rel="noopener"
+          class="mt-3 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-primary-600 bg-white hover:bg-primary-50 border border-primary-200 rounded-xl transition-all"
+        >
+          <ng-icon name="lucideDownload" size="12"></ng-icon>
+          Télécharger le contrat
+        </a>
+      }
+    </div>
+
+    <!-- ── PAIEMENTS ── -->
+    <div class="bg-gray-50 rounded-xl border border-gray-100 p-4">
+      <p class="text-xs font-bold text-primary-400 uppercase tracking-wider flex items-center gap-2 mb-3">
+        <ng-icon name="lucideBanknote" size="13"></ng-icon>
+        Paiements
+      </p>
+      @if (location().payements && location().payements!.length > 0) {
+        <div class="space-y-2">
+          @for (p of location().payements; track p.id) {
+            <div class="flex items-center gap-3 bg-white rounded-lg p-2.5 border border-gray-100">
+              <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                <ng-icon name="lucideReceipt" size="14" class="text-green-600"></ng-icon>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-semibold text-primary-800">
+                  {{ p.montant | number: '1.0-0' }} GNF
+                </p>
+                <p class="text-[10px] text-primary-400 mt-0.5">
+                  {{ p.created_at | date: 'dd/MM/yyyy' }} · {{ p.methode_payement }}
+                </p>
+              </div>
+              @if (p.recu_url) {
+                <a [href]="p.recu_url" target="_blank" rel="noopener"
+                  class="p-1.5 text-primary-400 hover:text-secondary-500 hover:bg-secondary-50 rounded-lg transition-all">
+                  <ng-icon name="lucideDownload" size="13"></ng-icon>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="text-xs text-primary-400 text-center py-3">Aucun paiement enregistré</p>
+      }
+    </div>
+
+  </div>
+</div>

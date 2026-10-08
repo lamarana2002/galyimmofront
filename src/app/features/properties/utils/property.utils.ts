@@ -82,21 +82,6 @@ export function isPropertyTransitionAllowed(
   return getPropertyAllowedTransitions(current).includes(next);
 }
 
-// ── Type de bien ─────────────────────────────────────────────────
-
-export function getPropertyTypeIcon(typeSlug: string): string {
-  const map: Record<string, string> = {
-    appartement: 'lucideHome',
-    villa: 'lucideBuilding2',
-    commercial: 'lucideStore',
-    terrain: 'lucideMap',
-    bureau: 'lucideBuilding',
-    entrepot: 'lucideWarehouse',
-    immeuble: 'lucideBuilding2',
-  };
-  return map[typeSlug] ?? 'lucideHome';
-}
-
 export function getDocIconColor(ext: string): string {
   const map: Record<string, string> = {
     pdf: 'text-red-600 bg-red-100',
@@ -108,19 +93,6 @@ export function getDocIconColor(ext: string): string {
     png: 'text-purple-600 bg-purple-100',
   };
   return map[ext] ?? 'text-gray-500 bg-gray-100';
-}
-
-export function getPropertyTypeLabel(typeSlug: string): string {
-  const map: Record<string, string> = {
-    appartement: 'Appartement',
-    villa: 'Villa',
-    commercial: 'Local commercial',
-    terrain: 'Terrain',
-    bureau: 'Bureau',
-    entrepot: 'Entrepôt',
-    immeuble: 'Immeuble',
-  };
-  return map[typeSlug] ?? typeSlug;
 }
 
 // ── Adresse ─────────────────────────────────────────────────
@@ -209,6 +181,22 @@ export function getPropertyOccupationRateBarClass(rate: number): string {
   if (rate >= 50) return 'bg-amber-600';
   if (rate > 0) return 'bg-orange-600';
   return 'bg-gray-400';
+}
+
+export interface PropertyOccupationInfo {
+  rate: number;
+  textClass: string;
+  barClass: string;
+}
+
+// Calcule le taux une seule fois plutôt que de le refaire à chaque endroit du template
+export function getPropertyOccupationInfo(property: PropertyModel): PropertyOccupationInfo {
+  const rate = getPropertyOccupationRate(property);
+  return {
+    rate,
+    textClass: getPropertyOccupationRateClass(rate),
+    barClass: getPropertyOccupationRateBarClass(rate),
+  };
 }
 
 export function getPropertyAvailabilityStatus(property: PropertyModel): {
@@ -346,11 +334,6 @@ export function getPropertyAvatarColor(id: number): string {
     'bg-indigo-500',
   ];
   return colors[id % colors.length];
-}
-
-// Pour les biens avec unités (has_units = true)
-export function hasPropertyUnits(property: PropertyModel): boolean {
-  return property.has_units;
 }
 
 export function getPropertyUnitsSummary(property: PropertyModel): string {
