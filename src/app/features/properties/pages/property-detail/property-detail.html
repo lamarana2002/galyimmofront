@@ -52,13 +52,26 @@
           Mes biens
         </a>
 
-        <span
-          class="absolute top-4 right-5 inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full border"
-          [class]="getStatutClass(b.status)"
-        >
-          <span class="w-1.5 h-1.5 rounded-full" [class]="getStatutDotClass(b.status)"></span>
-          {{ getStatutLabel(b.status) }}
-        </span>
+        <div class="absolute top-4 right-5 flex items-center gap-2">
+          @if (!b.has_units && b.units?.[0]; as unit) {
+            <span
+              class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full border"
+              [class]="getUnitStatutClass(unit.status)"
+              title="Statut d'occupation de l'unité"
+            >
+              <span class="w-1.5 h-1.5 rounded-full" [class]="getUnitStatutDotClass(unit.status)"></span>
+              {{ getUnitStatutLabel(unit.status) }}
+            </span>
+          }
+          <span
+            class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full border"
+            [class]="getStatutClass(b.status)"
+            title="Statut commercial du bien"
+          >
+            <span class="w-1.5 h-1.5 rounded-full" [class]="getStatutDotClass(b.status)"></span>
+            {{ getStatutLabel(b.status) }}
+          </span>
+        </div>
       </div>
 
       <div class="px-7 pb-5 relative">
@@ -200,12 +213,7 @@
                 <ng-icon name="lucideTrendingUp" size="24" class="text-amber-600"></ng-icon>
               </div>
               <div>
-                <!-- @if (unit?.sale_price) {
-                  <p class="text-lg font-bold text-amber-700 leading-none">{{ unit?.sale_price | number: '1.0-0' }}</p>
-                } @else {
-                  <p class="text-lg font-bold text-primary-300 leading-none">—</p>
-                } -->
-                  @if (b?.sale_price) {
+                @if (b?.sale_price) {
                   <p class="text-lg font-bold text-amber-700 leading-none">{{ b?.sale_price | number: '1.0-0' }}</p>
                 } @else {
                   <p class="text-lg font-bold text-primary-300 leading-none">—</p>
@@ -283,13 +291,6 @@
             (deleteUnit)="confirmDeleteUnit($event)"
           />
         }
-        @if (activeTab() === 'locataire') {
-          <app-tenant-tab
-            [unit]="b.units?.[0]"
-            (onContact)="contacterLocataire($event)"
-            (onAffect)="affecterLocataire()"
-          />
-        }
         @if (activeTab() === 'contrats') {
           <app-leases-tab [unit]="b.units?.[0]" (onNewLease)="affecterLocataire()" />
         }
@@ -304,6 +305,7 @@
           <app-gallery-tab
             [gallery]="bien()?.gallery"
             [previewUrl]="previewUrl()"
+            [isUploading]="isUploading()"
             (onConfirmDelete)="confirmDeleteImage($event)"
             (onUploadImage)="uploadImage()"
             (onCancelUpload)="cancelUpload()"
@@ -312,6 +314,7 @@
         }
         @if (activeTab() === 'documents') {
           <app-documents-tab
+            #documentsTab
             [documents]="bien()?.documents"
             [ownerId]="bien()?.id || 0"
             ownerType="properties"
@@ -340,6 +343,7 @@
       <app-unit-form-modal
         [editingUnit]="editingUnit()"
         [propertyId]="bien()?.id ?? 0"
+        [isSaving]="unitSaving()"
         (close)="closeUnitModal()"
         (saveUnit)="saveUnit($event)"
       />
@@ -372,6 +376,7 @@
       <app-confirm-dialog
         title="Supprimer cette photo ?"
         message="Cette action est irréversible."
+        [loading]="isDeletingImage()"
         (confirmed)="deleteImage()"
         (cancelled)="showDeleteImage.set(false)"
       />

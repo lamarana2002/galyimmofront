@@ -62,9 +62,7 @@
                       style="background: linear-gradient(135deg, #2a5c5a, #1d3f3e)"
                     >
                       <ng-icon
-                        [name]="
-                          propertyUtils.getPropertyTypeIcon(property.property_type?.slug ?? '')
-                        "
+                        [name]="property.property_type?.icon || 'lucideHome'"
                         size="18"
                         class="text-primary-300"
                       ></ng-icon>
@@ -89,7 +87,7 @@
               <span
                 class="px-2.5 py-1 text-[11px] font-semibold bg-primary-100 text-primary-700 rounded-full"
               >
-                {{ propertyUtils.getPropertyTypeLabel(property.property_type?.slug ?? '') }}
+                {{ property.property_type?.name || '—' }}
               </span>
             </td>
 
@@ -105,7 +103,7 @@
 
             <!-- Unités -->
             <td class="px-4 py-4">
-              @if (propertyUtils.hasPropertyUnits(property)) {
+              @if (property.has_units) {
                 <div class="flex items-center gap-2 text-xs">
                   <span class="font-bold text-primary-900">{{ property.stats?.units || 0 }}</span>
                   <span class="text-primary-300">·</span>
@@ -120,32 +118,25 @@
 
             <!-- Occupation -->
             <td class="px-4 py-4">
-              @if (propertyUtils.hasPropertyUnits(property)) {
+              @if (property.has_units) {
+                @let occ = propertyUtils.getPropertyOccupationInfo(property);
                 <div class="flex items-center gap-2">
                   <div class="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      class="h-full rounded-full"
-                      [style.width.%]="propertyUtils.getPropertyOccupationRate(property)"
-                      [class]="
-                        propertyUtils
-                          .getPropertyOccupationRateClass(
-                            propertyUtils.getPropertyOccupationRate(property)
-                          )
-                          .replace('text-', 'bg-')
-                      "
-                    ></div>
+                    <div class="h-full rounded-full" [style.width.%]="occ.rate" [class]="occ.barClass"></div>
                   </div>
-                  <span
-                    class="text-xs font-bold"
-                    [class]="
-                      propertyUtils.getPropertyOccupationRateClass(
-                        propertyUtils.getPropertyOccupationRate(property)
-                      )
-                    "
-                  >
-                    {{ propertyUtils.getPropertyOccupationRate(property) }}%
-                  </span>
+                  <span class="text-xs font-bold" [class]="occ.textClass">{{ occ.rate }}%</span>
                 </div>
+              } @else if (property.primary_unit) {
+                <span
+                  class="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-full"
+                  [class]="propertyUtils.getUnitStatusBadgeClass(property.primary_unit.status)"
+                >
+                  <span
+                    class="w-1.5 h-1.5 rounded-full"
+                    [class]="propertyUtils.getUnitStatusDotClass(property.primary_unit.status)"
+                  ></span>
+                  {{ propertyUtils.getUnitStatusLabel(property.primary_unit.status) }}
+                </span>
               } @else {
                 <span class="text-xs text-primary-400">—</span>
               }
@@ -153,12 +144,19 @@
 
             <!-- Prix -->
             <td class="px-4 py-4">
-              @if (property.sale_price) {
+              @if (!property.primary_unit?.rent_amount && !property.sale_price) {
+                <span class="text-xs text-primary-400">—</span>
+              }
+              @if (property.primary_unit?.rent_amount) {
                 <p class="text-sm font-bold text-primary-900">
+                  {{ propertyUtils.formatPropertyPrice(property.primary_unit?.rent_amount ?? null) }}
+                  <span class="text-[10px] font-normal text-primary-400">/ mois</span>
+                </p>
+              }
+              @if (property.sale_price) {
+                <p class="text-xs text-primary-600" [class.mt-0.5]="property.primary_unit?.rent_amount">
                   {{ propertyUtils.formatPropertyPrice(property.sale_price) }}
                 </p>
-              } @else {
-                <span class="text-xs text-primary-400">—</span>
               }
             </td>
 
@@ -186,7 +184,7 @@
                   <ng-icon name="lucideEye" size="15"></ng-icon>
                 </a>
                 <button
-                  (click)="editPropertty(property.id)"
+                  (click)="editProperty(property.id)"
                   class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
                   title="Modifier"
                 >
@@ -206,46 +204,4 @@
       </tbody>
     </table>
   </div>
-
-  <!-- Pagination -->
-  <!-- @if (totalPages() > 1) {
-    <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between">
-      <p class="text-xs text-primary-400">
-        Page <span class="font-semibold text-primary-700">{{ currentPage() }}</span> sur
-        {{ totalPages() }} ·
-        <span class="font-semibold text-primary-700">{{ totalItems() }}</span> biens
-      </p>
-      <div class="flex items-center gap-1">
-        <button
-          (click)="onPageChange(currentPage() - 1)"
-          [disabled]="!hasPrev()"
-          class="px-3 py-1.5 text-xs font-medium text-primary-400 hover:text-primary-700 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          ← Précédent
-        </button>
-
-        @for (p of pagesArray(); track p) {
-          <button
-            (click)="onPageChange(p)"
-            class="w-7 h-7 flex items-center justify-center text-xs font-semibold rounded-lg transition-all"
-            [class]="
-              currentPage() === p
-                ? 'bg-secondary-500 text-white'
-                : 'text-primary-500 hover:bg-gray-50'
-            "
-          >
-            {{ p }}
-          </button>
-        }
-
-        <button
-          (click)="onPageChange(currentPage() + 1)"
-          [disabled]="!hasNext()"
-          class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          Suivant →
-        </button>
-      </div>
-    </div>
-  } -->
 </div>

@@ -145,7 +145,20 @@ export class DocumentsTab {
       payload.structure_id = this.ownerId();
     }
 
+    this.isUploading.set(true);
     this.onUpload.emit(payload);
+  }
+
+  /** À appeler par le parent une fois l'upload terminé avec succès. */
+  onUploadSuccess() {
+    this.isUploading.set(false);
+    this.showUploadForm.set(false);
+    this.resetForm();
+  }
+
+  /** À appeler par le parent si l'upload échoue. */
+  onUploadError() {
+    this.isUploading.set(false);
   }
 
   requestDelete(doc: PropertyDocument) {

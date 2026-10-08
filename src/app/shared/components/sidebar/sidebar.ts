@@ -14,10 +14,21 @@ import {
   lucideUsers,
   lucideMessageSquare,
   lucideBanknote,
+  lucideKanban,
+  lucideSettings,
+  lucideShieldCheck
 } from '@ng-icons/lucide';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ProfileService } from '../../../core/auth/services/profile.service';
 import { NgIcon, provideIcons } from '@ng-icons/core';
+
+interface NavItem {
+  label: string;
+  icon: string;
+  link: string;
+  role?: string;
+  badge?: 'pro' | 'unread';
+}
 
 type User = {
   name: string;
@@ -45,6 +56,9 @@ type User = {
       lucideHelpCircle,
       lucideMessageSquare,
       lucideBanknote,
+      lucideKanban,
+      lucideSettings,
+      lucideShieldCheck
     }),
   ],
   templateUrl: './sidebar.html',
@@ -55,23 +69,28 @@ export class Sidebar implements OnInit {
   profile = inject(ProfileService);
   userRoles = this.profile.roleNamesArray;
 
-  navs = [
+  mainNavs: NavItem[] = [
+    { label: 'Dashboard', icon: 'lucideHouse', link: '/dashboard' },
+    { label: 'Kanban', icon: 'lucideKanban', link: '/kanban', badge: 'pro' },
+    { label: 'Inbox', icon: 'lucideInbox', link: '/inbox', badge: 'unread' },
+  ];
+
+  managementNavs: NavItem[] = [
     { label: 'Agences', icon: 'lucideBuilding2', link: '/structures', role: 'super-admin' },
     { label: 'Propriétés', icon: 'lucideHome', link: '/properties', role: 'proprietaire' },
     { label: 'Locataires', icon: 'lucideUserRound', link: '/locataires', role: 'proprietaire' },
     { label: 'Contrats', icon: 'lucideFileText', link: '/contrats', role: 'proprietaire' },
     { label: 'Paiements', icon: 'lucideBanknote', link: '/payments', role: 'proprietaire' },
-    { label: 'Teams', icon: 'lucideUsers', link: '/teams', role: 'proprietaire' },
-    { label: 'FAQs', icon: 'lucideHelpCircle', link: '/faqs', role: 'proprietaire' },
-    { label: 'Témoignages', icon: 'lucideMessageSquare', link: '/testimonials', role: 'proprietaire' },
+    { label: 'Teams', icon: 'lucideUsers', link: '/teams', role: 'super-admin' },
+    { label: 'FAQs', icon: 'lucideHelpCircle', link: '/faqs', role: 'super-admin' },
+    { label: 'Témoignages', icon: 'lucideMessageSquare', link: '/testimonials', role: 'super-admin' },
     { label: 'Utilisateurs', icon: 'lucideUsers', link: '/users', role: 'proprietaire' },
     { label: 'Administrateurs', icon: 'lucideUserCog', link: '/users', role: 'super-admin' },
-    {
-      label: 'Analytics',
-      icon: 'lucideChartNoAxesCombined',
-      link: '/analytics',
-      role: 'super-admin',
-    },
+    { label: 'Analytics', icon: 'lucideChartNoAxesCombined', link: '/analytics', role: 'super-admin' },
+  ];
+
+  accountNavs: NavItem[] = [
+    { label: 'Settings', icon: 'lucideSettings', link: '/settings' },
   ];
 
   sidebarService = inject(SidebarService);

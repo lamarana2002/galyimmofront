@@ -85,6 +85,19 @@
           </select>
         </div>
 
+        <!-- Tri -->
+        <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          <select
+            [ngModel]="sortBy()"
+            (ngModelChange)="onSortChange($event)"
+            class="bg-transparent border-0 px-2 py-1.5 text-xs font-semibold text-primary-700 focus:outline-none focus:ring-0 cursor-pointer rounded-lg"
+          >
+            @for (opt of sortOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
         <div class="flex-1"></div>
 
         <!-- Toggle vue -->
@@ -149,7 +162,7 @@
         </div>
         <p class="font-semibold text-red-600">{{ errorMsg }}</p>
         <button
-          (click)="loadAll(currentPage())"
+          (click)="loadAll()"
           class="mt-4 px-4 py-2 text-sm font-semibold text-red-600 bg-red-100 hover:bg-red-200 rounded-xl transition-all"
         >
           Réessayer
@@ -166,8 +179,8 @@
       <!-- VUE GRILLE -->
       @if (viewMode() === 'grid') {
         <app-property-grid-view
-          [filteredProperties]="filteredProperties()"
-          (onEdit)="editPropertty($event)"
+          [filteredProperties]="pagedProperties()"
+          (onEdit)="editProperty($event)"
           (onDelete)="confirmDelete($event)"
         />
       }
@@ -175,8 +188,8 @@
       <!-- VUE TABLEAU -->
       @if (viewMode() === 'table') {
         <app-property-list-view
-          [filteredProperties]="filteredProperties()"
-          (onEdit)="editPropertty($event)"
+          [filteredProperties]="pagedProperties()"
+          (onEdit)="editProperty($event)"
           (onDelete)="confirmDelete($event)"
         />
       }
@@ -209,6 +222,6 @@
     [editingProperty]="editingProperty()"
     [structureId]="structureId()!"
     (closed)="addPropertyModal.set(false); editingProperty.set(null)"
-    (saved)="loadAll(currentPage()); addPropertyModal.set(false); editingProperty.set(null)"
+    (saved)="loadAll(); addPropertyModal.set(false); editingProperty.set(null)"
   />
 }

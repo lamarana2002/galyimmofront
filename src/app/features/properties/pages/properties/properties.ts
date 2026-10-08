@@ -17,6 +17,7 @@ import {
 import { PropertyModel } from '../../models/property.model';
 import { PropertyStatusEnum } from '../../enums/property-status.enum';
 import { PropertyService } from '../../services/property.service';
+import { PropertyTypeService } from '../../services/property-type.service';
 import { FilterProperty } from '../../interfaces/filter-property.interface';
 import { PropertyKpis } from '../../models/property-kpis.model';
 
@@ -24,15 +25,17 @@ import { PropertyKpis } from '../../models/property-kpis.model';
 import * as propertyUtils from '../../utils/property.utils';
 import { IQueryParam } from '../../../../shared/interfaces/query-parms.interface';
 import { AddPropertyModal } from "../../components/modals/add-property-modal/add-property-modal";
-import { PropertyGridView } from "../../components/propertties/property-grid-view/property-grid-view";
+import { PropertyGridView } from "../../components/properties/property-grid-view/property-grid-view";
 import { ProfileService } from '../../../../core/auth/services/profile.service';
-import { PropertyListView } from "../../components/propertties/property-list-view/property-list-view";
+import { PropertyListView } from "../../components/properties/property-list-view/property-list-view";
 
 import { Pagination }             from '../../../../shared/components/pagination/pagination';
 import { LoadingComponent }       from '../../../../shared/components/loading/loading';
 import { EmptyStateComponent }    from '../../../../shared/components/empty-state/empty-state';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { ToastService }           from '../../../../shared/services/toast.service';
+
+type PropertySortKey = 'date_desc' | 'date_asc' | 'name_asc' | 'name_desc' | 'occupation_desc';
 
 @Component({
   selector: 'app-properties',
@@ -58,6 +61,7 @@ import { ToastService }           from '../../../../shared/services/toast.servic
 export class Properties implements OnInit, OnDestroy {
   
   private readonly service  = inject(PropertyService);
+  private readonly propertyTypeService = inject(PropertyTypeService);
   private readonly toast    = inject(ToastService);
   private readonly profile  = inject(ProfileService);
   private readonly router   = inject(Router);
@@ -85,12 +89,13 @@ export class Properties implements OnInit, OnDestroy {
     under_renovation: 0,
   });
 
-  // ── Pagination (serveur) ──────────────────────────────────────
+  // Tous les biens de la structure sont chargés en une fois : au-delà de
+  // ce nombre, il faudrait repasser le filtrage/tri côté serveur.
+  private readonly FETCH_PAGE_SIZE = 500;
+
+  // ── Pagination (locale, sur les résultats déjà filtrés) ────────
   currentPage  = signal(1);
   itemsPerPage = signal(12);
-  totalItems   = signal(0);
-  hasNext      = signal(false);
-  hasPrev      = signal(false);
 
   // ── UI ────────────────────────────────────────────────────────
   viewMode     = signal<'grid' | 'table'>('grid');
@@ -116,16 +121,18 @@ export class Properties implements OnInit, OnDestroy {
     { label: 'En travaux', value: PropertyStatusEnum.UNDER_RENOVATION },
   ];
 
-  // Types (seront chargés depuis le backend)
-  typeOptions = signal<{ value: string; label: string; icon: string }[]>([
-    { value: 'appartement', label: 'Appartement', icon: 'lucideHome' },
-    { value: 'villa', label: 'Villa', icon: 'lucideBuilding2' },
-    { value: 'commercial', label: 'Local commercial', icon: 'lucideStore' },
-    { value: 'terrain', label: 'Terrain', icon: 'lucideMap' },
-    { value: 'bureau', label: 'Bureau', icon: 'lucideBuilding' },
-    { value: 'entrepot', label: 'Entrepôt', icon: 'lucideWarehouse' },
-    { value: 'immeuble', label: 'Immeuble', icon: 'lucideBuilding2' },
-  ]);
+  // Types (chargés depuis le backend)
+  typeOptions = signal<{ value: string; label: string; icon: string }[]>([]);
+
+  // ── Tri ───────────────────────────────────────────────────────
+  sortBy = signal<PropertySortKey>('date_desc');
+  readonly sortOptions = [
+    { value: 'date_desc' as const,       label: 'Plus récent' },
+    { value: 'date_asc' as const,        label: 'Plus ancien' },
+    { value: 'name_asc' as const,        label: 'Nom (A→Z)' },
+    { value: 'name_desc' as const,       label: 'Nom (Z→A)' },
+    { value: 'occupation_desc' as const, label: "Taux d'occupation" },
+  ];
 
   // ── Computed ──────────────────────────────────────────────────
   kpis = computed(() => [
@@ -163,13 +170,17 @@ export class Properties implements OnInit, OnDestroy {
     },
   ]);
 
+  totalItems = computed(() => this.filteredProperties().length);
+
   totalPages = computed(() =>
-    Math.ceil(this.totalItems() / this.itemsPerPage())
+    Math.max(1, Math.ceil(this.totalItems() / this.itemsPerPage()))
   );
 
-  pagesArray = computed(() =>
-    Array.from({ length: this.totalPages() }, (_, i) => i + 1)
-  );
+  // Sous-ensemble affiché sur la page locale courante
+  pagedProperties = computed(() => {
+    const start = (this.currentPage() - 1) * this.itemsPerPage();
+    return this.filteredProperties().slice(start, start + this.itemsPerPage());
+  });
 
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
@@ -178,7 +189,8 @@ export class Properties implements OnInit, OnDestroy {
     }else {
       this.structureId?.set(this.profile.userStructure)
     }
-    this.loadAll(this.currentPage());
+    this.loadPropertyTypes();
+    this.loadAll();
   }
 
   ngOnDestroy(): void {
@@ -187,12 +199,26 @@ export class Properties implements OnInit, OnDestroy {
   }
 
   // ── Chargement ────────────────────────────────────────────────
-  loadAll(page = 1): void {
+  loadPropertyTypes(): void {
+    this.propertyTypeService.findAll().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (response) => {
+        const options = response.data.map(type => ({
+          value: type.slug,
+          label: type.name,
+          icon: type.icon
+        }));
+        this.typeOptions.set(options);
+      },
+      error: () => this.toast.error('Impossible de charger les types de bien.')
+    });
+  }
+
+  loadAll(): void {
     this.loading.set(true);
     this.error.set(null);
 
     forkJoin({
-      properties: this.service.findAll(this.buildQueryParams(page)),
+      properties: this.service.findAll({ page: 1, perPage: this.FETCH_PAGE_SIZE }),
       kpis: this.service.getKpis(),
     })
     .pipe(takeUntil(this.destroy$))
@@ -200,13 +226,6 @@ export class Properties implements OnInit, OnDestroy {
       next: ({ properties, kpis }) => {
         this.allProperties.set(properties.data);
         this.applyFilters(this.buildFilterData());
-
-        this.currentPage.set(properties.current_page);
-        this.itemsPerPage.set(properties.per_page);
-        this.totalItems.set(properties.total);
-        this.hasNext.set(!!properties.next_page_url);
-        this.hasPrev.set(!!properties.prev_page_url);
-
         this.kpisData.set(kpis);
         this.loading.set(false);
       },
@@ -217,7 +236,7 @@ export class Properties implements OnInit, OnDestroy {
     });
   }
 
-  editPropertty(id: number): void {
+  editProperty(id: number): void {
     const property = this.allProperties().find(p => p.id === id) ?? null;
     this.editingProperty.set(property);
     this.addPropertyModal.set(true);
@@ -225,14 +244,7 @@ export class Properties implements OnInit, OnDestroy {
 
   // ── Filtrage local ────────────────────────────────────────────
   applyFilters(filter?: FilterProperty & IQueryParam & { type?: string }): void {
-    const all = this.allProperties();
-
-    if (!all.length) {
-      this.filteredProperties.set([]);
-      return;
-    }
-
-    let result = [...all];
+    let result = [...this.allProperties()];
 
     if (filter?.search?.trim()) {
       const q = filter.search.toLowerCase();
@@ -254,7 +266,33 @@ export class Properties implements OnInit, OnDestroy {
       result = result.filter(p => p.property_type?.slug === filter.type);
     }
 
+    result = this.sortProperties(result);
+
     this.filteredProperties.set(result);
+
+    // Si les résultats ont rétréci (filtre, suppression), on ramène la
+    // page locale dans les clous plutôt que de laisser une page vide.
+    const maxPage = Math.max(1, Math.ceil(result.length / this.itemsPerPage()));
+    if (this.currentPage() > maxPage) this.currentPage.set(maxPage);
+  }
+
+  private sortProperties(list: PropertyModel[]): PropertyModel[] {
+    const sorted = [...list];
+    switch (this.sortBy()) {
+      case 'name_asc':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case 'name_desc':
+        return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      case 'date_asc':
+        return sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      case 'occupation_desc':
+        return sorted.sort(
+          (a, b) => propertyUtils.getPropertyOccupationRate(b) - propertyUtils.getPropertyOccupationRate(a),
+        );
+      case 'date_desc':
+      default:
+        return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
   }
 
   buildFilterData(): FilterProperty & IQueryParam & { type?: string } {
@@ -269,22 +307,32 @@ export class Properties implements OnInit, OnDestroy {
     this.searchQuery.set('');
     this.activeStatut.set('all');
     this.activeType.set('all');
+    this.currentPage.set(1);
     this.applyFilters();
   }
 
   // ── Handlers filtres ──────────────────────────────────────────
   onSearchChange(value: string): void {
     this.searchQuery.set(value);
+    this.currentPage.set(1);
     this.applyFilters(this.buildFilterData());
   }
 
   onStatusFilterChange(status: string): void {
     this.activeStatut.set(status);
+    this.currentPage.set(1);
     this.applyFilters(this.buildFilterData());
   }
 
   onTypeFilterChange(type: string): void {
     this.activeType.set(type);
+    this.currentPage.set(1);
+    this.applyFilters(this.buildFilterData());
+  }
+
+  onSortChange(sort: PropertySortKey): void {
+    this.sortBy.set(sort);
+    this.currentPage.set(1);
     this.applyFilters(this.buildFilterData());
   }
 
@@ -294,7 +342,7 @@ export class Properties implements OnInit, OnDestroy {
 
   onPageChange(page: number): void {
     if (page < 1 || page > this.totalPages()) return;
-    this.loadAll(page);
+    this.currentPage.set(page);
   }
 
   // ── Actions ───────────────────────────────────────────────────
@@ -304,7 +352,7 @@ export class Properties implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.toast.success('Statut mis à jour avec succès.');
-          this.loadAll(this.currentPage());
+          this.loadAll();
         },
         error: (err) => {
           this.toast.error(err?.error?.message ?? 'Erreur lors du changement de statut.');
@@ -334,10 +382,7 @@ export class Properties implements OnInit, OnDestroy {
           this.toast.success(`Bien « ${target.name} » supprimé.`);
           this.deleteTarget.set(null);
           this.deleteLoading.set(false);
-          const newPage = this.allProperties().length === 1 && this.currentPage() > 1
-            ? this.currentPage() - 1
-            : this.currentPage();
-          this.loadAll(newPage);
+          this.loadAll();
         },
         error: (err) => {
           this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
@@ -355,13 +400,5 @@ export class Properties implements OnInit, OnDestroy {
   getTypeCount(type: string): number {
     if (type === 'all') return this.allProperties().length;
     return this.allProperties().filter(p => p.property_type?.slug === type).length;
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────
-  private buildQueryParams(page: number): IQueryParam {
-    return {
-      page,
-      perPage: this.itemsPerPage(),
-    };
   }
 }

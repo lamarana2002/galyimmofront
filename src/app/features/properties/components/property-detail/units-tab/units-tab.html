@@ -126,14 +126,14 @@
               <td class="px-4 py-4">
                 <div class="flex items-center gap-1 justify-center">
                   <button
-                    (click)="openEditUnit(u)"
+                    (click)="$event.stopPropagation(); openEditUnit(u)"
                     class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
                     title="Modifier"
                   >
                     <ng-icon name="lucidePencil" size="14"></ng-icon>
                   </button>
                   <button
-                    (click)="confirmDeleteUnit(u)"
+                    (click)="$event.stopPropagation(); confirmDeleteUnit(u)"
                     class="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-all"
                     title="Supprimer"
                   >

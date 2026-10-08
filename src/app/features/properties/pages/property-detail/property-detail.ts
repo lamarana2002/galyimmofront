@@ -76,7 +76,6 @@ import { UnitFormModal } from '../../components/modals/units/unit-form-modal/uni
 import { ILocationUnit } from '../../models/location-unit.model';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { AddPropertyModal } from '../../components/modals/add-property-modal/add-property-modal';
-import { TenantTab } from '../../components/shared-tabs/tenant-tab/tenant-tab';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { LeasesTab } from '../../components/shared-tabs/leases-tab/leases-tab';
 import { CreateLocationModal } from '../../components/modals/create-location-modal/create-location-modal';
@@ -108,7 +107,6 @@ import { UnitSidePanel } from '../../components/shared-tabs/unit-side-panel/unit
     DocumentsTab,
     GalleryTab,
     LeasesTab,
-    TenantTab,
     InfoTab,
     UnitsTab,
     FinancialTab,
@@ -209,7 +207,6 @@ export class PropertyDetail implements OnInit, OnDestroy {
     }
     return [
       { key: 'infos', label: 'Informations', icon: 'lucideInfo' },
-      { key: 'locataire', label: 'Locataire', icon: 'lucideUser' },
       { key: 'contrats', label: 'Contrats', icon: 'lucideShieldCheck' },
       { key: 'paiements', label: 'Paiements', icon: 'lucideBanknote' },
       { key: 'galerie', label: 'Galerie', icon: 'lucideImage' },
@@ -219,6 +216,7 @@ export class PropertyDetail implements OnInit, OnDestroy {
   });
 
   @ViewChild('paymentsTab') paymentsTabRef?: UnitPaymentsTab;
+  @ViewChild('documentsTab') documentsTabRef?: DocumentsTab;
 
   // ── Paiements ─────────────────────────────────────────────────
   showPaymentModal = signal(false);
@@ -272,6 +270,7 @@ export class PropertyDetail implements OnInit, OnDestroy {
   previewUrl = signal<string | null>(null);
   selectedFile = signal<File | null>(null);
   isUploading = signal(false);
+  isDeletingImage = signal(false);
 
   // ── Computed stats ────────────────────────────────────────────
   unitsCount = computed(() => this.bien()?.units?.length ?? 0);
@@ -551,8 +550,9 @@ export class PropertyDetail implements OnInit, OnDestroy {
 
   deleteImage(): void {
     const id = this.deletingImageId();
-    if (!id) return;
+    if (!id || this.isDeletingImage()) return;
 
+    this.isDeletingImage.set(true);
     this.galleryService
       .delete(id)
       .pipe(takeUntil(this.destroy$))
@@ -569,14 +569,15 @@ export class PropertyDetail implements OnInit, OnDestroy {
                 : b,
             );
 
-            this.showDeleteImage.set(false);
-            this.deletingImageId.set(null);
-
             this.toast.success('Image supprimée avec succès.');
           }
+          this.isDeletingImage.set(false);
+          this.showDeleteImage.set(false);
+          this.deletingImageId.set(null);
         },
         error: (err) => {
           this.toast.error(err?.error?.message ?? 'Erreur lors de la suppression.');
+          this.isDeletingImage.set(false);
         },
       });
   }
@@ -678,8 +679,12 @@ export class PropertyDetail implements OnInit, OnDestroy {
           this.bien.update(b => b ? { ...b, documents: [...(b.documents || []), res.data!] } : b);
           this.toast.success('Document ajouté avec succès.');
         }
+        this.documentsTabRef?.onUploadSuccess();
       },
-      error: (err) => this.toast.error(err?.error?.message ?? "Erreur lors de l'envoi du document.")
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? "Erreur lors de l'envoi du document.");
+        this.documentsTabRef?.onUploadError();
+      }
     });
   }
 

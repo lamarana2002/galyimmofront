@@ -1,9 +1,9 @@
-import { Component, inject, input, OnInit, OnDestroy, output, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, OnDestroy, output, signal } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { PropertyService } from '../../../services/property.service';
 import { PropertyTypeService } from '../../../services/property-type.service';
 import { PropertyStatusEnum } from '../../../enums/property-status.enum';
-import { PropertyTypeModel } from '../../../models/propety-type.model';
+import { PropertyTypeModel } from '../../../models/property-type.model';
 import { PropertyModel } from '../../../models/property.model';
 import { CreatePropertyPayload } from '../../../interfaces/create-property-payload.interface';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -23,6 +23,8 @@ import {
   lucideLayoutGrid,
   lucideBanknote,
   lucideKey,
+  lucideLayers,
+  lucideChevronDown,
 } from '@ng-icons/lucide';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { GeoService } from '../../../../../shared/services/geo.service';
@@ -42,7 +44,6 @@ interface PropertyForm {
   total_floors: number | null;
   sale_price: number | null;
   condo_fees: number | null;
-  has_units: boolean;
   is_active: boolean;
   description: string | null;
   cover_image: File | null;
@@ -56,6 +57,23 @@ interface PropertyForm {
   security_deposit: number | null;
   monthly_charges: number | null;
 }
+
+const ALL_STATUSES = [
+  { value: PropertyStatusEnum.AVAILABLE, label: 'Disponible' },
+  { value: PropertyStatusEnum.FOR_SALE, label: 'En vente' },
+  { value: PropertyStatusEnum.FOR_RENT, label: 'À louer' },
+  { value: PropertyStatusEnum.RENTED, label: 'Loué' },
+  { value: PropertyStatusEnum.SOLD, label: 'Vendu' },
+  { value: PropertyStatusEnum.UNDER_RENOVATION, label: 'En travaux' },
+];
+
+// « Loué » et « Vendu » résultent d'un contrat / d'une vente : pas choisissables à la création
+const CREATABLE_STATUSES = new Set([
+  PropertyStatusEnum.AVAILABLE,
+  PropertyStatusEnum.FOR_SALE,
+  PropertyStatusEnum.FOR_RENT,
+  PropertyStatusEnum.UNDER_RENOVATION,
+]);
 
 @Component({
   selector: 'app-add-property-modal',
@@ -78,6 +96,8 @@ interface PropertyForm {
       lucideLayoutGrid,
       lucideBanknote,
       lucideKey,
+      lucideLayers,
+      lucideChevronDown,
     }),
   ],
 })
@@ -118,15 +138,37 @@ export class AddPropertyModal implements OnInit, OnDestroy {
   selectedQuartierId   = signal<number | null>(null);
   selectedSquareAreaId = signal<number | null>(null);
 
-  // Status options
-  statusOptions = [
-    { value: PropertyStatusEnum.AVAILABLE, label: 'Disponible' },
-    { value: PropertyStatusEnum.FOR_SALE, label: 'En vente' },
-    { value: PropertyStatusEnum.FOR_RENT, label: 'À louer' },
-    { value: PropertyStatusEnum.RENTED, label: 'Loué' },
-    { value: PropertyStatusEnum.SOLD, label: 'Vendu' },
-    { value: PropertyStatusEnum.UNDER_RENOVATION, label: 'En travaux' },
-  ];
+  // ── Type sélectionné : source de vérité pour has_units et les champs affichés ──
+  selectedTypeId = signal<number | null>(null);
+  showDetails = signal(false);
+
+  selectedType = computed(
+    () =>
+      this.propertyTypes().find(t => t.id === this.selectedTypeId()) ??
+      this.editingProperty()?.property_type ??
+      null,
+  );
+
+  // À l'édition on conserve le has_units existant (le type est verrouillé)
+  hasUnits = computed(
+    () => this.editingProperty()?.has_units ?? this.selectedType()?.can_have_units ?? false,
+  );
+  showRentalConfig = computed(() => !!this.selectedType()?.is_rentable && !this.hasUnits());
+  showSalePrice = computed(() => !!this.selectedType()?.is_sellable);
+
+  statusOptions = computed(() => {
+    const type = this.selectedType();
+    const editing = this.editingProperty();
+
+    return ALL_STATUSES.filter(s => {
+      if (editing && s.value === editing.status) return true;
+      if (!editing && !CREATABLE_STATUSES.has(s.value)) return false;
+      if (!type) return true;
+      if ((s.value === PropertyStatusEnum.FOR_SALE || s.value === PropertyStatusEnum.SOLD) && !type.is_sellable) return false;
+      if ((s.value === PropertyStatusEnum.FOR_RENT || s.value === PropertyStatusEnum.RENTED) && !type.is_rentable) return false;
+      return true;
+    });
+  });
 
   // Form model en signal avec typage explicite
   form = signal<PropertyForm>({
@@ -143,7 +185,6 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     total_floors: null,
     sale_price: null,
     condo_fees: null,
-    has_units: false,
     is_active: true,
     description: null,
     cover_image: null,
@@ -161,6 +202,8 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     this.loadPropertyTypes();
     const property = this.editingProperty();
     if (property) {
+      this.selectedTypeId.set(property.property_type.id);
+      this.showDetails.set(true);
       this.form.set({
         name: property.name,
         code: property.code,
@@ -175,7 +218,6 @@ export class AddPropertyModal implements OnInit, OnDestroy {
         total_floors: property.total_floors,
         sale_price: property.sale_price,
         condo_fees: property.condo_fees,
-        has_units: property.has_units,
         is_active: property.is_active,
         description: property.description,
         cover_image: null,
@@ -236,8 +278,18 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     });
   }
 
-  onCountryChange(event: Event): void {
-    const id = Number((event.target as HTMLSelectElement).value);
+  onTypeChange(id: number | null): void {
+    this.selectedTypeId.set(id);
+    this.form.update(f => ({ ...f, property_type_id: id === null ? '' : String(id) }));
+
+    // Le statut déjà choisi doit rester valide pour le nouveau type
+    const status = this.form().status;
+    if (status && !this.statusOptions().some(s => s.value === status)) {
+      this.form.update(f => ({ ...f, status: '' }));
+    }
+  }
+
+  onCountryChange(id: number | null): void {
     this.selectedCountryId.set(id);
     this.selectedRegionId.set(null);
     this.clearGeoDown(0);
@@ -246,8 +298,7 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     }
   }
 
-  onRegionChange(event: Event): void {
-    const id = Number((event.target as HTMLSelectElement).value);
+  onRegionChange(id: number | null): void {
     this.selectedRegionId.set(id);
     this.selectedVilleId.set(null);
     this.clearGeoDown(1);
@@ -256,8 +307,7 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     }
   }
 
-  onVilleChange(event: Event): void {
-    const id = Number((event.target as HTMLSelectElement).value);
+  onVilleChange(id: number | null): void {
     this.selectedVilleId.set(id);
     this.selectedCommuneId.set(null);
     this.clearGeoDown(2);
@@ -266,8 +316,7 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     }
   }
 
-  onCommuneChange(event: Event): void {
-    const id = Number((event.target as HTMLSelectElement).value);
+  onCommuneChange(id: number | null): void {
     this.selectedCommuneId.set(id);
     this.selectedQuartierId.set(null);
     this.clearGeoDown(3);
@@ -276,8 +325,7 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     }
   }
 
-  onQuartierChange(event: Event): void {
-    const id = Number((event.target as HTMLSelectElement).value);
+  onQuartierChange(id: number | null): void {
     this.selectedQuartierId.set(id);
     this.selectedSquareAreaId.set(null);
     this.clearGeoDown(4);
@@ -286,10 +334,9 @@ export class AddPropertyModal implements OnInit, OnDestroy {
     }
   }
 
-  onSquareAreaChange(event: Event): void {
-    const id = Number((event.target as HTMLSelectElement).value);
+  onSquareAreaChange(id: number | null): void {
     this.selectedSquareAreaId.set(id);
-    this.form.update(f => ({ ...f, square_area_id: id || null }));
+    this.form.update(f => ({ ...f, square_area_id: id }));
   }
 
   private clearGeoDown(level: number): void {
@@ -371,6 +418,8 @@ export class AddPropertyModal implements OnInit, OnDestroy {
 
     this.saving.set(true);
     const current = this.form();
+    const hasUnits = this.hasUnits();
+    const rentalVisible = this.showRentalConfig();
 
     const payload: CreatePropertyPayload = {
       structure_id: this.structureId(),
@@ -385,21 +434,21 @@ export class AddPropertyModal implements OnInit, OnDestroy {
       what3words: current.what3words,
       total_surface: current.total_surface,
       total_floors: current.total_floors,
-      sale_price: current.sale_price,
+      sale_price: this.showSalePrice() ? current.sale_price : null,
       condo_fees: current.condo_fees,
-      has_units: current.has_units,
+      has_units: hasUnits,
       is_active: current.is_active,
       description: current.description,
       amenities: null,
       ...(current.cover_image instanceof File ? { cover_image: current.cover_image } : {}),
-      ...(!current.has_units ? {
+      ...(!hasUnits ? {
         primary_unit: {
-          rooms: current.rooms,
-          bedrooms: current.bedrooms,
-          bathrooms: current.bathrooms,
-          rent_amount: current.rent_amount,
-          security_deposit: current.security_deposit,
-          monthly_charges: current.monthly_charges,
+          rooms: rentalVisible ? current.rooms : null,
+          bedrooms: rentalVisible ? current.bedrooms : null,
+          bathrooms: rentalVisible ? current.bathrooms : null,
+          rent_amount: rentalVisible ? current.rent_amount : null,
+          security_deposit: rentalVisible ? current.security_deposit : null,
+          monthly_charges: rentalVisible ? current.monthly_charges : null,
         },
       } : {}),
     };
@@ -426,6 +475,7 @@ export class AddPropertyModal implements OnInit, OnDestroy {
   }
 
   closeModal(): void {
+    if (this.saving()) return;
     this.closed.emit();
   }
 }

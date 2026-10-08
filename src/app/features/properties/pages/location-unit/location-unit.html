@@ -165,7 +165,7 @@
               >
               </ng-icon>
               {{ tab.label }}
-              @if (tab.key === 'contrats') {
+              @if (tab.key === 'locations') {
                 <span
                   class="px-1.5 py-0.5 text-[10px] font-bold bg-primary-800 text-white rounded-full"
                 >
@@ -293,15 +293,6 @@
           </div>
         }
 
-        <!-- ═══ ONGLET LOCATAIRE ═══ -->
-        @if (activeTab === 'locataire') {
-          <app-tenant-tab
-            [unit]="unite()"
-            (onContact)="contacterLocataire($event)"
-            (onAffect)="affecterLocataire()"
-          />
-        }
-
         <!-- ═══ ONGLET CONTRATS ═══ -->
         @if (activeTab === 'locations') {
           <app-leases-tab [unit]="unite()" (onNewLease)="affecterLocataire()" />
@@ -311,7 +302,8 @@
         @if (activeTab === 'photos') {
           <app-gallery-tab
             [gallery]="unite()?.gallery"
-            [previewUrl]="previewUrl"
+            [previewUrl]="previewUrl()"
+            [isUploading]="isUploading()"
             (onConfirmDelete)="confirmDeleteImage($event)"
             (onUploadImage)="uploadImage()"
             (onCancelUpload)="cancelUpload()"
@@ -327,34 +319,6 @@
             (addPayment)="openPaymentModal()"
           />
         }
-
-        <!-- ═══ ONGLET DOCUMENTS ═══ -->
-        <!-- @if (activeTab === 'documents') {
-          @if (!unite.documents || unite.documents.length === 0) {
-            <div class="flex flex-col items-center py-20 text-center">
-              <ng-icon name="lucideFile" size="40" class="text-gray-200 mb-3"></ng-icon>
-              <p class="text-primary-400">Aucun document</p>
-            </div>
-          } @else {
-            <div class="space-y-2.5">
-              @for (doc of unite.documents; track doc.id) {
-                <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-3.5 border border-gray-100 hover:shadow-sm transition-all">
-                  <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    [class]="getDocIconColor(doc.ext)">
-                    <ng-icon name="lucideFile" size="18"></ng-icon>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-primary-900 truncate">{{ doc.nom }}</p>
-                    <p class="text-[10px] text-primary-400 mt-0.5">{{ doc.ext | uppercase }} · {{ doc.date | date:'dd/MM/yyyy' }}</p>
-                  </div>
-                  <button class="p-1.5 text-primary-400 hover:text-secondary-500 hover:bg-secondary-50 rounded-lg transition-all">
-                    <ng-icon name="lucideDownload" size="14"></ng-icon>
-                  </button>
-                </div>
-              }
-            </div>
-          }
-        } -->
       </div>
     </div>
 
@@ -376,12 +340,13 @@
 </div>
 
 <!-- ══ MODAL SUPPRESSION IMAGE ══ -->
-@if (showDeleteImage) {
+@if (showDeleteImage()) {
   <app-confirm-dialog
     title="Supprimer cette photo ?"
     message="Cette action est irréversible."
+    [loading]="isDeletingImage()"
     (confirmed)="deleteImage()"
-    (cancelled)="showDeleteImage = false"
+    (cancelled)="showDeleteImage.set(false)"
   />
 }
 
@@ -389,6 +354,7 @@
   <app-unit-form-modal
     [editingUnit]="editingUnit()"
     [propertyId]="unite()?.property_id ?? 0"
+    [isSaving]="unitSaving()"
     (close)="showUnitModal.set(false)"
     (saveUnit)="saveUnit($event)"
   />

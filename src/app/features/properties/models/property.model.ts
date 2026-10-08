@@ -2,9 +2,25 @@ import { PropertyStatusEnum } from '../enums/property-status.enum';
 import { PropertyGallery }     from './property-gallery.model';
 import { PropertyDocument }    from './property-document.model';
 import { PropertyStats }       from './property-stats.model';
-import { PropertyTypeModel }   from './propety-type.model';
+import { PropertyTypeModel }   from './property-type.model';
 import { ILocationUnit } from './location-unit.model';
+import { UnitStatutEnum } from '../enums/unit-status.enum';
 import { IAdresse } from '../../../shared/models/adresse.model';
+
+// Sous-ensemble d'ILocationUnit renvoyé par la liste des biens (has_units = false)
+export interface PropertyPrimaryUnit {
+  id: number;
+  unit_code: string;
+  unit_number: string | null;
+  surface: number | null;
+  rooms: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  rent_amount: number | null;
+  security_deposit: number | null;
+  monthly_charges: number | null;
+  status: UnitStatutEnum;
+}
 
 export interface PropertyModel {
   id: number;
@@ -13,6 +29,8 @@ export interface PropertyModel {
   structure_id:   number | null;
   property_type:  PropertyTypeModel;
   units?:         ILocationUnit[];       // has_units = true → unités manuelles
+  primary_unit?:  PropertyPrimaryUnit | null; // has_units = false → unité auto-créée
+  units_count?:   number;
   gallery?:       PropertyGallery[];    // images du bien
   documents?:     PropertyDocument[];   // documents du bien
   stats:          PropertyStats;
