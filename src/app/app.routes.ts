@@ -195,6 +195,14 @@ export const routes: Routes = [
           import('./features/locataires/pages/locataires/locataires').then((m) => m.Locataires),
       },
       {
+        path: 'locataires/:locataireId',
+        canActivate: [permissionGuard(['locataires.show'])],
+        loadComponent: () =>
+          import('./features/locataires/pages/locataire-detail/locataire-detail').then(
+            (m) => m.LocataireDetail,
+          ),
+      },
+      {
         path: 'users',
         canActivate: [permissionGuard(['users.index'])],
         loadComponent: () => import('./features/users/pages/users').then((m) => m.Users),

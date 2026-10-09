@@ -71,7 +71,7 @@ export class Sidebar implements OnInit {
 
   mainNavs: NavItem[] = [
     { label: 'Dashboard', icon: 'lucideHouse', link: '/dashboard' },
-    { label: 'Kanban', icon: 'lucideKanban', link: '/kanban', badge: 'pro' },
+    // { label: 'Kanban', icon: 'lucideKanban', link: '/kanban', badge: 'pro' }, // pas encore utilisé
     { label: 'Inbox', icon: 'lucideInbox', link: '/inbox', badge: 'unread' },
   ];
 
@@ -90,7 +90,7 @@ export class Sidebar implements OnInit {
   ];
 
   accountNavs: NavItem[] = [
-    { label: 'Settings', icon: 'lucideSettings', link: '/settings' },
+    // { label: 'Settings', icon: 'lucideSettings', link: '/settings' }, // pas encore utilisé
   ];
 
   sidebarService = inject(SidebarService);
