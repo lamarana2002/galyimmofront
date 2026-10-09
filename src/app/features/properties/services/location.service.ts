@@ -41,6 +41,6 @@ export class LocationService {
   }
 
   terminate(id: number): Observable<ApiResponse<ILocationModel>> {
-    return this.http.post<ApiResponse<ILocationModel>>(`${this.baseUrl}/${id}/terminate`, {});
+    return this.http.delete<ApiResponse<ILocationModel>>(`${this.baseUrl}/${id}/terminate`);
   }
 }

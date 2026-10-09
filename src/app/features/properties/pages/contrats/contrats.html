@@ -253,3 +253,14 @@
     (confirmed)="confirmRenew($event)"
   />
 }
+
+@if (showTerminateConfirm()) {
+  <app-confirm-dialog
+    title="Résilier le contrat ?"
+    message="Le contrat sera résilié. Cette action est irréversible."
+    confirmLabel="Résilier"
+    [loading]="!!terminatingId()"
+    (confirmed)="confirmTerminate()"
+    (cancelled)="cancelTerminate()"
+  />
+}

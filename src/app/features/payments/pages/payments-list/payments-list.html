@@ -22,9 +22,6 @@
               <h1 class="text-lg font-bold text-primary-900" tracking-heading>
                 Historique des Paiements
               </h1>
-              <span class="px-2 py-0.5 text-[10px] font-bold bg-green-100 text-green-700 rounded-full">
-                Mois en cours
-              </span>
             </div>
             <!-- Méta compact -->
             <div class="flex items-center gap-3 mt-0.5 text-xs text-primary-400">
@@ -36,24 +33,55 @@
         </div>
 
         <!-- Actions header (Filtres & Export) -->
-        <div class="flex items-center gap-2">
-          <!-- Filtres basiques -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Filtres statut -->
           <div class="flex items-center bg-gray-50 border border-gray-200 rounded-xl p-1 gap-1">
-            <button class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white shadow-sm text-primary-700">
-              Tous
-            </button>
-            <button class="px-3 py-1.5 text-xs font-medium rounded-lg text-primary-500 hover:text-primary-700 transition-colors">
-              Encaissés
-            </button>
-            <button class="px-3 py-1.5 text-xs font-medium rounded-lg text-primary-500 hover:text-primary-700 transition-colors">
-              En attente
-            </button>
+            @for (filter of statusFilters; track filter.value) {
+              <button
+                (click)="onStatusFilterChange(filter.value)"
+                class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors"
+                [class]="
+                  activeStatus() === filter.value
+                    ? 'bg-white shadow-sm text-primary-700'
+                    : 'text-primary-500 hover:text-primary-700'
+                "
+              >
+                {{ filter.label }}
+              </button>
+            }
           </div>
 
-          <button class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-primary-600 bg-white hover:bg-primary-50 border border-gray-200 rounded-xl transition-all ml-2">
-            <ng-icon name="lucideFilter" size="13"></ng-icon>
-            Filtres avancés
-          </button>
+          <!-- Filtres mois / année -->
+          <select
+            [ngModel]="selectedMonth()"
+            (ngModelChange)="onMonthChange($event)"
+            class="px-3 py-2 text-xs font-semibold text-primary-600 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
+          >
+            <option [ngValue]="null">Tous les mois</option>
+            @for (m of months; track m.value) {
+              <option [ngValue]="m.value">{{ m.label }}</option>
+            }
+          </select>
+          <select
+            [ngModel]="selectedYear()"
+            (ngModelChange)="onYearChange($event)"
+            class="px-3 py-2 text-xs font-semibold text-primary-600 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-secondary-400"
+          >
+            <option [ngValue]="null">Toutes les années</option>
+            @for (y of availableYears(); track y) {
+              <option [ngValue]="y">{{ y }}</option>
+            }
+          </select>
+
+          @if (hasActiveFilters()) {
+            <button
+              (click)="resetFilters()"
+              class="px-3 py-2 text-xs font-semibold text-primary-500 hover:text-primary-700 transition-colors"
+            >
+              Réinitialiser
+            </button>
+          }
+
           <button class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xl transition-all shadow-sm">
             <ng-icon name="lucideDownload" size="13"></ng-icon>
             Exporter
@@ -148,12 +176,26 @@
                   </td>
                   
                   <td class="px-6 py-4 whitespace-nowrap text-right">
-                    <button class="p-1.5 text-primary-400 hover:text-secondary-500 hover:bg-secondary-50 rounded-lg transition-all mr-1 opacity-0 group-hover:opacity-100" title="Générer Quittance">
-                      <ng-icon name="lucideDownload" size="15"></ng-icon>
-                    </button>
-                    <button class="p-1.5 text-primary-400 hover:text-primary-700 hover:bg-gray-100 rounded-lg transition-all">
-                      <ng-icon name="lucideMoreVertical" size="15"></ng-icon>
-                    </button>
+                    <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      @if (payment.receipt_url) {
+                        <a
+                          [href]="payment.receipt_url"
+                          target="_blank"
+                          rel="noreferrer"
+                          class="p-1.5 text-primary-400 hover:text-secondary-500 hover:bg-secondary-50 rounded-lg transition-all"
+                          title="Télécharger le reçu"
+                        >
+                          <ng-icon name="lucideDownload" size="15"></ng-icon>
+                        </a>
+                      }
+                      <button
+                        (click)="openDrawer(payment)"
+                        class="p-1.5 text-primary-400 hover:text-primary-700 hover:bg-gray-100 rounded-lg transition-all"
+                        title="Voir le détail"
+                      >
+                        <ng-icon name="lucideEye" size="15"></ng-icon>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               } @empty {
@@ -181,4 +223,8 @@
       </div>
     }
   </div>
+
+  @if (drawerPayment(); as payment) {
+    <app-payment-detail-drawer [payment]="payment" (close)="closeDrawer()" />
+  }
 </div>

@@ -22,6 +22,14 @@ export class FactureService {
     return this.http.get<FactureListResponse>(this.baseUrl, { params });
   }
 
+  findAll(params?: { page?: number; perPage?: number }): Observable<FactureListResponse> {
+    let httpParams = new HttpParams();
+    if (params?.page) httpParams = httpParams.set('page', params.page.toString());
+    if (params?.perPage) httpParams = httpParams.set('per_page', params.perPage.toString());
+
+    return this.http.get<FactureListResponse>(this.baseUrl, { params: httpParams });
+  }
+
   getById(id: number): Observable<ApiResponse<Facture>> {
     return this.http.get<ApiResponse<Facture>>(`${this.baseUrl}/${id}`);
   }
