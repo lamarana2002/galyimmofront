@@ -44,16 +44,18 @@ export class UsersHandlerTab implements OnInit, OnDestroy {
 
   readonly UserStatus = UserStatus;
 
+  // Tous les utilisateurs correspondant à la recherche sont chargés en une
+  // fois : au-delà de ce nombre, il faudrait un compteur agrégé côté backend.
+  private readonly FETCH_PAGE_SIZE = 500;
+
   // ── Données ───────────────────────────────────────────────────
   loading       = signal(true);
   deleteLoading = signal(false);
   users         = signal<UserModel[]>([]);
 
-  // ── Pagination ────────────────────────────────────────────────
+  // ── Pagination (locale, sur les utilisateurs déjà chargés) ────
   currentPage  = signal(1);
-  totalPages   = signal(1);
-  totalItems   = signal(0);
-  perPage      = 15;
+  perPage      = 25;
 
   // ── Recherche ─────────────────────────────────────────────────
   searchQuery  = signal('');
@@ -70,11 +72,20 @@ export class UsersHandlerTab implements OnInit, OnDestroy {
     return u ? `${u.prenom} ${u.nom} sera supprimé définitivement.` : '';
   });
 
+  // ── Computed pagination (locale) ──────────────────────────────
+  totalItems = computed(() => this.users().length);
+  totalPages = computed(() => Math.max(1, Math.ceil(this.totalItems() / this.perPage)));
+
+  pagedUsers = computed(() => {
+    const start = (this.currentPage() - 1) * this.perPage;
+    return this.users().slice(start, start + this.perPage);
+  });
+
   // ── Computed KPIs ─────────────────────────────────────────────
   kpis = computed(() => {
     const all = this.users();
     return [
-      { label: 'Total',    value: this.totalItems(), color: 'bg-blue-50 text-blue-700',    icon: 'lucideUsers'     },
+      { label: 'Total',    value: all.length, color: 'bg-blue-50 text-blue-700',    icon: 'lucideUsers'     },
       { label: 'Actifs',   value: all.filter(u => u.status === UserStatus.ACTIVE).length,   color: 'bg-green-50 text-green-700',  icon: 'lucideUserCheck' },
       { label: 'Suspendus',value: all.filter(u => u.status === UserStatus.SUSPENDED).length, color: 'bg-red-50 text-red-700', icon: 'lucideUserX'    },
     ];
@@ -103,13 +114,11 @@ export class UsersHandlerTab implements OnInit, OnDestroy {
   // ── Chargement ────────────────────────────────────────────────
   loadUsers(search = this.searchQuery()): void {
     this.loading.set(true);
-    this.userService.findAll({ page: this.currentPage(), perPage: this.perPage, search }).pipe(
+    this.userService.findAll({ page: 1, perPage: this.FETCH_PAGE_SIZE, search }).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: r => {
         this.users.set(r.data);
-        this.totalItems.set(r.total);
-        this.totalPages.set(r.last_page);
         this.loading.set(false);
       },
       error: () => {
@@ -126,7 +135,6 @@ export class UsersHandlerTab implements OnInit, OnDestroy {
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-    this.loadUsers();
   }
 
   // ── Actions ───────────────────────────────────────────────────

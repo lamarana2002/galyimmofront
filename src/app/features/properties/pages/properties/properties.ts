@@ -95,7 +95,7 @@ export class Properties implements OnInit, OnDestroy {
 
   // ── Pagination (locale, sur les résultats déjà filtrés) ────────
   currentPage  = signal(1);
-  itemsPerPage = signal(12);
+  itemsPerPage = signal(25);
 
   // ── UI ────────────────────────────────────────────────────────
   viewMode     = signal<'grid' | 'table'>('grid');

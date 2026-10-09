@@ -31,6 +31,7 @@ import { LocationStatusEnum } from '../../enums/location-status.enum';
 import { LocationHelper } from '../../utils/location.utils';
 import { RenewLocationModal } from '../../../../shared/components/renew-location-modal/renew-location-modal';
 import { RenewLocationPayload } from '../../interfaces/renew-location-payload.interface';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-contrats',
@@ -46,6 +47,7 @@ import { RenewLocationPayload } from '../../interfaces/renew-location-payload.in
     LoadingComponent,
     EmptyStateComponent,
     RenewLocationModal,
+    ConfirmDialogComponent,
   ],
   templateUrl: './contrats.html',
   viewProviders: [
@@ -95,6 +97,10 @@ export class Contrats implements OnInit, OnDestroy {
   // Renouvellement modal
   showRenewModal = signal(false);
   pendingRenewLocation = signal<ILocationModel | null>(null);
+
+  // Résiliation
+  showTerminateConfirm = signal(false);
+  pendingTerminateLocation = signal<ILocationModel | null>(null);
 
   readonly statusFilters: Array<{
     label: string;
@@ -252,7 +258,18 @@ export class Contrats implements OnInit, OnDestroy {
   }
 
   terminateContract(location: ILocationModel): void {
-    if (this.terminatingId()) return; // Prevent multiple clicks
+    this.pendingTerminateLocation.set(location);
+    this.showTerminateConfirm.set(true);
+  }
+
+  cancelTerminate(): void {
+    this.showTerminateConfirm.set(false);
+    this.pendingTerminateLocation.set(null);
+  }
+
+  confirmTerminate(): void {
+    const location = this.pendingTerminateLocation();
+    if (!location || this.terminatingId()) return;
 
     this.terminatingId.set(location.id);
     this.locationService
@@ -265,6 +282,8 @@ export class Contrats implements OnInit, OnDestroy {
             this.loadContracts(this.currentPage());
           }
           this.terminatingId.set(null);
+          this.showTerminateConfirm.set(false);
+          this.pendingTerminateLocation.set(null);
         },
         error: (err) => {
           this.toast.error(err?.error?.message ?? 'Erreur lors de la résiliation du contrat.');
