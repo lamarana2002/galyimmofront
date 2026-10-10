@@ -209,7 +209,7 @@ export class AddPropertyModal implements OnInit, OnDestroy {
         code: property.code,
         property_type_id: String(property.property_type.id),
         status: property.status,
-        square_area_id: property.adresse?.square_area_id ?? null,
+        square_area_id: property.adresse?.square_area?.id ?? null,
         repere: property.adresse?.repere ?? null,
         latitude: property.adresse?.latitude ?? null,
         longitude: property.adresse?.longitude ?? null,
@@ -251,7 +251,7 @@ export class AddPropertyModal implements OnInit, OnDestroy {
         this.selectedVilleId.set(property.adresse.square_area?.quartier?.commune?.ville_id ?? null);
         this.selectedCommuneId.set(property.adresse.square_area?.quartier?.commune_id ?? null);
         this.selectedQuartierId.set(property.adresse.square_area?.quartier_id ?? null);
-        this.selectedSquareAreaId.set(property.adresse.square_area_id ?? null);
+        this.selectedSquareAreaId.set(property.adresse.square_area?.id ?? null);
         this.preloadGeoData();
       }
     }
