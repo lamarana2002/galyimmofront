@@ -12,6 +12,7 @@ import {
 
 import { ILocationUnit } from '../../../models/location-unit.model';
 import { LocationStatusEnum } from '../../../enums/location-status.enum';
+import { LocationHelper } from '../../../utils/location.utils';
 
 @Component({
   selector: 'app-unit-side-panel',
@@ -39,12 +40,19 @@ export class UnitSidePanel {
   terminate = output<void>();
 
   readonly LocationStatusEnum = LocationStatusEnum;
+  readonly LocationHelper = LocationHelper;
 
+  // Le back calcule désormais jours_restants (peut être négatif = en retard).
+  // On ne recalcule localement que si le champ est absent (anciens payloads).
   joursRestants = computed(() => {
     const location = this.unit()?.current_location;
-    if (!location?.end_date) return 0;
-    const endDate = new Date(location.end_date);
-    return Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / 86400000));
+    if (!location) return 0;
+    if (location.jours_restants !== undefined && location.jours_restants !== null) {
+      return location.jours_restants;
+    }
+    const endDate = location.date_fin || location.end_date;
+    if (!endDate) return 0;
+    return Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000);
   });
 
   locationExpireBientot = computed(() => {
@@ -54,9 +62,16 @@ export class UnitSidePanel {
 
   locationExpire = computed(() => {
     return (
-      this.joursRestants() === 0 &&
+      this.joursRestants() <= 0 &&
       this.unit()?.current_location?.status === LocationStatusEnum.ACTIVE
     );
+  });
+
+  // Largeur de la barre de progression, bornée entre 0 et 100 (jours_restants
+  // peut être négatif en cas de retard).
+  progressPercent = computed(() => {
+    const pct = 100 - (this.joursRestants() / 365) * 100;
+    return Math.min(100, Math.max(0, pct));
   });
 
   getInitials(prenom: string, nom: string): string {

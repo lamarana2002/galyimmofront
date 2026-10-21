@@ -181,24 +181,6 @@ export class LocationUnit implements OnInit, OnDestroy {
   ];
 
   // ── Computed ──────────────────────────────────────────────────
-  joursRestants = computed(() => {
-    const location = this.unite()?.current_location;
-    if (!location?.end_date) return 0;
-    const endDate = new Date(location.end_date);
-    return Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / 86400000));
-  });
-
-  locationExpireBientot = computed(() => {
-    const days = this.joursRestants();
-    return days > 0 && days <= 60;
-  });
-
-  locationExpire = computed(() => {
-    return (
-      this.joursRestants() === 0 &&
-      this.unite()?.current_location?.status === LocationStatusEnum.ACTIVE
-    );
-  });
 
   allLocations = computed(() => {
     const unit = this.unite();

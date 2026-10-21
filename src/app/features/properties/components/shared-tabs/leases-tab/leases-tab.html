@@ -4,10 +4,10 @@
       <ng-icon name="lucideShieldCheck" size="16" class="text-secondary-500"></ng-icon>
       Historique des contrats
     </h6>
-    <button (click)="onNewLease.emit()"
-      class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all">
+    <button (click)="onNewLease.emit()" title="Nouveau contrat"
+      class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs font-bold text-white bg-primary-800 hover:bg-primary-900 rounded-xl transition-all">
       <ng-icon name="lucidePlus" size="13"></ng-icon>
-      Nouveau contrat
+      <span class="hidden sm:inline">Nouveau contrat</span>
     </button>
   </div>
 
@@ -39,8 +39,9 @@
                 {{ c.status | titlecase }}
               </span>
             </div>
-            <!-- TODO: verify what date should be here -->
-            <p class="text-[11px] text-primary-400 font-mono mt-0.5">Ref-{{ c.end_date }}</p>
+            <p class="text-[11px] text-primary-400 font-mono mt-0.5">
+              {{ c.reference || ('Contrat #' + c.id) }}
+            </p>
           </div>
         </div>
 
