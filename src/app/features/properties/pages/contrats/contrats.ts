@@ -16,6 +16,7 @@ import {
   lucideUsers,
   lucideChevronRight,
   lucideTriangleAlert,
+  lucideAlertTriangle,
   lucideRotateCcw,
   lucideX,
 } from '@ng-icons/lucide';
@@ -64,6 +65,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
       lucideUsers,
       lucideChevronRight,
       lucideTriangleAlert,
+      lucideAlertTriangle,
       lucideRotateCcw,
       lucideX,
     }),
@@ -146,6 +148,13 @@ export class Contrats implements OnInit, OnDestroy {
         bgClass: 'bg-secondary-100',
         iconClass: 'text-secondary-700',
       },
+      {
+        label: 'Total impayé',
+        value: all.reduce((sum, location) => sum + (location.financial_summary?.balance_due ?? 0), 0),
+        icon: 'lucideAlertTriangle',
+        bgClass: 'bg-red-100',
+        iconClass: 'text-red-600',
+      },
     ];
   });
 
@@ -188,6 +197,7 @@ export class Contrats implements OnInit, OnDestroy {
       const q = this.searchQuery().toLowerCase();
       result = result.filter(
         (l) =>
+          l.reference?.toLowerCase().includes(q) ||
           l.locataire?.nom?.toLowerCase().includes(q) ||
           l.locataire?.prenom?.toLowerCase().includes(q) ||
           l.property?.name?.toLowerCase().includes(q) ||

@@ -153,14 +153,8 @@
       <div class="flex-1 overflow-y-auto p-12 custom-scrollbar">
         <div class="max-w-2xl mx-auto">
           <!-- Carte Message -->
-          <div class="bg-slate-50 border border-slate-100 rounded-3xl p-8 shadow-sm mb-8 relative">
-            <ng-icon 
-              name="lucideClock" 
-              size="120" 
-              class="absolute -right-4 -bottom-4 text-slate-200/50 -rotate-12 pointer-events-none"
-            ></ng-icon>
-            
-            <p class="text-lg text-primary-800 leading-relaxed font-medium relative z-10 whitespace-pre-wrap">
+          <div class="bg-slate-50 border border-slate-100 rounded-3xl p-8 shadow-sm mb-8">
+            <p class="text-lg text-primary-800 leading-relaxed font-medium whitespace-pre-wrap">
               {{ selectedNotification()?.message }}
             </p>
           </div>

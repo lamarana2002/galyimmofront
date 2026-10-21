@@ -8,7 +8,9 @@
   <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 flex-shrink-0">
     <div>
       <h2 class="text-base font-bold text-primary-900">Détail du contrat</h2>
-      <p class="mt-0.5 text-xs text-primary-400 font-mono">Ref-{{ location().id }}</p>
+      <p class="mt-0.5 text-xs text-primary-400 font-mono">
+        {{ location().reference || ('Contrat #' + location().id) }}
+      </p>
     </div>
     <button (click)="close()"
       class="rounded-lg p-1.5 text-primary-400 transition-colors hover:bg-gray-100 hover:text-primary-700">
@@ -69,11 +71,11 @@
             {{ location().date_location | date: 'dd/MM/yyyy' }}
           </span>
         </div>
-        @if (location().end_date) {
+        @if (location().date_fin || location().end_date) {
           <div class="flex items-center justify-between">
             <span class="text-xs text-primary-500">Fin</span>
             <span class="text-xs font-semibold text-primary-800">
-              {{ location().end_date | date: 'dd/MM/yyyy' }}
+              {{ (location().date_fin || location().end_date) | date: 'dd/MM/yyyy' }}
             </span>
           </div>
         }

@@ -93,7 +93,7 @@
   <div class="px-6 py-5">
 
     <!-- KPI CARDS -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
       @for (kpi of kpis; track kpi.label) {
         <div class="bg-white rounded-2xl border border-gray-200 px-5 py-4 flex items-center gap-3 shadow-sm">
           <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" [class]="kpi.bgClass">

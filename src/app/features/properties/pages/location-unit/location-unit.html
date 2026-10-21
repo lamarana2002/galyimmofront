@@ -103,7 +103,7 @@
   </div>
 
   <!-- ══ KPI CARDS ══ -->
-  <div class="px-6 pt-5 grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+  <div class="px-6 pt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
       <div class="w-12 h-12 rounded-xl bg-secondary-100 flex items-center justify-center flex-shrink-0">
         <ng-icon name="lucideBanknote" size="24" class="text-secondary-500"></ng-icon>
@@ -138,11 +138,11 @@
   </div>
 
   <!-- ══ LAYOUT 2 COLONNES ══ -->
-  <div class="px-6 pb-5 flex gap-5 items-start">
+  <div class="px-6 pb-5 flex flex-col lg:flex-row gap-5 items-start">
     <!-- ══════════════════════════════════════════════
          COLONNE GAUCHE — ONGLETS
     ═══════════════════════════════════════════════ -->
-    <div class="flex-1 min-w-0">
+    <div class="flex-1 min-w-0 w-full">
       <!-- Onglets nav -->
       <div
         class="bg-white border border-b-0 border-gray-200 rounded-t-2xl px-2 pt-2 overflow-x-auto"
@@ -325,7 +325,7 @@
     <!-- ══════════════════════════════════════════════
          COLONNE DROITE — PANNEAU FIXE
     ═══════════════════════════════════════════════ -->
-    <div class="w-72 flex-shrink-0 space-y-4 sticky top-36">
+    <div class="w-full lg:w-72 flex-shrink-0 space-y-4 lg:sticky lg:top-36">
       <app-unit-side-panel
         [unit]="unite()"
         [renewLoading]="renewingLocation()"

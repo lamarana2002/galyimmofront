@@ -16,10 +16,11 @@
       </button>
       <button
         (click)="onAddPayment()"
-        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-primary-700 hover:bg-primary-800 rounded-xl transition-all shadow-sm"
+        title="Enregistrer un paiement"
+        class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs font-semibold text-white bg-primary-700 hover:bg-primary-800 rounded-xl transition-all shadow-sm"
       >
         <ng-icon name="lucidePlus" size="13"></ng-icon>
-        Enregistrer un paiement
+        <span class="hidden sm:inline">Enregistrer un paiement</span>
       </button>
     </div>
   </div>
