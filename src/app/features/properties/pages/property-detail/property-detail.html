@@ -74,14 +74,14 @@
         </div>
       </div>
 
-      <div class="px-7 pb-5 relative">
+      <div class="px-5 lg:px-7 pb-5 relative">
         <div
-          class="absolute -top-9 left-7 w-[72px] h-[72px] bg-white rounded-2xl border-[3px] border-white shadow-lg flex items-center justify-center"
+          class="w-16 h-16 lg:w-[72px] lg:h-[72px] lg:absolute lg:-top-9 lg:left-7 bg-white rounded-2xl border-[3px] border-white shadow-lg flex items-center justify-center mb-3 lg:mb-0"
         >
-          <ng-icon name="lucideBuilding2" size="34" class="text-primary-700"></ng-icon>
+          <ng-icon name="lucideBuilding2" size="28" class="text-primary-700"></ng-icon>
         </div>
 
-        <div class="pt-4 pl-24 flex items-end justify-between gap-4 flex-wrap">
+        <div class="pt-3 lg:pt-4 lg:pl-24 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-3 flex-wrap mb-1">
               <h1 class="text-2xl font-bold text-primary-900" tracking-heading>
@@ -103,13 +103,13 @@
               }
             </div>
             @if (b.adresse) {
-              <p class="text-sm text-primary-400 flex items-center gap-1 mb-1">
-                <ng-icon name="lucideMapPin" size="13"></ng-icon>
-                {{ getFullAddress(b) }}
+              <p class="text-sm text-primary-400 flex items-center gap-1 mb-1 min-w-0">
+                <ng-icon name="lucideMapPin" size="13" class="flex-shrink-0"></ng-icon>
+                <span class="truncate">{{ getFullAddress(b) }}</span>
               </p>
             }
             @if (b.description) {
-              <p class="text-sm text-primary-500 max-w-2xl leading-relaxed">{{ b.description }}</p>
+              <p class="text-sm text-primary-500 max-w-2xl leading-relaxed text-left">{{ b.description }}</p>
             }
           </div>
           <div class="flex gap-2 flex-shrink-0">
